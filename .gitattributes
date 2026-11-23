@@ -1,0 +1,24 @@
+# 统一文本换行符,保证 Linux CI 上 gradlew / YAML 可执行
+* text=auto eol=lf
+
+# Windows 脚本保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制资源不换行
+*.jar binary
+*.aar binary
+*.so binary
+*.dll binary
+*.dll.a binary
+*.rlib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.db binary
+*.zip binary
+*.ttf binary
+*.otf binary
