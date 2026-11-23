@@ -3,7 +3,7 @@ package com.github.tvbox.kt.core.spider.js
 import android.content.Context
 import android.text.TextUtils
 import android.util.Base64
-import com.github.tvbox.kt.core.spider.Spider
+import com.github.catvod.crawler.Spider
 import com.github.tvbox.kt.util.FileUtils
 import com.github.tvbox.kt.util.LOG
 import com.github.tvbox.kt.util.MD5

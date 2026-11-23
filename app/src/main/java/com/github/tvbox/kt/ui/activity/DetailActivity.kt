@@ -1038,6 +1038,10 @@ class DetailActivity : BaseActivity() {
         sourceKey = key ?: ""
         firstsourceKey = key ?: ""
         if (TextUtils.isEmpty(vid) || vid!!.startsWith("msearch:") || ApiConfig.get().getSource(sourceKey) == null) {
+            LOG.i("echo-loadDetail invalid param: vid=$vid sourceKey=$sourceKey fromCollect=$fromCollect")
+            if (!detailFallbackActive && !fromCollect) {
+                Toast.makeText(this, "资源或站点未加载，请检查配置与网络", Toast.LENGTH_SHORT).show()
+            }
             handleNoPlayableDetail()
             return
         }

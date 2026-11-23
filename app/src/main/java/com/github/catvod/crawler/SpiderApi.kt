@@ -1,4 +1,4 @@
-package com.github.tvbox.kt.core.spider
+package com.github.catvod.crawler
 
 import android.app.Activity
 import android.content.Context

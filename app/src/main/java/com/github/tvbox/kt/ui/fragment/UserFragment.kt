@@ -169,7 +169,7 @@ class UserFragment : BaseLazyFragment(), View.OnClickListener {
         Companion.homeHotVodAdapter = homeHotVodAdapter
         homeHotVodAdapter.setOnItemClickListener { adapter, _, position ->
             if (ApiConfig.get().getSourceBeanList().isEmpty()) return@setOnItemClickListener
-            val vod = adapter.getItem(position) as Movie.Video
+            val vod = adapter.getItem(position) as? Movie.Video ?: return@setOnItemClickListener
 
             if (Hawk.get(HawkConfig.HOME_REC, HawkConfig.DEFAULT_HOME_REC) == 1 &&
                 homeSourceRec != null && vod.action != null

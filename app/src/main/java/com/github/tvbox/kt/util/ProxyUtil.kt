@@ -1,6 +1,6 @@
 package com.github.tvbox.kt.util
 
-import com.github.tvbox.kt.core.spider.SpiderDebug
+import com.github.catvod.crawler.SpiderDebug
 import com.github.tvbox.kt.server.ControlManager
 import com.github.tvbox.kt.util.parser.SuperParse
 import okhttp3.OkHttpClient

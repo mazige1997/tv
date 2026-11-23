@@ -11,13 +11,15 @@ import com.google.gson.JsonParser
  */
 object LiveParseHelper {
 
-    /** 完整数组形态(Rust 优先,失败回退 Kotlin)。 */
+    /** 完整数组形态(Rust 优先,解析结果为空也回退 Kotlin)。 */
     fun parseToJsonArray(text: String?): JsonArray {
         return try {
             if (NativeCore.available) {
                 val json = NativeCore.parseLive(text ?: "")
                 if (!json.isNullOrEmpty()) {
-                    return JsonParser.parseString(json).asJsonArray
+                    val array = JsonParser.parseString(json).asJsonArray
+                    // Rust 解析失败时可能返回 "[]",此时必须回退,否则直播列表被清空
+                    if (array.size() > 0) return array
                 }
             }
             TxtSubscribe.parseToJsonArray(text)
@@ -27,7 +29,7 @@ object LiveParseHelper {
         }
     }
 
-    /** 折叠形态 {group:{channel:[urls]}}(Rust 优先,失败回退 Kotlin)。 */
+    /** 折叠形态 {group:{channel:[urls]}}(Rust 优先,解析结果为空也回退 Kotlin)。 */
     fun parseSimple(text: String?): LinkedHashMap<String, LinkedHashMap<String, ArrayList<String>>> {
         val out = LinkedHashMap<String, LinkedHashMap<String, ArrayList<String>>>()
         return try {
@@ -50,7 +52,7 @@ object LiveParseHelper {
                         }
                         out[groupName] = channelMap
                     }
-                    return out
+                    if (out.isNotEmpty()) return out
                 }
             }
             TxtSubscribe.parse(out, text ?: "")

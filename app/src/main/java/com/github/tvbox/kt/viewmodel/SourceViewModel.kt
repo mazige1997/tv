@@ -18,7 +18,7 @@ import com.github.tvbox.kt.bean.MovieSort
 import com.github.tvbox.kt.bean.SourceBean
 import com.github.tvbox.kt.cache.VodRecord
 import com.github.tvbox.kt.core.net.OkHttp
-import com.github.tvbox.kt.core.spider.Spider
+import com.github.catvod.crawler.Spider
 import com.github.tvbox.kt.data.AppDataManager
 import com.github.tvbox.kt.event.RefreshEvent
 import com.github.tvbox.kt.player.thirdparty.RemoteTVBox

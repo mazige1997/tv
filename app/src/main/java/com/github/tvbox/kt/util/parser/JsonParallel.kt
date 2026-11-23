@@ -1,7 +1,7 @@
 package com.github.tvbox.kt.util.parser
 
 import android.util.Base64
-import com.github.tvbox.kt.core.spider.SpiderDebug
+import com.github.catvod.crawler.SpiderDebug
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Headers

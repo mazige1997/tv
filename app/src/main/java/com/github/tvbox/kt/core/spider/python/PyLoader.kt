@@ -1,7 +1,7 @@
 package com.github.tvbox.kt.core.spider.python
 
-import com.github.tvbox.kt.core.spider.Spider
-import com.github.tvbox.kt.core.spider.SpiderNull
+import com.github.catvod.crawler.Spider
+import com.github.catvod.crawler.SpiderNull
 
 /**
  * python 爬虫加载器接口,Kotlin 移植(与旧版 IPyLoader 一致)。

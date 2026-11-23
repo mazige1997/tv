@@ -268,8 +268,11 @@
 }
 
 # 爬虫 jar 加载的接口约定(DexClassLoader 内实现继承宿主类)
--keep class com.github.tvbox.kt.core.spider.Spider { *; }
--keep class com.github.tvbox.kt.core.spider.SpiderApi { *; }
+# JAR 爬虫插件通过 DexClassLoader 反射加载,必须保留原版 catvod 契约类
+-keep class com.github.catvod.crawler.Spider { *; }
+-keep class com.github.catvod.crawler.SpiderApi { *; }
+-keep class com.github.catvod.crawler.SpiderNull { *; }
+-keep class com.github.catvod.crawler.SpiderDebug { *; }
 
 # Room 实体
 -keep class com.github.tvbox.kt.data.entity.** { *; }

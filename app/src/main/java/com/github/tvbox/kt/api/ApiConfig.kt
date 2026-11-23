@@ -20,7 +20,7 @@ import com.github.tvbox.kt.core.NativeCore
 import com.github.tvbox.kt.core.net.OkHttp
 import com.github.tvbox.kt.core.spider.JarLoader
 import com.github.tvbox.kt.core.spider.JsLoader
-import com.github.tvbox.kt.core.spider.Spider
+import com.github.catvod.crawler.Spider
 import com.github.tvbox.kt.core.spider.python.PyLoader
 import com.github.tvbox.kt.server.ControlManager
 import com.github.tvbox.kt.util.AES
@@ -1165,7 +1165,7 @@ class ApiConfig private constructor() {
             for (channelElement in groupElement.asJsonObject.get("channels").asJsonArray) {
                 val obj = channelElement.asJsonObject
                 val liveChannelItem = LiveChannelItem()
-                liveChannelItem.setChannelName(obj.get("name").asString.trim())
+                liveChannelItem.setChannelName(DefaultConfig.safeJsonString(obj, "name", "").trim())
                 liveChannelItem.setChannelLogo(DefaultConfig.safeJsonString(obj, "logo", ""))
                 liveChannelItem.setChannelEpg(DefaultConfig.safeJsonString(obj, "epg", ""))
                 liveChannelItem.setChannelUa(DefaultConfig.safeJsonString(obj, "ua", ""))

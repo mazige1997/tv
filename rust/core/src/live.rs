@@ -451,7 +451,8 @@ pub fn parse_to_json(text: &str) -> String {
 }
 
 fn parse_to_array(text: &str) -> Vec<Value> {
-    let text = text.trim();
+    // 与原版 Kotlin 的 isLiveJsonContent 对齐:去掉 UTF-8 BOM 后再判断形态
+    let text = text.trim().trim_start_matches('\u{FEFF}').trim();
     if text.is_empty() {
         return Vec::new();
     }
@@ -552,6 +553,14 @@ mod tests {
     #[test]
     fn json_input_normalized() {
         let src = r#"[{"name":"卫视","channel":[{"name":"东方卫视","urls":["http://a.com/dt.m3u8"]}]}]"#;
+        let v: Value = serde_json::from_str(&parse_to_json(src)).unwrap();
+        assert_eq!(v[0]["group"], "卫视");
+        assert_eq!(v[0]["channels"][0]["urls"][0], "http://a.com/dt.m3u8");
+    }
+
+    #[test]
+    fn json_input_with_bom_normalized() {
+        let src = "\u{FEFF}[{\"name\":\"卫视\",\"channel\":[{\"name\":\"东方卫视\",\"urls\":[\"http://a.com/dt.m3u8\"]}]}]";
         let v: Value = serde_json::from_str(&parse_to_json(src)).unwrap();
         assert_eq!(v[0]["group"], "卫视");
         assert_eq!(v[0]["channels"][0]["urls"][0], "http://a.com/dt.m3u8");

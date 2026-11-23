@@ -1,7 +1,7 @@
 package com.github.tvbox.kt.util.parser
 
 import android.util.Base64
-import com.github.tvbox.kt.core.spider.SpiderDebug
+import com.github.catvod.crawler.SpiderDebug
 import com.github.tvbox.kt.util.LOG
 import org.json.JSONArray
 import org.json.JSONObject

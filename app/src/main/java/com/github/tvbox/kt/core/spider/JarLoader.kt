@@ -1,5 +1,8 @@
 package com.github.tvbox.kt.core.spider
 
+import com.github.catvod.crawler.Spider
+import com.github.catvod.crawler.SpiderApi
+import com.github.catvod.crawler.SpiderNull
 import android.content.Context
 import android.os.Environment
 import android.text.TextUtils
