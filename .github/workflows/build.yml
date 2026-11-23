@@ -66,15 +66,25 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: 设置 Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: 安装 NDK / Platform / Build-Tools
+      # 不用 android-actions/setup-android@v3:它会安装已废弃的 tools 包,
+      # 在较新的 cmdline-tools 上报 "Failed to find package 'tools'" 而失败。
+      # ubuntu-latest 镜像已自带 Android SDK,这里直接定位 sdkmanager 并安装所需版本。
+      - name: 配置 Android SDK / NDK
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "ndk;25.2.9519653" \
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 3 -type f -name sdkmanager | head -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::未找到 sdkmanager,请检查 runner 的 Android SDK 环境"
+            exit 1
+          fi
+          echo "使用 sdkmanager: $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" \
             "platforms;android-34" \
-            "build-tools;34.0.0" > /dev/null
+            "build-tools;34.0.0" \
+            "ndk;25.2.9519653" > /dev/null
 
       - name: 安装 Rust 及 Android 交叉编译目标
         uses: dtolnay/rust-toolchain@stable
