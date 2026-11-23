@@ -1,0 +1,14 @@
+[package]
+name = "tvbox-jni"
+description = "tvbox-core 的 JNI 桥接层,产物为 libtvbox_core.so"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[lib]
+name = "tvbox_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+tvbox-core = { path = "../core" }
+jni = "0.21"

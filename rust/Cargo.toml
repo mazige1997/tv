@@ -1,0 +1,17 @@
+[workspace]
+members = ["core", "jni"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "2.0.0"
+license = "Apache-2.0"
+
+[profile.release]
+opt-level = 3
+lto = "thin"  # thin-LTO:运行时性能与 full 几乎一致,编译时间仅 1/4(三 ABI 6min vs 20min+)
+codegen-units = 1
+# 必须保持 unwind:JNI 层每个入口都依赖 catch_unwind 做 panic→null 降级,
+# panic="abort" 会使 catch_unwind 失效并直接崩溃进程,严禁改成 abort
+panic = "unwind"
+strip = true

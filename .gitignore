@@ -1,0 +1,22 @@
+# Gradle / Android 构建缓存与产物
+.gradle/
+**/build/
+local.properties
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Rust 构建产物
+rust/target/
+
+# IDE / 本机工具
+.idea/
+.vscode/
+*.iml
+.workbuddy/
+
+# 日志与生成文件
+*.log
+proguardMapping.txt
+.DS_Store
+Thumbs.db

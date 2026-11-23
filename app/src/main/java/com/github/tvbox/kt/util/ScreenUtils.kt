@@ -1,0 +1,42 @@
+package com.github.tvbox.kt.util
+
+import android.app.Activity
+import android.app.UiModeManager
+import android.content.Context
+import android.content.res.Configuration
+import android.telephony.TelephonyManager
+import android.util.DisplayMetrics
+import android.view.WindowManager
+
+/**
+ * 屏幕工具(电视设备识别),Kotlin 移植(与旧版 ScreenUtils 一致)。
+ */
+object ScreenUtils {
+
+    fun getSqrt(activity: Activity): Double {
+        val wm = activity.windowManager
+        val dm = DisplayMetrics()
+        wm.defaultDisplay.getMetrics(dm)
+        val x = Math.pow((dm.widthPixels / dm.xdpi).toDouble(), 2.0)
+        val y = Math.pow((dm.heightPixels / dm.ydpi).toDouble(), 2.0)
+        // 屏幕尺寸
+        return Math.sqrt(x + y)
+    }
+
+    private fun checkScreenLayoutIsTv(context: Context): Boolean {
+        return (context.resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >
+            Configuration.SCREENLAYOUT_SIZE_LARGE
+    }
+
+    private fun checkIsPhone(context: Context): Boolean {
+        val telephonyManager =
+            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        return telephonyManager.phoneType != TelephonyManager.PHONE_TYPE_NONE
+    }
+
+    fun isTv(context: Context): Boolean {
+        val uiModeManager = context.getSystemService(Context.UI_MODE_SERVICE) as UiModeManager
+        return uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION ||
+            (checkScreenLayoutIsTv(context) && !checkIsPhone(context))
+    }
+}

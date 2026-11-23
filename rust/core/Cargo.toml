@@ -1,0 +1,19 @@
+[package]
+name = "tvbox-core"
+description = "TVBox Kotlin 电视版的 Rust 原生核心:配置解码 / 直播源解析 / 哈希与加密 / URL 工具"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde_json = { version = "1.0", features = ["preserve_order"] }
+regex = "1.11"
+url = "2.5"
+
+
+
+
+
+
+
+[dev-dependencies]
