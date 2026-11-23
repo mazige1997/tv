@@ -7,18 +7,39 @@ import okhttp3.Dns
 import okhttp3.OkHttpClient
 
 /**
- * 爬虫基类,Kotlin 移植(与旧版 com.github.catvod.crawler.Spider 一致)。
- * jar 爬虫(DexClassLoader 内的实现)继承此类,接口签名不可改动。
+ * 爬虫基类 — 必须与旧版 com.github.catvod.crawler.Spider 的 JVM ABI 完全一致。
+ *
+ * 第三方爬虫 jar 由 DexClassLoader 加载，其代码在编译期按原版签名生成字节码：
+ * - 静态读取 Spider.empty / Spider.mContext
+ * - 静态调用 Spider.client() / Spider.safeDns()
+ * 因此这些成员必须生成真正的 JVM 静态字段/方法（@JvmField / @JvmStatic），
+ * 否则 jar 运行时抛 NoSuchFieldError / NoSuchMethodError，表现为分类/详情/直播全部无数据。
  */
 open class Spider {
 
-    var empty: JSONObject = JSONObject()
+    companion object {
+        /** public static JSONObject empty — 原版行18 */
+        @JvmField
+        var empty: JSONObject = JSONObject()
 
+        /** protected static Context mContext — 原版行21。用 @JvmField 生成静态字段 */
+        @JvmField
+        var mContext: Context? = null
+
+        /** public static Dns safeDns() — 原版行129 */
+        @JvmStatic
+        fun safeDns(): Dns = OkHttp.dns()
+
+        /** public static OkHttpClient client() — 原版行133 */
+        @JvmStatic
+        fun client(): OkHttpClient = OkHttp.client()
+    }
+
+    /** public String siteKey — 实例字段,原版行19 */
     @JvmField
     var siteKey: String? = null
 
-    protected var mContext: Context? = null
-
+    /** init(Context): mContext = context — 原版行23 */
     open fun init(context: Context?) {
         mContext = context
     }
@@ -59,10 +80,6 @@ open class Spider {
 
     /** 直播 list */
     open fun liveContent(url: String?): String = ""
-
-    fun safeDns(): Dns = OkHttp.dns()
-
-    fun client(): OkHttpClient = OkHttp.client()
 
     /** 取消请求 tag */
     open fun cancelByTag() {}

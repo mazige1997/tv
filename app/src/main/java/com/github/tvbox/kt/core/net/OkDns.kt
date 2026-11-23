@@ -22,6 +22,11 @@ class OkDns : Dns {
         }
     }
 
+    /** 与原版 com.github.catvod.net.OkDns.clear() 对齐,兼容 catvod.net.OkDns 委托层 */
+    fun clear() {
+        hosts.clear()
+    }
+
     private fun get(hostname: String): String {
         val target = hosts[hostname]
         if (target != null) return target
