@@ -774,7 +774,11 @@ class SourceViewModel : ViewModel() {
             detailResult.postValue(createPushDetail(urlid, sourceKey))
             return
         }
-        val type = sourceBean?.type ?: return
+        val type = sourceBean?.type ?: run {
+            // 站点未加载时显式投递空结果,避免详情页永远停在 loading
+            detailResult.postValue(AbsXml())
+            return
+        }
         if (type == 3) {
             spThreadPool.execute {
                 val executor = Executors.newSingleThreadExecutor()
@@ -1081,7 +1085,11 @@ class SourceViewModel : ViewModel() {
             postPlayResult(requestSeq, createPushPlayResult(url, pushUrl, progressKey, subtitleKey, playFlag))
             return
         }
-        val type = sourceBean?.type ?: return
+        val type = sourceBean?.type ?: run {
+            // 站点未加载时显式投递空结果,避免播放页一直等待解析超时
+            postPlayResult(requestSeq, null)
+            return
+        }
         if (type == 3) {
             spThreadPool.execute {
                 val executor = Executors.newSingleThreadExecutor()

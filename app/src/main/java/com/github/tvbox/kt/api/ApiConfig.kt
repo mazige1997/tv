@@ -126,10 +126,16 @@ class ApiConfig private constructor() {
         fun FindResult(json0: String, configKey: String?): String {
             var json = json0
             return try {
-                // Rust 优先
+                // Rust 快路径:只有产出合法 JSON 才采用。
+                // 空串 / 原文 / 解密乱码 / panic 返回 null 时一律回落到下方与原版
+                // ApiConfig.java#FindResult 一致的纯 Kotlin 分支,避免整份配置解析失败。
                 if (NativeCore.available) {
-                    val decoded = NativeCore.decodeConfig(json, configKey)
-                    if (decoded != null) return decoded
+                    val decoded = try {
+                        NativeCore.decodeConfig(json, configKey)
+                    } catch (_: Throwable) {
+                        null
+                    }
+                    if (!decoded.isNullOrEmpty() && AES.isJson(decoded)) return decoded
                 }
                 var content = json
                 if (AES.isJson(content)) return content

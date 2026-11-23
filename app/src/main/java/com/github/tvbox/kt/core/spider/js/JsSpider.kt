@@ -145,6 +145,9 @@ constructor(private val key: String, private val api: String, private val dex: C
         if (!destroyed.get()) executor.submit(runnable)
     }
 
+    /** JS 模块是否成功初始化。false 时调用 call() 只会返回 null,宿主不应缓存该实例。 */
+    fun isReady(): Boolean = !destroyed.get() && jsObject != null
+
     private fun <T> submit(callable: Callable<T>): Future<T> {
         return executor.submit(callable)
     }

@@ -159,18 +159,22 @@
   @com.google.gson.annotations.SerializedName <fields>;
 }
 # Gson 通过字段名反序列化源站首页分类和影片列表。
--keepclassmembers class com.github.tvbox.osc.bean.AbsJson {
+-keepclassmembers class com.github.tvbox.kt.bean.AbsJson {
   <fields>;
 }
--keepclassmembers class com.github.tvbox.osc.bean.AbsJson$* {
+-keepclassmembers class com.github.tvbox.kt.bean.AbsJson$* {
   <fields>;
 }
--keepclassmembers class com.github.tvbox.osc.bean.AbsSortJson {
+-keepclassmembers class com.github.tvbox.kt.bean.AbsSortJson {
   <fields>;
 }
--keepclassmembers class com.github.tvbox.osc.bean.AbsSortJson$* {
+-keepclassmembers class com.github.tvbox.kt.bean.AbsSortJson$* {
   <fields>;
 }
+# 配置解析 / 结果投递链路涉及反射与跨线程回调,整包保留避免 R8 full mode 改写成员
+-keep class com.github.tvbox.kt.api.** { *; }
+-keep class com.github.tvbox.kt.viewmodel.** { *; }
+-keep class com.github.tvbox.kt.core.spider.** { *; }
 -keep,allowobfuscation,allowoptimization class * extends com.google.gson.reflect.TypeToken
 #xstream
 -keep class com.thoughtworks.xstream.converters.extended.SubjectConverter { *; }

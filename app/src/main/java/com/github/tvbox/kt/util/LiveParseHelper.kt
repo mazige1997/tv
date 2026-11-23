@@ -18,8 +18,10 @@ object LiveParseHelper {
                 val json = NativeCore.parseLive(text ?: "")
                 if (!json.isNullOrEmpty()) {
                     val array = JsonParser.parseString(json).asJsonArray
-                    // Rust 解析失败时可能返回 "[]",此时必须回退,否则直播列表被清空
-                    if (array.size() > 0) return array
+                    // Rust 解析失败时可能返回 "[]",此时必须回退,否则直播列表被清空。
+                    // 即使非空,也要和 TxtSubscribe 一样规范化成 {group, channels:[...]},
+                    // 否则 ApiConfig.loadLives 取 "group"/"channels" 会 NPE 或得到空列表。
+                    if (array.size() > 0) return TxtSubscribe.normalizeJsonArray(array)
                 }
             }
             TxtSubscribe.parseToJsonArray(text)

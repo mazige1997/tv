@@ -7,7 +7,6 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
-import java.net.MalformedURLException
 import java.net.URL
 import java.util.ArrayList
 import java.util.Arrays
@@ -37,18 +36,24 @@ object HtmlParser {
         if (StringUtils.isEmpty(parent)) {
             return child ?: ""
         }
-        var q = parent
+        val base: String = parent ?: return child ?: ""
+        var q = base
         try {
-            // 优先使用 Rust 实现(与 java.net.URL 语义一致);失败回退 JDK
+            // 主路径与原版 HtmlParser.java 完全一致:java.net.URL。
+            // csp 爬虫的 pdfh/pdfa 会把所有相对链接交给这里,任何返回值差异
+            // 都会让分类 / 详情 / 播放地址整体失效,因此不把 Rust 结果作为主路径。
+            q = URL(URL(base), child).toExternalForm()
+        } catch (e: Throwable) {
+            // JDK 解析失败时再尝试 Rust,并严格校验返回值,防止 null / 空串污染链接
             if (NativeCore.available) {
-                return NativeCore.joinUrl(parent!!, child ?: "")
+                try {
+                    val joined = NativeCore.joinUrl(base, child ?: "")
+                    if (!joined.isNullOrEmpty()) q = joined
+                } catch (_: Throwable) {
+                }
             }
-            val url = URL(URL(parent), child)
-            q = url.toExternalForm()
-        } catch (e: MalformedURLException) {
-            e.printStackTrace()
         }
-        return q ?: ""
+        return q
     }
 
     class Painfo {

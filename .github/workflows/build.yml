@@ -108,6 +108,20 @@ jobs:
       - name: 编译 Rust 核心并打包 Release APK
         run: ./gradlew assembleTvRelease --no-daemon --stacktrace
 
+      # buildRustCore 在缺少 cargo/NDK 时会静默跳过,产物里就没有 .so。
+      # 这里显式列出 APK 内的 native 库,便于判断运行时究竟走 Rust 快路径还是 Kotlin 回退。
+      - name: 校验 APK 内的 native 库
+        run: |
+          APK=$(ls app/build/outputs/apk/tv/release/*.apk | head -n 1)
+          echo "APK: $APK"
+          echo "--- jniLibs ---"
+          unzip -l "$APK" | grep -E "lib/[^/]+/.*\.so" | awk '{print $4}' | sort || true
+          if unzip -l "$APK" | grep -q "libtvbox_core.so"; then
+            echo "libtvbox_core.so: PRESENT (NativeCore 快路径生效)"
+          else
+            echo "::warning::libtvbox_core.so MISSING — NativeCore 将全部走 Kotlin 回退"
+          fi
+
       - name: 解析 Release 标签
         id: tag
         env:

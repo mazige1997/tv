@@ -55,7 +55,8 @@ object TxtSubscribe {
         return parseTxtToJsonArray(trimmed)
     }
 
-    private fun normalizeJsonArray(groups: JsonArray): JsonArray {
+    /** 统一规范化为 {group, channels:[{name, urls, ...}]} 结构,供 Rust / JSON / M3U 各解析入口复用。 */
+    fun normalizeJsonArray(groups: JsonArray): JsonArray {
         val result = JsonArray()
         for (groupElement in groups) {
             val groupObj = groupElement.asJsonObject

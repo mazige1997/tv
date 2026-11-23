@@ -1,13 +1,16 @@
 package com.github.tvbox.kt.util
 
-import com.github.tvbox.kt.core.NativeCore
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
  * AES 工具,Kotlin 移植(行为与旧版 AES.java 一致)。
- * 配置解码优先走 Rust(NativeCore.aesDecryptHex),失败回退 javax.crypto。
+ *
+ * 注意:这里刻意不走 Rust 快路径。AES 解密结果没有可校验的结构(Rust 实现一旦
+ * 与原版 PKCS7/IV 处理有偏差会静默产出乱码),而它又是 FindResult 纯 Kotlin
+ * 回退分支的最后一环;若快路径返回乱码,即使上层校验了 decodeConfig 的结果,
+ * 仍会被绕过并导致整份配置解析失败。该调用只在加载配置时发生几次,无性能需求。
  */
 object AES {
 
@@ -29,9 +32,6 @@ object AES {
     fun ECB(data: String, key: String): String? {
         return try {
             val padded = rightPadding(key, "0", 16)
-            if (NativeCore.available) {
-                NativeCore.aesDecryptHex(data, padded, null, false)?.let { return it }
-            }
             val data2 = toBytes(data)
             val keySpec = SecretKeySpec(padded.toByteArray(), "AES")
             val cipher = Cipher.getInstance("AES/ECB/PKCS7Padding")
@@ -46,9 +46,6 @@ object AES {
     /** AES/CBC/PKCS7 解密,data 为 hex 串;失败返回 null。 */
     fun CBC(data: String, key: String, iv: String): String? {
         return try {
-            if (NativeCore.available) {
-                NativeCore.aesDecryptHex(data, key, iv, true)?.let { return it }
-            }
             val cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
             val keySpec = SecretKeySpec(key.toByteArray(), "AES")
             val paramSpec = IvParameterSpec(iv.toByteArray())

@@ -160,6 +160,16 @@ class JsLoader {
             val sp = JsSpider(key, api, classLoader)
             sp.siteKey = key
             sp.init(KtApp.instance(), ext)
+            if (!sp.isReady()) {
+                // 模块加载/编译失败时不要写入 spiders 缓存,否则坏实例会被永久复用,
+                // 全站分类/详情/播放地址持续为空且无法自愈(与原版 JsLoader 语义一致)。
+                LOG.i("echo-getSpider init failed, skip cache: $key")
+                try {
+                    sp.destroy()
+                } catch (_: Throwable) {
+                }
+                return SpiderNull()
+            }
             spiders[key] = sp
             return sp
         } catch (th: Throwable) {

@@ -58,8 +58,9 @@ class VodInfo : Serializable {
                     for (infoBean in urlInfo.beanList!!) {
                         seriesList.add(VodSeries(infoBean.name, infoBean.url))
                     }
-                    tempSeriesMap[urlInfo.flag!!] = seriesList
-                    flags.add(VodSeriesFlag(urlInfo.flag))
+                    val flagName = urlInfo.flag ?: ""
+                    tempSeriesMap[flagName] = seriesList
+                    flags.add(VodSeriesFlag(flagName))
                 }
             }
             seriesMap = LinkedHashMap()
@@ -68,7 +69,7 @@ class VodInfo : Serializable {
                 if (flags.size <= 5) {
                     if (isReverse(list)) Collections.reverse(list)
                 }
-                seriesMap!![flag.name!!] = list
+                seriesMap!![flag.name ?: ""] = list
             }
         }
     }

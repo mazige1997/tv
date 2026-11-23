@@ -24,7 +24,10 @@ object MD5 {
     fun encode(res: String): String {
         if (NativeCore.available) {
             try {
-                return NativeCore.md5Hex(res)
+                // JNI 在 panic/异常时返回 null,而 external 声明为非空 String;
+                // Kotlin 不插空检查,必须显式兜底,否则 null 会作为结果直接返回。
+                val hashed = NativeCore.md5Hex(res)
+                if (!hashed.isNullOrEmpty()) return hashed
             } catch (_: Throwable) {
             }
         }
