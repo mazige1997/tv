@@ -46,12 +46,17 @@
 1. `rust-test`:运行 `cargo test -p tvbox-core --release --locked`,测试通过才继续编译。
 2. `build-release`:配置 JDK 17 + Android SDK/NDK 25 + Rust 三个 Android target →
    执行 `./gradlew assembleTvRelease` → 上传构建产物(Artifact)。
-3. 发布方式:
-   - 推送 `v*` 标签(如 `git tag v2.0.1 && git push origin v2.0.1`)→ 自动创建 GitHub Release,
-     并上传 Release APK 与 `mapping.txt`。
-   - 在 Actions 页面手动触发 `workflow_dispatch` → 同样创建 Release;
-     可填写 `release_tag`,留空则使用 `v<run number>`。
-   - 普通分支 push / PR 只跑编译、上传 Artifact,不会创建 Release。
+3. 发布:每次构建成功后都会通过 `softprops/action-gh-release@v2` 创建或更新 GitHub Release,
+   并上传已签名的 Release APK 与 `mapping.txt`(重复上传会覆盖同名文件)。
+   - 推送 `v*` 标签(如 `v2.0.1`)→ 用该标签作为 Release tag,正式发布。
+   - 手动触发 / 普通分支 push → 使用 `inputs.release_tag` 或 `v<run number>` 作为 tag,
+     并自动标记为 prerelease。
+
+### 签名
+
+Release 使用随仓库提交的公开签名 `app/tvbox-release.jks`(alias `tvbox`,store/key 密码均为 `tvbox123`),
+仅用于社区构建、方便覆盖安装;**不要用于任何承载敏感数据的自有应用**。
+签名配置写在 `app/build.gradle.kts` 的 `signingConfigs.release`,CI 无需任何 secret。
 
 发布 Release 需要仓库具备 `contents: write` 权限(工作流已声明)。
 

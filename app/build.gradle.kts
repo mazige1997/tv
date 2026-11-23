@@ -104,6 +104,16 @@ android {
         }
     }
 
+    // 公开签名:keystore 与密码随仓库提交,仅用于 TVBox 社区构建,勿用于个人敏感应用
+    signingConfigs {
+        create("release") {
+            storeFile = file("tvbox-release.jks")
+            storePassword = "tvbox123"
+            keyAlias = "tvbox"
+            keyPassword = "tvbox123"
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -111,6 +121,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

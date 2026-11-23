@@ -8,6 +8,8 @@
 # 二进制资源不换行
 *.jar binary
 *.aar binary
+*.jks binary
+*.keystore binary
 *.so binary
 *.dll binary
 *.dll.a binary
