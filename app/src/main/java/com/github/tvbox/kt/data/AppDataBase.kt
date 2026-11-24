@@ -10,7 +10,7 @@ import com.github.tvbox.kt.cache.VodRecord
 import com.github.tvbox.kt.cache.VodRecordDao
 
 /** Room 数据库,Kotlin 移植(与旧版 AppDataBase schema 一致,版本 1)。 */
-@Database(entities = [Cache::class, VodRecord::class, VodCollect::class], version = 1)
+@Database(entities = [Cache::class, VodRecord::class, VodCollect::class], version = 1, exportSchema = false)
 abstract class AppDataBase : RoomDatabase() {
     abstract fun getCacheDao(): CacheDao
 

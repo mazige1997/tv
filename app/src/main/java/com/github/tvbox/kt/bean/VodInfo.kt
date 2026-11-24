@@ -2,7 +2,6 @@ package com.github.tvbox.kt.bean
 
 import com.github.tvbox.kt.util.RegexUtils
 import java.io.Serializable
-import java.util.Collections
 import java.util.LinkedHashMap
 
 /**
@@ -24,7 +23,7 @@ class VodInfo : Serializable {
     var actor: String? = null // 演员
     var director: String? = null // 导演
     var seriesFlags: ArrayList<VodSeriesFlag>? = null
-    var seriesMap: LinkedHashMap<String, List<VodSeries>>? = null
+    var seriesMap: LinkedHashMap<String, MutableList<VodSeries>>? = null
     var des: String? = null
     var playFlag: String? = null
     var playIndex: Int = 0
@@ -50,7 +49,7 @@ class VodInfo : Serializable {
         des = video.des
         val infoList = video.urlBean?.infoList
         if (!infoList.isNullOrEmpty()) {
-            val tempSeriesMap = LinkedHashMap<String, List<VodSeries>>()
+            val tempSeriesMap = LinkedHashMap<String, MutableList<VodSeries>>()
             val flags = ArrayList<VodSeriesFlag>()
             for (urlInfo in infoList) {
                 if (!urlInfo.beanList.isNullOrEmpty()) {
@@ -68,9 +67,9 @@ class VodInfo : Serializable {
             seriesFlags = flags
             seriesMap = LinkedHashMap()
             for (flag in flags) {
-                val list: List<VodSeries> = tempSeriesMap[flag.name] ?: continue
+                val list: MutableList<VodSeries> = tempSeriesMap[flag.name] ?: continue
                 if (flags.size <= 5) {
-                    if (isReverse(list)) Collections.reverse(list)
+                    if (isReverse(list)) list.reverse()
                 }
                 seriesMap!![flag.name ?: ""] = list
             }
@@ -108,7 +107,8 @@ class VodInfo : Serializable {
     fun reverse() {
         val flags = seriesMap?.keys ?: return
         for (flag in flags) {
-            Collections.reverse(seriesMap!![flag])
+            val list = seriesMap!![flag] ?: continue
+            list.reverse()
         }
     }
 
