@@ -62,6 +62,35 @@ class KtApp : Application() {
                 th.printStackTrace()
             }
         }.apply { isDaemon = true; name = "clean-player-cache"; start() }
+        startCacheDiagTimer()
+    }
+
+    /**
+     * 边下边播缓存自动快照:app 运行期间每 15 秒统计一次 exo-video-cache,
+     * 仅在统计结果变化且日志落盘开启时写入,避免刷屏。这样无需打开「诊断日志」
+     * 对话框,直接复制播放日志即可看到 files/size 随播放增长,确认缓存确实落盘。
+     * 完全独立于播放链路,只读取缓存目录,不影响播放。
+     */
+    private var lastCacheSummary: String? = null
+    private val cacheDiagHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val cacheDiagRunnable = object : Runnable {
+        override fun run() {
+            try {
+                if (LOG.diskEnabled) {
+                    val summary = FileUtils.exoCacheSummary()
+                    if (summary != lastCacheSummary) {
+                        lastCacheSummary = summary
+                        LOG.i("DIAG exo_cache_auto $summary")
+                    }
+                }
+            } catch (_: Throwable) {
+            }
+            cacheDiagHandler.postDelayed(this, 15_000L)
+        }
+    }
+
+    private fun startCacheDiagTimer() {
+        cacheDiagHandler.postDelayed(cacheDiagRunnable, 15_000L)
     }
 
     /**
