@@ -78,9 +78,10 @@ class KtApp : Application() {
             try {
                 if (LOG.diskEnabled) {
                     val summary = FileUtils.exoCacheSummary()
-                    val helper = xyz.doikki.videoplayer.exo.ExoMediaSourceHelper
+                    // 注意:Java 类在 Kotlin 里不能作为值引用(无 companion object),
+                    // 必须用全限定类名直接访问其静态字段。
                     val evt = try {
-                        helper.sCacheEvent
+                        xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheEvent
                     } catch (_: Throwable) {
                         "?"
                     }
@@ -90,10 +91,10 @@ class KtApp : Application() {
                     //   writes>0          -> 落盘正常,只是统计口径问题;
                     //   writes=0 err!=none -> 写入抛异常,err 即根因;
                     //   opens=0           -> HLS 请求压根没经过 CacheDataSource。
-                    val writes = try { helper.sCacheWriteBytes.get() } catch (_: Throwable) { -1L }
-                    val wcalls = try { helper.sCacheWriteCalls.get() } catch (_: Throwable) { -1L }
-                    val opens = try { helper.sCacheOpenCalls.get() } catch (_: Throwable) { -1L }
-                    val werr = try { helper.sCacheWriteError } catch (_: Throwable) { "?" }
+                    val writes = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteBytes.get() } catch (_: Throwable) { -1L }
+                    val wcalls = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteCalls.get() } catch (_: Throwable) { -1L }
+                    val opens = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheOpenCalls.get() } catch (_: Throwable) { -1L }
+                    val werr = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteError } catch (_: Throwable) { "?" }
                     val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr"
                     if (line != lastCacheSummary) {
                         lastCacheSummary = line
