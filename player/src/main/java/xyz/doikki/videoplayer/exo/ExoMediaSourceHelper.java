@@ -34,6 +34,17 @@ public final class ExoMediaSourceHelper {
     private OkHttpDataSource.Factory mHttpDataSourceFactory;
     private Cache mCache;
     private OkHttpClient mClient;
+    // 边下边播:由上层(ExoPlayer.kt)根据设置项在每次 setDataSource 前设置,
+    // 开启后 http(s) 媒体走 CacheDataSource(本地 SimpleCache,LRU 512M),实现边下边播。
+    private volatile boolean mCacheEnabled;
+
+    public boolean isCacheEnabled() {
+        return mCacheEnabled;
+    }
+
+    public void setCacheEnabled(boolean cacheEnabled) {
+        mCacheEnabled = cacheEnabled;
+    }
 
     private ExoMediaSourceHelper(Context context) {
         mAppContext = context.getApplicationContext();
@@ -72,7 +83,8 @@ public final class ExoMediaSourceHelper {
     }
 
     public MediaSource getHlsMediaSource(String uri, Map<String, String> headers) {
-        return getMediaSource(uri, headers, false, C.TYPE_HLS);
+        // 与 setDataSource 保持一致:边下边播开启时,解析失败重试 HLS 的路径同样走缓存
+        return getMediaSource(uri, headers, mCacheEnabled, C.TYPE_HLS);
     }
 
     private MediaSource getMediaSource(String uri, Map<String, String> headers, boolean isCache, int contentType) {

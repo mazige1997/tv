@@ -46,6 +46,8 @@ object HawkConfig {
     const val NOW_DATE = "now_date"
     const val REMOTE_TVBOX = "remote_tvbox_host"
     const val IJK_CACHE_PLAY = "ijk_cache_play"
+    const val PLAY_CACHE = "play_cache" // EXO 边下边播
+    const val LOG_DISK = "log_disk" // 诊断日志落盘开关(默认开)
     const val PLAYER_IS_LIVE = "player_is_live"
     const val DOH_JSON = "doh_json"
     const val LIVE_GROUP_INDEX = "live_group_index"

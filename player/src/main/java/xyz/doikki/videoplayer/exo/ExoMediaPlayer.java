@@ -108,7 +108,7 @@ public class ExoMediaPlayer extends AbstractPlayer implements Player.Listener {
         currentPlayPath = path;
         currentHeaders = copyHeaders(headers);
         mRetriedAsHls = false;
-        mMediaSource = mMediaSourceHelper.getMediaSource(path, copyHeaders(currentHeaders));
+        mMediaSource = mMediaSourceHelper.getMediaSource(path, copyHeaders(currentHeaders), mMediaSourceHelper.isCacheEnabled());
     }
 
     @Override

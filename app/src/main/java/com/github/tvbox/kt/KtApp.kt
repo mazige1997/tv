@@ -114,6 +114,7 @@ class KtApp : Application() {
             LOG.i("DIAG version=$ver sdk=${Build.VERSION.SDK_INT} abi=${Build.SUPPORTED_ABIS.joinToString(",")} native=${NativeCore.available}")
             LOG.i("DIAG api_url_set=${apiUrl.isNotEmpty()} len=${apiUrl.length} prefix=${apiUrl.take(20)}")
             LOG.i("DIAG log_file=${LOG.diagPath()}")
+            LOG.i("DIAG log_disk=${if (LOG.diskEnabled) "on" else "off"} play_cache=${if (Hawk.get(HawkConfig.PLAY_CACHE, false)) "on" else "off"}")
         } catch (th: Throwable) {
             LOG.e("DIAG snapshot failed: ${th.message}")
         }
@@ -121,6 +122,7 @@ class KtApp : Application() {
 
     private fun initParams() {
         Hawk.init(this).build()
+        LOG.diskEnabled = Hawk.get(HawkConfig.LOG_DISK, true)
         Hawk.put(HawkConfig.DEBUG_OPEN, false)
         Hawk.put(HawkConfig.PLAYER_IS_LIVE, false)
         if (!Hawk.contains(HawkConfig.PLAY_TYPE)) {

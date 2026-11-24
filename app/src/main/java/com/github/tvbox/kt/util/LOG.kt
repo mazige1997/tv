@@ -26,6 +26,14 @@ object LOG {
     @Volatile
     private var target: File? = null
 
+    /**
+     * 日志落盘开关(默认开):关闭后仅输出到 logcat,不创建/写入诊断文件。
+     * 由设置页「日志落盘」控制,启动时从 Hawk 恢复。
+     */
+    @Volatile
+    @JvmStatic
+    var diskEnabled: Boolean = true
+
     /** 优先 Download 目录(文件管理器可见),失败回退 app 外部私有目录;均不可写时返回 null。 */
     private fun diagFile(): File? {
         target?.let { return it }
@@ -70,6 +78,7 @@ object LOG {
     }
 
     private fun write(level: String, msg: String) {
+        if (!diskEnabled) return
         try {
             val f = diagFile() ?: return
             synchronized(lock) {
@@ -79,10 +88,10 @@ object LOG {
         }
     }
 
-    /** 诊断日志文件的实际路径,供启动快照写入。 */
+    /** 诊断日志文件的实际路径,供启动快照写入。落盘关闭时不触发文件创建。 */
     @JvmStatic
     fun diagPath(): String = try {
-        diagFile()?.absolutePath ?: "(诊断日志不可写)"
+        if (!diskEnabled) "(日志落盘已关闭)" else diagFile()?.absolutePath ?: "(诊断日志不可写)"
     } catch (_: Throwable) {
         "(诊断日志不可写)"
     }
@@ -90,12 +99,16 @@ object LOG {
     /** 读取诊断日志全文,供设置页查看 / 复制 / 分享。 */
     @JvmStatic
     fun readDiag(): String = try {
-        val f = diagFile()
-        if (f == null) {
-            "(暂无诊断日志)"
+        if (!diskEnabled) {
+            "(日志落盘已关闭,可在设置中打开)"
         } else {
-            synchronized(lock) {
-                if (f.exists()) f.readText() else "(暂无诊断日志)"
+            val f = diagFile()
+            if (f == null) {
+                "(暂无诊断日志)"
+            } else {
+                synchronized(lock) {
+                    if (f.exists()) f.readText() else "(暂无诊断日志)"
+                }
             }
         }
     } catch (th: Throwable) {

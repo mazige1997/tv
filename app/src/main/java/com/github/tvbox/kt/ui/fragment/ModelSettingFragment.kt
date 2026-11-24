@@ -87,6 +87,8 @@ class ModelSettingFragment : BaseLazyFragment() {
     private var tvAutoSwitchLineText: TextView? = null
     private var tvRecStyleText: TextView? = null
     private var tvIjkCachePlay: TextView? = null
+    private var tvPlayCache: TextView? = null
+    private var tvLogDisk: TextView? = null
     private var tvHomeDefaultShow: TextView? = null
     private var apiDialog: ApiDialog? = null
     private var selectLocalLive = false
@@ -133,6 +135,10 @@ class ModelSettingFragment : BaseLazyFragment() {
         tvHistoryMerge = findViewById(R.id.tvHistoryMerge)
         tvSearchView = findViewById(R.id.tvSearchView)
         tvIjkCachePlay = findViewById(R.id.tvIjkCachePlay)
+        tvPlayCache = findViewById(R.id.tvPlayCache)
+        tvPlayCache!!.text = if (Hawk.get(HawkConfig.PLAY_CACHE, false)) "开启" else "关闭"
+        tvLogDisk = findViewById(R.id.tvLogDisk)
+        tvLogDisk!!.text = if (Hawk.get(HawkConfig.LOG_DISK, true)) "开启" else "关闭"
         tvMediaCodec!!.text = Hawk.get(HawkConfig.IJK_CODEC, "硬解码")
         tvDebugOpen!!.text = if (Hawk.get(HawkConfig.DEBUG_OPEN, false)) "已打开" else "已关闭"
         tvParseWebView!!.text = if (Hawk.get(HawkConfig.PARSE_WEBVIEW, true)) "系统自带" else "XWalkView"
@@ -670,6 +676,8 @@ class ModelSettingFragment : BaseLazyFragment() {
         }
 
         findViewById<View>(R.id.llIjkCachePlay)!!.setOnClickListener { v -> onClickIjkCachePlay(v) }
+        findViewById<View>(R.id.llPlayCache)!!.setOnClickListener { v -> onClickPlayCache(v) }
+        findViewById<View>(R.id.llLogDisk)!!.setOnClickListener { v -> onClickLogDisk(v) }
         findViewById<View>(R.id.llClearCache)!!.setOnClickListener { v -> onClickClearCache(v) }
     }
 
@@ -763,6 +771,25 @@ class ModelSettingFragment : BaseLazyFragment() {
         FastClickCheckUtil.check(v)
         Hawk.put(HawkConfig.IJK_CACHE_PLAY, !Hawk.get(HawkConfig.IJK_CACHE_PLAY, false))
         tvIjkCachePlay!!.text = if (Hawk.get(HawkConfig.IJK_CACHE_PLAY, false)) "开启" else "关闭"
+    }
+
+    /** EXO 边下边播:下一次起播生效(媒体源在 setDataSource 时构建)。 */
+    private fun onClickPlayCache(v: View) {
+        FastClickCheckUtil.check(v)
+        val enabled = !Hawk.get(HawkConfig.PLAY_CACHE, false)
+        Hawk.put(HawkConfig.PLAY_CACHE, enabled)
+        tvPlayCache!!.text = if (enabled) "开启" else "关闭"
+        Toast.makeText(mContext, if (enabled) "边下边播已开启,下次播放生效" else "边下边播已关闭", Toast.LENGTH_SHORT).show()
+    }
+
+    /** 诊断日志落盘:立即生效(同时作用于 logcat 之外的文件写入)。 */
+    private fun onClickLogDisk(v: View) {
+        FastClickCheckUtil.check(v)
+        val enabled = !Hawk.get(HawkConfig.LOG_DISK, true)
+        Hawk.put(HawkConfig.LOG_DISK, enabled)
+        LOG.diskEnabled = enabled
+        tvLogDisk!!.text = if (enabled) "开启" else "关闭"
+        LOG.i("DIAG log_disk=${if (enabled) "on" else "off"}")
     }
 
     private fun openLocalConfig(live: Boolean) {

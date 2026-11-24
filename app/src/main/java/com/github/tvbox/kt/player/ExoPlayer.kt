@@ -5,7 +5,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Pair
 import com.github.tvbox.kt.util.AudioTrackMemory
+import com.github.tvbox.kt.util.HawkConfig
 import com.github.tvbox.kt.util.LOG
+import com.orhanobut.hawk.Hawk
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.DefaultRenderersFactory
@@ -135,7 +137,17 @@ class ExoPlayer(context: Context) : ExoMediaPlayer(context) {
     // 每次播放普通 m3u8 都会在 setDataSource 入口抛 NPE,被 PlayFragment 的 observer
     // 误判成「获取播放信息错误」并触发自动换线路。与 IjkMediaPlayer 的覆写保持一致。
     override fun setDataSource(path: String, headers: MutableMap<String, String>?) {
-        LOG.i("DIAG setDataSource headers=${headers?.size ?: -1} path_len=${path.length}")
+        // 边下边播:开关开启且为非直播的 http(s) 地址时,媒体数据经本地 CacheDataSource
+        // 边播边缓存(512M LRU);直播流地址持续变化,缓存无意义且会挤占空间,故不启用。
+        val cacheOn = Hawk.get(HawkConfig.PLAY_CACHE, false)
+            && !Hawk.get(HawkConfig.PLAYER_IS_LIVE, false)
+            && (path.startsWith("http://") || path.startsWith("https://"))
+        try {
+            mMediaSourceHelper.setCacheEnabled(cacheOn)
+        } catch (th: Throwable) {
+            LOG.i("DIAG play_cache_set_error=${th.javaClass.simpleName}")
+        }
+        LOG.i("DIAG setDataSource headers=${headers?.size ?: -1} path_len=${path.length} cache=${if (cacheOn) "on" else "off"}")
         resetBufferingRecovery()
         defaultSubtitleTrackSelected = false
         defaultSubtitleTrackSelectionClosed = false
