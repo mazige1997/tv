@@ -13,15 +13,20 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.rtsp.RtspMediaSource;
+import com.google.android.exoplayer2.upstream.DataSink;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.cache.Cache;
+import com.google.android.exoplayer2.upstream.cache.CacheDataSink;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource;
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import okhttp3.OkHttpClient;
 
@@ -41,6 +46,19 @@ public final class ExoMediaSourceHelper {
     // 缓存诊断事件(供上层写入诊断日志):记录 CacheDataSource 的缓存命中/忽略原因。
     // reason: 0=CACHE_IGNORED_REASON_ERROR, 1=CACHE_IGNORED_REASON_UNSET_LENGTH。
     public static volatile String sCacheEvent = "none";
+
+    // 决定性诊断:直接统计真正写入本地缓存的字节数。
+    // setFlags(0) 后 EventListener 的 onCacheIgnored 不再上报错误、onCachedBytesRead 只在
+    // "命中缓存"时触发,首次播放全是从网络读+写缓存,两个回调都不触发,因此 evt 停在
+    // factory_created 无法判断是否写入。这里在 CacheDataSink 外层包一层,记录每次 open/
+    // write 的真实字节与首个 IOException,snapshot 直接读这些计数即可一锤定音:
+    //   writes>0  -> 数据真的落盘了,问题在统计口径;
+    //   writes=0 且 err!=none -> 写入抛异常被吞,异常类型即根因;
+    //   writes=0 且 opens=0 -> HLS 请求根本没走 CacheDataSource。
+    public static final AtomicLong sCacheWriteCalls = new AtomicLong();
+    public static final AtomicLong sCacheWriteBytes = new AtomicLong();
+    public static final AtomicLong sCacheOpenCalls = new AtomicLong();
+    public static volatile String sCacheWriteError = "none";
 
     public boolean isCacheEnabled() {
         return mCacheEnabled;
@@ -188,9 +206,54 @@ public final class ExoMediaSourceHelper {
 
     private DataSource.Factory getCacheDataSourceFactory() {
         sCacheEvent = "factory_created";
+        // 每次真正创建缓存工厂时重置写入计数,便于观察"本次播放"是否落盘。
+        sCacheWriteCalls.set(0);
+        sCacheWriteBytes.set(0);
+        sCacheOpenCalls.set(0);
+        sCacheWriteError = "none";
         if (mCache == null) {
             mCache = newCache();
         }
+        // 显式提供写 DataSink(经诊断包装)。Factory 默认在 upstream!=null 且非只读时
+        // 会自动用 CacheDataSink,但那样看不到写入异常。这里包一层记录真实字节数/异常,
+        // 让上层日志能直接判断缓存是否在落盘。fragmentSize 用 5MB(ExoPlayer 默认),
+        // 对 HLS 分片足够;超过会滚动到新文件,不影响 LRU 总上限。
+        final Cache cacheRef = mCache;
+        DataSink.Factory writeSinkFactory = new DataSink.Factory() {
+            @Override
+            public DataSink createDataSink() {
+                final DataSink delegate = new CacheDataSink.Factory()
+                        .setCache(cacheRef)
+                        .setFragmentSize(5 * 1024 * 1024)
+                        .createDataSink();
+                return new DataSink() {
+                    @Override
+                    public void open(DataSpec dataSpec) throws IOException {
+                        sCacheOpenCalls.incrementAndGet();
+                        delegate.open(dataSpec);
+                    }
+
+                    @Override
+                    public void write(byte[] buffer, int offset, int length) throws IOException {
+                        try {
+                            delegate.write(buffer, offset, length);
+                            sCacheWriteCalls.incrementAndGet();
+                            sCacheWriteBytes.addAndGet(length);
+                        } catch (IOException e) {
+                            if ("none".equals(sCacheWriteError)) {
+                                sCacheWriteError = e.getClass().getSimpleName() + ": " + e.getMessage();
+                            }
+                            throw e;
+                        }
+                    }
+
+                    @Override
+                    public void close() throws IOException {
+                        delegate.close();
+                    }
+                };
+            }
+        };
         // 关键修复:不要设置 FLAG_IGNORE_CACHE_ON_ERROR。ExoPlayer 2.19 的 CacheDataSource
         // 一旦某次写入遇到 IOException(首个 ts 切片网络抖动/超时即可触发),seenCacheError
         // 会被永久置位,之后所有请求都走 shouldIgnoreCacheForRequest() 返回非 -1,
@@ -198,6 +261,7 @@ public final class ExoMediaSourceHelper {
         // flags 用默认值 0,偶发错误只影响该次请求,不会关闭后续缓存。
         return new CacheDataSource.Factory()
                 .setCache(mCache)
+                .setCacheWriteDataSinkFactory(writeSinkFactory)
                 .setUpstreamDataSourceFactory(getDataSourceFactory())
                 .setFlags(0)
                 .setEventListener(new CacheDataSource.EventListener() {

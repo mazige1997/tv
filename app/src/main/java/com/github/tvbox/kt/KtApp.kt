@@ -78,12 +78,23 @@ class KtApp : Application() {
             try {
                 if (LOG.diskEnabled) {
                     val summary = FileUtils.exoCacheSummary()
+                    val helper = xyz.doikki.videoplayer.exo.ExoMediaSourceHelper
                     val evt = try {
-                        xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheEvent
+                        helper.sCacheEvent
                     } catch (_: Throwable) {
                         "?"
                     }
-                    val line = "$summary evt=$evt"
+                    // 决定性诊断:写入失败的证据全部来自这里,不依赖 EventListener(首次
+                    // 播放不会触发它的回调)。writes=本次 write() 调用字节,opens=sink
+                    // 打开次数,err=首个 IOException。files/size 恒为 0 时看这三个值即可:
+                    //   writes>0          -> 落盘正常,只是统计口径问题;
+                    //   writes=0 err!=none -> 写入抛异常,err 即根因;
+                    //   opens=0           -> HLS 请求压根没经过 CacheDataSource。
+                    val writes = try { helper.sCacheWriteBytes.get() } catch (_: Throwable) { -1L }
+                    val wcalls = try { helper.sCacheWriteCalls.get() } catch (_: Throwable) { -1L }
+                    val opens = try { helper.sCacheOpenCalls.get() } catch (_: Throwable) { -1L }
+                    val werr = try { helper.sCacheWriteError } catch (_: Throwable) { "?" }
+                    val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr"
                     if (line != lastCacheSummary) {
                         lastCacheSummary = line
                         LOG.i("DIAG exo_cache_auto $line")
