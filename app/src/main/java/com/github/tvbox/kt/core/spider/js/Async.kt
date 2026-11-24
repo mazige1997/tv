@@ -1,5 +1,6 @@
 package com.github.tvbox.kt.core.spider.js
 
+import com.github.tvbox.kt.util.LOG
 import com.whl.quickjs.wrapper.JSCallFunction
 import com.whl.quickjs.wrapper.JSFunction
 import com.whl.quickjs.wrapper.JSObject
@@ -31,10 +32,13 @@ class Async private constructor() {
         val function: JSFunction? = `object`.getJSFunction(name)
         if (function == null) return empty()
         try {
-            val result = function.call(args)
+            // JSFunction.call(Object...) 是 Java 变参;必须用 * 展开,否则整个 Object[]
+            // 会被当作单个参数交给 JNI,触发 "Unsupported Java type [Ljava.lang.Object;"。
+            val result = function.call(*args)
             if (result is JSObject) then(result)
             else future.complete(result)
         } catch (t: Throwable) {
+            LOG.e("DIAG js_call_error name=$name args=${args.size} err=$t")
             future.completeExceptionally(t)
         } finally {
             function.release()

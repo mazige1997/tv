@@ -158,10 +158,10 @@ constructor(private val key: String, private val api: String, private val dex: C
         return try {
             submit(Callable { Async.run(jsObj, func, args).get() }).get()
         } catch (e: InterruptedException) {
-            LOG.i("Executor 提交或等待失败$e")
+            LOG.i("DIAG js_wait_failed func=$func err=$e")
             null
         } catch (e: ExecutionException) {
-            LOG.i("Executor 提交或等待失败$e")
+            LOG.i("DIAG js_wait_failed func=$func err=$e")
             null
         }
     }

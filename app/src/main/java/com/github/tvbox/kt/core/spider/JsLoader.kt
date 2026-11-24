@@ -171,6 +171,7 @@ class JsLoader {
                 return SpiderNull()
             }
             spiders[key] = sp
+            LOG.i("DIAG js_spider=OK key=$key api=$api")
             return sp
         } catch (th: Throwable) {
             LOG.i("echo-getSpider-error " + th.message)

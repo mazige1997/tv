@@ -17,7 +17,8 @@ class FunCall private constructor(
     private var result: Any? = null
 
     override fun call(): Any? {
-        result = jsObject.getJSFunction(name).call(args)
+        // Java 变参需要展开数组,否则 Object[] 会被当成单个 JS 参数
+        result = jsObject.getJSFunction(name).call(*args)
         if (result !is JSObject) return result
         val promise = result as JSObject
         val then: JSFunction? = promise.getJSFunction("then")

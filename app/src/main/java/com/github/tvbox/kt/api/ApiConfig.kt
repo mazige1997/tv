@@ -808,8 +808,10 @@ class ApiConfig private constructor() {
         val liveApiUrl = Hawk.get(HawkConfig.LIVE_API_URL, "")
         if (liveApiUrl.isEmpty() || apiUrl == liveApiUrl) {
             LOG.i("echo-load-config_live")
+            val hasLivesField = infoJson.has("lives")
+            LOG.i("DIAG config_live has_lives=$hasLivesField live_api_url_empty=${liveApiUrl.isEmpty()}")
             initLiveSettings()
-            if (infoJson.has("lives")) {
+            if (hasLivesField) {
                 val livesGroups = infoJson.get("lives").asJsonArray
                 var liveGroupIndex = getLiveGroupIndex()
                 if (liveGroupIndex > livesGroups.size() - 1) liveGroupIndex = 0
