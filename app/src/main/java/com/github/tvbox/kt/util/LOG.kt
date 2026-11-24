@@ -87,6 +87,29 @@ object LOG {
         "(诊断日志不可写)"
     }
 
+    /** 读取诊断日志全文,供设置页查看 / 复制 / 分享。 */
+    @JvmStatic
+    fun readDiag(): String = try {
+        val f = diagFile() ?: return "(暂无诊断日志)"
+        synchronized(lock) {
+            if (f.exists()) f.readText() else "(暂无诊断日志)"
+        }
+    } catch (th: Throwable) {
+        "(读取诊断日志失败: ${th.message})"
+    }
+
+    /** 清空诊断日志,便于只记录一次干净的复现过程。 */
+    @JvmStatic
+    fun clearDiag(): Boolean = try {
+        val f = diagFile() ?: return false
+        synchronized(lock) {
+            f.writeText("")
+            true
+        }
+    } catch (_: Throwable) {
+        false
+    }
+
     @JvmStatic
     fun e(msg: String?) {
         val m = msg ?: ""
