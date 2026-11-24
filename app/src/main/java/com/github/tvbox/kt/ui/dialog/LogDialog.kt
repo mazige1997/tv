@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import com.github.tvbox.kt.R
+import com.github.tvbox.kt.util.FileUtils
 import com.github.tvbox.kt.util.LOG
 
 /**
@@ -77,11 +78,16 @@ class LogDialog(context: Context) : BaseDialog(context) {
     }
 
     private fun refresh() {
+        // 每次打开/刷新诊断日志时统计一次边下边播缓存:写入日志(复制/分享可带上),
+        // 同时直接显示在对话框信息栏,避免 Android 11+ 私有目录无法用文件管理器查看。
+        val cacheSummary = FileUtils.exoCacheSummary()
+        LOG.i("DIAG exo_cache $cacheSummary")
         fullText = LOG.readDiag()
         val lines = fullText.lines()
         val diagLines = lines.filter { it.contains("DIAG ") }
         val header = "文件: ${LOG.diagPath()}  |  共 ${lines.size} 行 / ${fullText.length} 字符" +
-            (if (lines.size > MAX_SHOW_LINES) "  |  下方仅显示最近 $MAX_SHOW_LINES 行" else "")
+            (if (lines.size > MAX_SHOW_LINES) "  |  下方仅显示最近 $MAX_SHOW_LINES 行" else "") +
+            "\n边下边播缓存: $cacheSummary"
         infoView.text = header + (if (diagLines.isEmpty()) {
             "\n(暂无 DIAG 快照行 —— 可能安装的不是含诊断日志的版本)"
         } else {

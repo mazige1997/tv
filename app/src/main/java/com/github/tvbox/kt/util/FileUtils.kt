@@ -119,6 +119,51 @@ object FileUtils {
 
     fun getCachePath(): String = getCacheDir().absolutePath
 
+    /**
+     * 边下边播(ExoPlayer SimpleCache)的缓存目录,必须与
+     * xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.externalCacheDir()/newCache() 一致:
+     * 优先外部私有缓存目录,回退内部缓存目录,子目录名 exo-video-cache。
+     */
+    @JvmStatic
+    fun exoCacheDir(): File? {
+        return try {
+            val base = KtApp.instance().externalCacheDir ?: KtApp.instance().cacheDir
+            File(base, "exo-video-cache")
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    /** 统计边下边播缓存:返回 "path=... files=N size=X",供诊断日志界面实时显示。 */
+    @JvmStatic
+    fun exoCacheSummary(): String {
+        return try {
+            val dir = exoCacheDir()
+            if (dir == null || !dir.exists()) {
+                "path=(不存在,尚未开始缓存) files=0 size=0B"
+            } else {
+                val files = dir.listFiles() ?: emptyArray()
+                var count = 0
+                var bytes = 0L
+                for (f in files) {
+                    if (!f.isFile) continue
+                    count++
+                    bytes += f.length()
+                }
+                "path=${dir.absolutePath} files=$count size=${formatSize(bytes)}"
+            }
+        } catch (th: Throwable) {
+            "统计失败: ${th.javaClass.simpleName}"
+        }
+    }
+
+    private fun formatSize(bytes: Long): String = when {
+        bytes >= 1024L * 1024 * 1024 -> String.format("%.2fGB", bytes / (1024.0 * 1024 * 1024))
+        bytes >= 1024L * 1024 -> String.format("%.2fMB", bytes / (1024.0 * 1024))
+        bytes >= 1024L -> String.format("%.1fKB", bytes / 1024.0)
+        else -> "${bytes}B"
+    }
+
     fun getFilePath(): String = KtApp.instance().filesDir.absolutePath
 
     fun cleanDirectory(dir: File?) {
