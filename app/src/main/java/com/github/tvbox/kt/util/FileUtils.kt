@@ -134,7 +134,14 @@ object FileUtils {
         }
     }
 
-    /** 统计边下边播缓存:返回 "path=... files=N size=X",供诊断日志界面实时显示。 */
+    /**
+     * 统计边下边播缓存:返回 "path=... files=N size=X",供诊断日志界面实时显示。
+     *
+     * 关键:ExoPlayer 的 SimpleCache.startFile() 会在缓存根目录下创建 0~9 的随机
+     * 子目录,把真正的数据文件(<id>.<pos>.<len>.v3.exo)写进子目录里,根目录只留
+     * 索引文件。因此必须递归统计所有层级;只看根目录会漏掉全部缓存,误报 files=1
+     * size=0B(那唯一的 0 字节文件其实是索引),让人误以为边下边播没生效。
+     */
     @JvmStatic
     fun exoCacheSummary(): String {
         return try {
@@ -142,14 +149,20 @@ object FileUtils {
             if (dir == null || !dir.exists()) {
                 "path=(不存在,尚未开始缓存) files=0 size=0B"
             } else {
-                val files = dir.listFiles() ?: emptyArray()
                 var count = 0
                 var bytes = 0L
-                for (f in files) {
-                    if (!f.isFile) continue
-                    count++
-                    bytes += f.length()
+                fun walk(d: File) {
+                    val children = d.listFiles() ?: return
+                    for (f in children) {
+                        if (f.isDirectory) {
+                            walk(f)
+                        } else if (f.isFile) {
+                            count++
+                            bytes += f.length()
+                        }
+                    }
                 }
+                walk(dir)
                 "path=${dir.absolutePath} files=$count size=${formatSize(bytes)}"
             }
         } catch (th: Throwable) {

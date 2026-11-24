@@ -95,7 +95,8 @@ class KtApp : Application() {
                     val wcalls = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteCalls.get() } catch (_: Throwable) { -1L }
                     val opens = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheOpenCalls.get() } catch (_: Throwable) { -1L }
                     val werr = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteError } catch (_: Throwable) { "?" }
-                    val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr"
+                    val space = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.getCacheSpace() } catch (_: Throwable) { -3L }
+                    val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr idxspace=${space}B"
                     if (line != lastCacheSummary) {
                         lastCacheSummary = line
                         LOG.i("DIAG exo_cache_auto $line")

@@ -60,6 +60,20 @@ public final class ExoMediaSourceHelper {
     public static final AtomicLong sCacheOpenCalls = new AtomicLong();
     public static volatile String sCacheWriteError = "none";
 
+    /**
+     * 返回 ExoPlayer 缓存索引记录的已缓存字节数(getCacheSpace),与文件系统遍历互为交叉验证。
+     * 未初始化时返回 -1。
+     */
+    public static long getCacheSpace() {
+        try {
+            ExoMediaSourceHelper h = sInstance;
+            if (h == null || h.mCache == null) return -1L;
+            return h.mCache.getCacheSpace();
+        } catch (Throwable t) {
+            return -2L;
+        }
+    }
+
     public boolean isCacheEnabled() {
         return mCacheEnabled;
     }
