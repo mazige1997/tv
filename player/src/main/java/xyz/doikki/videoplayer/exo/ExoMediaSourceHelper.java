@@ -38,6 +38,10 @@ public final class ExoMediaSourceHelper {
     // 开启后 http(s) 媒体走 CacheDataSource(本地 SimpleCache,LRU 512M),实现边下边播。
     private volatile boolean mCacheEnabled;
 
+    // 缓存诊断事件(供上层写入诊断日志):记录 CacheDataSource 的缓存命中/忽略原因。
+    // reason: 0=CACHE_IGNORED_REASON_ERROR, 1=CACHE_IGNORED_REASON_UNSET_LENGTH。
+    public static volatile String sCacheEvent = "none";
+
     public boolean isCacheEnabled() {
         return mCacheEnabled;
     }
@@ -183,13 +187,30 @@ public final class ExoMediaSourceHelper {
     }
 
     private DataSource.Factory getCacheDataSourceFactory() {
+        sCacheEvent = "factory_created";
         if (mCache == null) {
             mCache = newCache();
         }
+        // 关键修复:不要设置 FLAG_IGNORE_CACHE_ON_ERROR。ExoPlayer 2.19 的 CacheDataSource
+        // 一旦某次写入遇到 IOException(首个 ts 切片网络抖动/超时即可触发),seenCacheError
+        // 会被永久置位,之后所有请求都走 shouldIgnoreCacheForRequest() 返回非 -1,
+        // 导致整个播放器实例彻底绕过缓存 —— 表现为缓存目录始终 files=1 size=0B。
+        // flags 用默认值 0,偶发错误只影响该次请求,不会关闭后续缓存。
         return new CacheDataSource.Factory()
                 .setCache(mCache)
                 .setUpstreamDataSourceFactory(getDataSourceFactory())
-                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+                .setFlags(0)
+                .setEventListener(new CacheDataSource.EventListener() {
+                    @Override
+                    public void onCachedBytesRead(long cacheSizeBytes, long totalBytes) {
+                        sCacheEvent = "hit cached=" + cacheSizeBytes + " total=" + totalBytes;
+                    }
+
+                    @Override
+                    public void onCacheIgnored(int reason) {
+                        sCacheEvent = "ignored reason=" + reason + " (0=error,1=unsetLength)";
+                    }
+                });
     }
 
     private Cache newCache() {

@@ -78,9 +78,15 @@ class KtApp : Application() {
             try {
                 if (LOG.diskEnabled) {
                     val summary = FileUtils.exoCacheSummary()
-                    if (summary != lastCacheSummary) {
-                        lastCacheSummary = summary
-                        LOG.i("DIAG exo_cache_auto $summary")
+                    val evt = try {
+                        xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheEvent
+                    } catch (_: Throwable) {
+                        "?"
+                    }
+                    val line = "$summary evt=$evt"
+                    if (line != lastCacheSummary) {
+                        lastCacheSummary = line
+                        LOG.i("DIAG exo_cache_auto $line")
                     }
                 }
             } catch (_: Throwable) {
