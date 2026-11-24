@@ -1,6 +1,7 @@
 package com.github.tvbox.kt.core
 
 import android.util.Log
+import com.github.tvbox.kt.util.LOG
 
 /**
  * Rust 原生核心桥(libtvbox_core.so)。
@@ -12,12 +13,27 @@ import android.util.Log
  */
 object NativeCore {
 
+    /**
+     * 诊断隔离开关:功能验证阶段整体关闭原生核心。
+     *
+     * Rust 快路径是重构版相对原版唯一系统性新增的数据路径;关闭后所有调用方已有的
+     * `if (NativeCore.available)` 保护会让数据链路 100% 走与原版逐行一致的 Kotlin 回退实现。
+     * 功能确认稳定后把此值改回 false 即可重新启用,无需改动其它文件。
+     */
+    private const val FORCE_DISABLE_NATIVE = true
+
     // 注意:不可加 @JvmField —— 带 private set 的属性有自定义访问器,@JvmField 非法;
     // Kotlin 调用方照常属性访问,Java 调用方(如有)使用 getAvailable()
     var available = false
         private set
 
     fun load() {
+        if (FORCE_DISABLE_NATIVE) {
+            available = false
+            Log.i("NativeCore", "DIAG: 原生核心已整体禁用,数据链路全部走 Kotlin 回退实现")
+            LOG.i("DIAG native=DISABLED (diagnostic isolation)")
+            return
+        }
         if (available) return
         try {
             System.loadLibrary("tvbox_core")

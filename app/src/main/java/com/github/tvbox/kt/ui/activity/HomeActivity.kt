@@ -374,6 +374,9 @@ class HomeActivity : BaseActivity() {
             }
 
             override fun success() {
+                LOG.i("DIAG config=OK sites=" + ApiConfig.get().sourceBeanList.size +
+                    " lives=" + ApiConfig.get().liveChannelGroupList.size +
+                    " spider=" + (ApiConfig.get().getSpider() ?: ""))
                 dataInitOk = true
                 if (ApiConfig.get().getSpider()!!.isEmpty()) {
                     jarInitOk = true
@@ -384,6 +387,7 @@ class HomeActivity : BaseActivity() {
             }
 
             override fun error(msg: String) {
+                LOG.i("DIAG config=ERROR msg=$msg")
                 if (msg.equals("-1", ignoreCase = true)) {
                     mHandler.post {
                         dataInitOk = true

@@ -2,6 +2,7 @@ package com.github.tvbox.kt
 
 import android.app.Activity
 import android.app.Application
+import android.os.Build
 import com.github.tvbox.kt.bean.VodInfo
 import com.github.tvbox.kt.callback.EmptyCallback
 import com.github.tvbox.kt.callback.LoadingCallback
@@ -36,7 +37,8 @@ class KtApp : Application() {
         initParams()
         OkGoHelper.init() // 台标获取
         EpgUtil.init()
-        NativeCore.load() // Rust 原生核心(失败时自动回退 Kotlin 实现)
+        NativeCore.load() // Rust 原生核心(诊断期整体禁用,加载失败时亦自动回退 Kotlin 实现)
+        logStartupDiag()
         // 初始化 Web 服务器
         ControlManager.init(this)
         // 初始化数据库
@@ -59,6 +61,27 @@ class KtApp : Application() {
                 th.printStackTrace()
             }
         }.apply { isDaemon = true; name = "clean-player-cache"; start() }
+    }
+
+    /**
+     * 启动诊断快照:在没有 adb 的电视盒上,用于确认测的是哪一版、配置是否已设置、
+     * 原生核心是否启用。结果写入 Download/tvbox_diag.log。
+     */
+    private fun logStartupDiag() {
+        try {
+            val ver = try {
+                packageManager.getPackageInfo(packageName, 0).versionName ?: "?"
+            } catch (_: Throwable) {
+                "?"
+            }
+            val apiUrl = Hawk.get(HawkConfig.API_URL, "") ?: ""
+            LOG.i("DIAG ==== app start ====")
+            LOG.i("DIAG version=$ver sdk=${Build.VERSION.SDK_INT} abi=${Build.SUPPORTED_ABIS.joinToString(",")} native=${NativeCore.available}")
+            LOG.i("DIAG api_url_set=${apiUrl.isNotEmpty()} len=${apiUrl.length} prefix=${apiUrl.take(20)}")
+            LOG.i("DIAG log_file=${LOG.diagPath()}")
+        } catch (th: Throwable) {
+            LOG.e("DIAG snapshot failed: ${th.message}")
+        }
     }
 
     private fun initParams() {
