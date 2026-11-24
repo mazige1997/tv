@@ -454,6 +454,7 @@ object DanmakuApi {
     }
 
     private fun findAnimeId(body: String): String {
+        if (body.isBlank()) return ""
         val `object` = JSONObject(body)
         var array = `object`.optJSONArray("animes")
         if (array == null) array = `object`.optJSONArray("anime")
@@ -470,6 +471,9 @@ object DanmakuApi {
     }
 
     private fun findEpisode(body: String, episode: String?, allowMovieFallback: Boolean): EpisodeMatch? {
+        // 弹幕服务可能返回 HTTP 200 + 空 body(限流/被拦截),JSONObject("") 会抛
+        // "End of input at character 0",这里直接视为未匹配,不制造解析错误日志。
+        if (body.isBlank()) return null
         val `object` = JSONObject(body)
         val episodeList = findEpisodeList(`object`)
         val episodes = episodeList?.episodes
@@ -498,6 +502,7 @@ object DanmakuApi {
     }
 
     private fun findEpisodeFromSearchEpisodes(body: String, episode: String?): EpisodeMatch? {
+        if (body.isBlank()) return null
         val match = findEpisode(body, episode, false)
         if (match != null) return match
         val movieFallback = findMovieFallback(JSONObject(body), episode)
@@ -646,6 +651,7 @@ object DanmakuApi {
     }
 
     private fun commentJsonToXml(body: String): String {
+        if (body.isBlank()) return ""
         // Rust 原生:comments/data 数组 → XML;失败回退纯 Kotlin
         if (NativeCore.available) {
             try {
@@ -773,6 +779,7 @@ object DanmakuApi {
     }
 
     private fun parseBuiltinSearchList(body: String, baseUrl: String): List<DanmuSearchResult> {
+        if (body.isBlank()) return ArrayList()
         if (NativeCore.available) {
             try {
                 val parsed = resultsFromRustJson(NativeCore.parseBuiltinDanmuSearchList(body, baseUrl))
