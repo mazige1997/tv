@@ -860,6 +860,7 @@ class DetailActivity : BaseActivity() {
     private fun initViewModel() {
         sourceViewModel = ViewModelProvider(this).get(SourceViewModel::class.java)
         sourceViewModel!!.detailResult.observe(this) { absXml ->
+            try {
             if (detailFallbackActive && !detailFallbackLoadingCandidate) {
                 return@observe
             }
@@ -897,6 +898,7 @@ class DetailActivity : BaseActivity() {
                     mVideo!!.pic = vod_picture
                 }
                 vodInfo!!.setVideo(mVideo!!)
+                LOG.i("DIAG detail=OK key=$sourceKey flags=${vodInfo!!.seriesFlags?.size ?: 0} groups=${vodInfo!!.seriesMap?.size ?: 0}")
                 vodInfo!!.sourceKey = mVideo!!.sourceKey
                 sourceKey = mVideo!!.sourceKey ?: ""
 
@@ -910,7 +912,8 @@ class DetailActivity : BaseActivity() {
                 setTextShow(tvArea!!, "地区：", mVideo!!.area)
                 setTextShow(tvLang!!, "语言：", mVideo!!.lang)
                 if (firstsourceKey != sourceKey) {
-                    setTextShow(tvType!!, "类型：", "[" + ApiConfig.get().getSource(sourceKey)!!.name + "] 解析")
+                    val parsedName = ApiConfig.get().getSource(sourceKey)?.name ?: sourceKey
+                    setTextShow(tvType!!, "类型：", "[$parsedName] 解析")
                 } else {
                     setTextShow(tvType!!, "类型：", mVideo!!.type)
                 }
@@ -998,6 +1001,17 @@ class DetailActivity : BaseActivity() {
                     return@observe
                 }
                 handleEmptyDetail(absXml)
+            }
+            } catch (t: Throwable) {
+                LOG.e("DIAG detail_render_error err=$t")
+                val sw = java.io.StringWriter()
+                t.printStackTrace(java.io.PrintWriter(sw))
+                LOG.e("DIAG detail_render_stack:\n$sw")
+                try {
+                    showSuccess()
+                } catch (_: Throwable) {
+                }
+                Toast.makeText(this@DetailActivity, "详情数据异常，已记录诊断日志", Toast.LENGTH_SHORT).show()
             }
         }
         sourceViewModel!!.detailFallbackSearchResult.observe(this) { absXml ->

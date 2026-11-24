@@ -34,6 +34,7 @@ class KtApp : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        installCrashHandler()
         initParams()
         OkGoHelper.init() // 台标获取
         EpgUtil.init()
@@ -61,6 +62,40 @@ class KtApp : Application() {
                 th.printStackTrace()
             }
         }.apply { isDaemon = true; name = "clean-player-cache"; start() }
+    }
+
+    /**
+     * 崩溃堆栈落盘:电视盒没有 adb 时,也能从设置页的诊断日志里拿到完整异常链。
+     */
+    private fun installCrashHandler() {
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val activity = try {
+                    AppManager.instance.currentActivity()?.javaClass?.name ?: "?"
+                } catch (_: Throwable) {
+                    "?"
+                }
+                LOG.e("DIAG ==== CRASH thread=${thread.name} activity=$activity ====")
+                var depth = 0
+                var cause: Throwable? = throwable
+                while (depth < 6) {
+                    val c = cause ?: break
+                    val sw = java.io.StringWriter()
+                    c.printStackTrace(java.io.PrintWriter(sw))
+                    LOG.e("DIAG crash[$depth] ${c.javaClass.name}: ${c.message}\n$sw")
+                    cause = c.cause
+                    depth++
+                }
+            } catch (_: Throwable) {
+            }
+            if (previous != null) {
+                previous.uncaughtException(thread, throwable)
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid())
+                System.exit(10)
+            }
+        }
     }
 
     /**

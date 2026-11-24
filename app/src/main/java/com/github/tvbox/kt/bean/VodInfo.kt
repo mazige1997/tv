@@ -63,6 +63,9 @@ class VodInfo : Serializable {
                     flags.add(VodSeriesFlag(flagName))
                 }
             }
+            // Kotlin 移植遗漏:详情页多处对 seriesFlags 使用 !! 解引用,
+            // 这里必须把线路列表赋给字段,否则进入详情必现 NullPointerException。
+            seriesFlags = flags
             seriesMap = LinkedHashMap()
             for (flag in flags) {
                 val list: List<VodSeries> = tempSeriesMap[flag.name] ?: continue
@@ -71,12 +74,16 @@ class VodInfo : Serializable {
                 }
                 seriesMap!![flag.name ?: ""] = list
             }
+        } else {
+            seriesFlags = ArrayList()
+            seriesMap = LinkedHashMap()
         }
     }
 
     private fun extractNumber(name: String?): Int {
         val matcher = RegexUtils.getPattern("\\d+").matcher(name ?: "")
-        return if (matcher.find()) matcher.group()!!.toInt() else 0
+        if (!matcher.find()) return 0
+        return matcher.group()?.toIntOrNull() ?: 0
     }
 
     private fun isReverse(list: List<VodSeries>): Boolean {
