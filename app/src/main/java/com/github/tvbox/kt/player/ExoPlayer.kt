@@ -130,7 +130,12 @@ class ExoPlayer(context: Context) : ExoMediaPlayer(context) {
         LOG.i("echo-exo-cues-listener-ready")
     }
 
-    override fun setDataSource(path: String, headers: MutableMap<String, String>) {
+    // headers 必须为可空类型:父类 VideoView.setUrl(url) 会传 null(无自定义请求头)。
+    // Kotlin 对非空参数会自动插入 Intrinsics.checkNotNullParameter,若这里声明为非空,
+    // 每次播放普通 m3u8 都会在 setDataSource 入口抛 NPE,被 PlayFragment 的 observer
+    // 误判成「获取播放信息错误」并触发自动换线路。与 IjkMediaPlayer 的覆写保持一致。
+    override fun setDataSource(path: String, headers: MutableMap<String, String>?) {
+        LOG.i("DIAG setDataSource headers=${headers?.size ?: -1} path_len=${path.length}")
         resetBufferingRecovery()
         defaultSubtitleTrackSelected = false
         defaultSubtitleTrackSelectionClosed = false

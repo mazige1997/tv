@@ -1114,79 +1114,86 @@ class PlayFragment : BaseLazyFragment() {
     private fun initViewModel() {
         sourceViewModel = ViewModelProvider(this).get(SourceViewModel::class.java)
         playResultObserver = Observer { info: JSONObject? ->
-            if (info == null) publishQuality(null)
-            if (info != null) {
-                try {
-                    if (isStalePlayResult(info)) {
-                        LOG.i("echo-ignore stale play result")
-                        return@Observer
-                    }
-                    mHandler!!.removeMessages(MSG_RESOLVE_PLAY_URL_TIMEOUT)
-                    publishQuality(info)
-                    webPlayUrl = null
-                    progressKey = info.optString("proKey", null)
-                    val parse = info.optString("parse", "1") == "1"
-                    val jx = info.optString("jx", "0") == "1"
-                    playSubtitle = info.optString("subt", "")
-                    playLyric = info.optString("lyric", "")
-                    lyricCacheKey = info.optString("lyricKey", null)
-                    if (TextUtils.isEmpty(lyricCacheKey) && !TextUtils.isEmpty(progressKey)) {
-                        lyricCacheKey = "$progressKey-lyric"
-                    }
-                    val lyrics = info.optJSONArray("lyrics")
-                    if (lyrics != null && lyrics.length() > 0) {
-                        playLyric = getSubtitleUrl(lyrics.optJSONObject(0))
-                    }
-                    val subtitles = info.optJSONArray("subs")
-                    if (subtitles != null) {
-                        for (i in 0 until subtitles.length()) {
-                            val obj = subtitles.optJSONObject(i) ?: continue
-                            val url = getSubtitleUrl(obj)
-                            val name = obj.optString("name", "")
-                            if (isLyricSubtitle(name)) {
-                                if (TextUtils.isEmpty(playLyric)) playLyric = url
-                            } else if (TextUtils.isEmpty(playSubtitle)) {
-                                playSubtitle = url
-                            }
+            if (info == null) {
+                publishQuality(null)
+                LOG.e("DIAG play_result_null source=$sourceKey progressKey=$progressKey")
+                handleResolvePlayUrlFailed("获取播放信息错误")
+                return@Observer
+            }
+            try {
+                if (isStalePlayResult(info)) {
+                    LOG.i("echo-ignore stale play result")
+                    return@Observer
+                }
+                mHandler!!.removeMessages(MSG_RESOLVE_PLAY_URL_TIMEOUT)
+                publishQuality(info)
+                webPlayUrl = null
+                progressKey = info.optString("proKey", null)
+                val parse = info.optString("parse", "1") == "1"
+                val jx = info.optString("jx", "0") == "1"
+                playSubtitle = info.optString("subt", "")
+                playLyric = info.optString("lyric", "")
+                lyricCacheKey = info.optString("lyricKey", null)
+                if (TextUtils.isEmpty(lyricCacheKey) && !TextUtils.isEmpty(progressKey)) {
+                    lyricCacheKey = "$progressKey-lyric"
+                }
+                val lyrics = info.optJSONArray("lyrics")
+                if (lyrics != null && lyrics.length() > 0) {
+                    playLyric = getSubtitleUrl(lyrics.optJSONObject(0))
+                }
+                val subtitles = info.optJSONArray("subs")
+                if (subtitles != null) {
+                    for (i in 0 until subtitles.length()) {
+                        val obj = subtitles.optJSONObject(i) ?: continue
+                        val url = getSubtitleUrl(obj)
+                        val name = obj.optString("name", "")
+                        if (isLyricSubtitle(name)) {
+                            if (TextUtils.isEmpty(playLyric)) playLyric = url
+                        } else if (TextUtils.isEmpty(playSubtitle)) {
+                            playSubtitle = url
                         }
                     }
-                    subtitleCacheKey = info.optString("subtKey", null)
-                    val playUrlStr = info.optString("playUrl", "")
-                    val flag = info.optString("flag")
-                    val rawUrl = info.opt("url")
-                    var url = if (rawUrl is JSONArray) rawUrl.toString() else rawUrl.toString()
-                    if (url.startsWith("[")) {
-                        url = mController!!.firstUrlByArray(url)
-                    }
-                    var artwork: String? = info.optString("artwork", "")
-                    if (TextUtils.isEmpty(artwork) && !TextUtils.isEmpty(playLyric) && mVodInfo != null) {
-                        artwork = mVodInfo!!.pic
-                    }
-                    playArtwork = artwork
-                    mVideoView!!.setArtwork(playArtwork)
-                    val msg = info.optString("msg", "")
-                    if (!TextUtils.isEmpty(msg)) {
-                        handleResolvePlayUrlFailed(msg)
-                        return@Observer
-                    }
-                    val danmaku = info.optString("danmaku", "").trim()
-                    val danmuProgressKey = progressKey
-                    var headers: HashMap<String, String>? = null
-                    webUserAgent = null
-                    webHeaderMap = null
-                    headers = getHeaders(info)
-                    if (headers != null) {
-                        webHeaderMap = headers
-                        webUserAgent = getHeaderValue(headers, "user-agent")
-                        if (webUserAgent != null) webUserAgent = webUserAgent!!.trim()
-                    }
-                    if (parse || jx) {
-                        val userJxList = (playUrlStr.isEmpty() && ApiConfig.get().getVipParseFlags().contains(flag)) || jx
-                        initParse(flag, userJxList, playUrlStr, url)
-                    } else {
-                        mController!!.showParse(false)
-                        playUrl(playUrlStr + url, headers)
-                    }
+                }
+                subtitleCacheKey = info.optString("subtKey", null)
+                val playUrlStr = info.optString("playUrl", "")
+                val flag = info.optString("flag")
+                val rawUrl = info.opt("url")
+                var url = if (rawUrl is JSONArray) rawUrl.toString() else rawUrl.toString()
+                if (url.startsWith("[")) {
+                    url = mController!!.firstUrlByArray(url)
+                }
+                var artwork: String? = info.optString("artwork", "")
+                if (TextUtils.isEmpty(artwork) && !TextUtils.isEmpty(playLyric) && mVodInfo != null) {
+                    artwork = mVodInfo!!.pic
+                }
+                playArtwork = artwork
+                mVideoView!!.setArtwork(playArtwork)
+                val msg = info.optString("msg", "")
+                if (!TextUtils.isEmpty(msg)) {
+                    handleResolvePlayUrlFailed(msg)
+                    return@Observer
+                }
+                val danmaku = info.optString("danmaku", "").trim()
+                val danmuProgressKey = progressKey
+                var headers: HashMap<String, String>? = null
+                webUserAgent = null
+                webHeaderMap = null
+                headers = getHeaders(info)
+                if (headers != null) {
+                    webHeaderMap = headers
+                    webUserAgent = getHeaderValue(headers, "user-agent")
+                    if (webUserAgent != null) webUserAgent = webUserAgent!!.trim()
+                }
+                if (parse || jx) {
+                    val userJxList = (playUrlStr.isEmpty() && ApiConfig.get().getVipParseFlags().contains(flag)) || jx
+                    initParse(flag, userJxList, playUrlStr, url)
+                } else {
+                    mController!!.showParse(false)
+                    playUrl(playUrlStr + url, headers)
+                }
+                LOG.i("DIAG play=OK parse=$parse jx=$jx url_len=${url.length} headers=${headers?.size ?: 0}")
+                // 播放已交给播放器,弹幕等辅助逻辑的异常不得再把播放判成失败并触发自动换线路。
+                try {
                     if (TextUtils.isEmpty(danmaku)) {
                         checkDanmu("")
                         searchDanmu("")
@@ -1199,11 +1206,11 @@ class PlayFragment : BaseLazyFragment() {
                             }
                         })
                     }
-                } catch (th: Throwable) {
-                    handleResolvePlayUrlFailed("获取播放信息错误")
+                } catch (aux: Throwable) {
+                    LOG.e("DIAG play_aux_error " + android.util.Log.getStackTraceString(aux))
                 }
-            } else {
-//                    获取播放信息错误后只需再重试一次
+            } catch (th: Throwable) {
+                LOG.e("DIAG play_observer_error " + android.util.Log.getStackTraceString(th))
                 handleResolvePlayUrlFailed("获取播放信息错误")
             }
         }
