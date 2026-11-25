@@ -80,22 +80,34 @@ class ExoPlayer(context: Context) : ExoMediaPlayer(context) {
     }
 
     init {
+        setRenderersFactory(buildRenderersFactory(context))
+        memory = AudioTrackMemory.getInstance(context)
+    }
+
+    override fun initPlayer() {
+        // 缓冲调优:直播维持默认 max 15s(避免增大直播延迟),点播把 max 15s→30s,
+        // 让播放器提前多缓冲后续分片,提升弱网下的播放连续性。
+        // min/起播/重缓冲阈值一律不动,保证首帧与重缓冲速度不变。
+        // 必须在 super.initPlayer() 之前设置:DKVideo 在 super 里用 mLoadControl 构建内部
+        // player(ExoMediaPlayer.java 的 initPlayer);而 PLAYER_IS_LIVE 在
+        // LivePlayActivity.initView() 末尾才置 true,构造期读取过早,这里才是可靠时机。
+        val isLive = try {
+            Hawk.get(HawkConfig.PLAYER_IS_LIVE, false)
+        } catch (t: Throwable) {
+            false
+        }
+        val maxBufferMs = if (isLive) DefaultLoadControl.DEFAULT_MAX_BUFFER_MS else 30_000
         setLoadControl(
             DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
                     DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                    DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                    maxBufferMs,
                     DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
                     DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
                 )
                 .build()
         )
-        setRenderersFactory(buildRenderersFactory(context))
-        LOG.i("echo-exo-low-memory-load-control")
-        memory = AudioTrackMemory.getInstance(context)
-    }
-
-    override fun initPlayer() {
+        LOG.i("echo-exo-load-control live=$isLive maxBufferMs=$maxBufferMs")
         super.initPlayer()
         bufferingHandler = Handler(mInternalPlayer.applicationLooper)
         mInternalPlayer.addListener(object : Player.Listener {
