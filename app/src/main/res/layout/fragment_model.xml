@@ -29,6 +29,7 @@
                     android:layout_height="@dimen/vs_50"
                     android:layout_marginBottom="@dimen/vs_10"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
 
                     android:gravity="center_vertical"
@@ -67,6 +68,19 @@
                         android:textSize="@dimen/ts_30" />
             </LinearLayout>
 
+            <!-- ===== 配置与数据源 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="配置与数据源"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/vs_60"
@@ -81,6 +95,7 @@
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="3.08"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -135,6 +150,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -178,6 +194,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -233,6 +250,7 @@
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="3.08"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -277,6 +295,7 @@
                     android:layout_marginLeft="@dimen/vs_5"
                     android:layout_weight="1"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -314,6 +333,19 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ===== 界面与显示 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="界面与显示"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -338,6 +370,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -381,6 +414,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -435,6 +469,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -478,6 +513,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -515,6 +551,19 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ===== 播放与网络 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="播放与网络"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -530,6 +579,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -582,6 +632,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -625,6 +676,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -663,6 +715,19 @@
             </LinearLayout>
 
 
+            <!-- ===== 弹幕设置 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="弹幕设置"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -678,6 +743,7 @@
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="1"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -722,6 +788,7 @@
                     android:layout_marginLeft="@dimen/vs_5"
                     android:layout_weight="1"
                     android:background="@drawable/shape_setting_model_focus"
+                    android:stateListAnimator="@animator/focus_scale"
                     android:focusable="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
@@ -777,6 +844,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -829,6 +897,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -872,6 +941,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -926,6 +996,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -980,6 +1051,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1022,6 +1094,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1061,6 +1134,19 @@
 
             </LinearLayout>
 
+            <!-- ===== 界面高级 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="界面高级"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -1085,6 +1171,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1121,6 +1208,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1167,6 +1255,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1210,6 +1299,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1249,6 +1339,19 @@
 
             </LinearLayout>
 
+            <!-- ===== 缓存与工具 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="缓存与工具"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/vs_60"
@@ -1274,6 +1377,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1319,6 +1423,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1367,6 +1472,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1403,6 +1509,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1449,6 +1556,7 @@
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1493,6 +1601,7 @@
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
                         android:background="@drawable/shape_setting_model_focus"
+                        android:stateListAnimator="@animator/focus_scale"
                         android:focusable="true"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
@@ -1530,12 +1639,26 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- ===== 诊断日志 ===== -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/vs_10"
+                android:layout_marginBottom="@dimen/vs_6"
+                android:paddingLeft="@dimen/vs_10"
+                android:text="诊断日志"
+                android:textColor="@color/tech_group_title"
+                android:textSize="@dimen/ts_20"
+                android:textStyle="bold"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
             <LinearLayout
                 android:id="@+id/llDiagLog"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/vs_50"
                 android:layout_marginBottom="@dimen/vs_10"
                 android:background="@drawable/shape_setting_model_focus"
+                android:stateListAnimator="@animator/focus_scale"
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"

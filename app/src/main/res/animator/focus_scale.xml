@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TV 焦点缩放动效:聚焦时轻微放大,失焦还原。GPU 属性动画,不触发重新布局,流畅。
+     仅用 scaleX/scaleY,兼容所有 API21+ 设备,不依赖 elevation。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="1.03"
+                android:valueType="floatType"
+                android:duration="120" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="1.03"
+                android:valueType="floatType"
+                android:duration="120" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator
+                android:propertyName="scaleX"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:duration="120" />
+            <objectAnimator
+                android:propertyName="scaleY"
+                android:valueTo="1.0"
+                android:valueType="floatType"
+                android:duration="120" />
+        </set>
+    </item>
+</selector>

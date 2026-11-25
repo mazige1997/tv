@@ -51,6 +51,13 @@
     <color name="dialog_text_primary">#FFFFFFFF</color>
     <color name="dialog_text_hint">#80FFFFFF</color>
 
-
+    <!-- Tech-style focus palette: shared by settings rows, cards and list focus states. -->
+    <color name="tech_focus_start">#FF123A4E</color>
+    <color name="tech_focus_end">#FF0C1C28</color>
+    <color name="tech_panel_idle">#991D202A</color>
+    <color name="tech_stroke_idle">#26FFFFFF</color>
+    <color name="tech_accent">#FF02F8E1</color>
+    <color name="tech_group_title">#FF67E8F9</color>
+    <color name="tech_value_text">#FF9FE8FF</color>
 
 </resources>
