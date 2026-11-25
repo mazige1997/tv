@@ -96,7 +96,14 @@ class KtApp : Application() {
                     val opens = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheOpenCalls.get() } catch (_: Throwable) { -1L }
                     val werr = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheWriteError } catch (_: Throwable) { "?" }
                     val space = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.getCacheSpace() } catch (_: Throwable) { -3L }
-                    val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr idxspace=${space}B"
+                    // limit/pct:动态 LRU 上限与当前占用比例;hits/hitB:真正命中本地缓存的次数/字节;
+                    // ignored:绕过缓存次数(0 为正常)。三者与 writes 配合可区分首播写入与重播命中。
+                    val limit = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheLimitBytes } catch (_: Throwable) { -1L }
+                    val pct = if (limit > 0 && space >= 0) space * 100 / limit else -1L
+                    val hits = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheHitCalls.get() } catch (_: Throwable) { -1L }
+                    val hitB = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheHitBytes.get() } catch (_: Throwable) { -1L }
+                    val ign = try { xyz.doikki.videoplayer.exo.ExoMediaSourceHelper.sCacheIgnoredCalls.get() } catch (_: Throwable) { -1L }
+                    val line = "$summary evt=$evt writes=${writes}B wcalls=$wcalls opens=$opens werr=$werr idxspace=${space}B limit=${limit}B pct=${pct}% hits=$hits hitB=${hitB}B ignored=$ign"
                     if (line != lastCacheSummary) {
                         lastCacheSummary = line
                         LOG.i("DIAG exo_cache_auto $line")

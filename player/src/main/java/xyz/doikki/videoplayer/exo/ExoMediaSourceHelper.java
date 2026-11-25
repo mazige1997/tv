@@ -40,8 +40,14 @@ public final class ExoMediaSourceHelper {
     private Cache mCache;
     private OkHttpClient mClient;
     // 边下边播:由上层(ExoPlayer.kt)根据设置项在每次 setDataSource 前设置,
-    // 开启后 http(s) 媒体走 CacheDataSource(本地 SimpleCache,LRU 512M),实现边下边播。
+    // 开启后 http(s) 媒体走 CacheDataSource(本地 SimpleCache,LRU 动态上限),实现边下边播。
     private volatile boolean mCacheEnabled;
+
+    // 缓存上限按设备可用空间动态计算,避免小存储 TV 盒被固定 512MB 占满。
+    private static final long MAX_CACHE_BYTES = 512L * 1024 * 1024;
+    private static final long MIN_CACHE_BYTES = 64L * 1024 * 1024;
+    /** 本次进程实际生效的 LRU 上限,供诊断日志读取。 */
+    public static volatile long sCacheLimitBytes = MAX_CACHE_BYTES;
 
     // 缓存诊断事件(供上层写入诊断日志):记录 CacheDataSource 的缓存命中/忽略原因。
     // reason: 0=CACHE_IGNORED_REASON_ERROR, 1=CACHE_IGNORED_REASON_UNSET_LENGTH。
@@ -59,6 +65,12 @@ public final class ExoMediaSourceHelper {
     public static final AtomicLong sCacheWriteBytes = new AtomicLong();
     public static final AtomicLong sCacheOpenCalls = new AtomicLong();
     public static volatile String sCacheWriteError = "none";
+
+    // 命中统计:EventListener 的 onCachedBytesRead 只在真正命中本地缓存时触发,
+    // onCacheIgnored 记录绕过缓存的次数。与 writes 配合可区分"首播写入"与"重播命中"。
+    public static final AtomicLong sCacheHitCalls = new AtomicLong();
+    public static final AtomicLong sCacheHitBytes = new AtomicLong();
+    public static final AtomicLong sCacheIgnoredCalls = new AtomicLong();
 
     /**
      * 返回 ExoPlayer 缓存索引记录的已缓存字节数(getCacheSpace),与文件系统遍历互为交叉验证。
@@ -225,6 +237,9 @@ public final class ExoMediaSourceHelper {
         sCacheWriteBytes.set(0);
         sCacheOpenCalls.set(0);
         sCacheWriteError = "none";
+        sCacheHitCalls.set(0);
+        sCacheHitBytes.set(0);
+        sCacheIgnoredCalls.set(0);
         if (mCache == null) {
             mCache = newCache();
         }
@@ -282,20 +297,44 @@ public final class ExoMediaSourceHelper {
                     @Override
                     public void onCachedBytesRead(long cacheSizeBytes, long totalBytes) {
                         sCacheEvent = "hit cached=" + cacheSizeBytes + " total=" + totalBytes;
+                        sCacheHitCalls.incrementAndGet();
+                        sCacheHitBytes.addAndGet(cacheSizeBytes);
                     }
 
                     @Override
                     public void onCacheIgnored(int reason) {
                         sCacheEvent = "ignored reason=" + reason + " (0=error,1=unsetLength)";
+                        sCacheIgnoredCalls.incrementAndGet();
                     }
                 });
     }
 
     private Cache newCache() {
+        File baseDir = externalCacheDir();
+        long limit = computeCacheLimit(baseDir);
+        sCacheLimitBytes = limit;
         return new SimpleCache(
-                new File(externalCacheDir(), "exo-video-cache"),//缓存目录
-                new LeastRecentlyUsedCacheEvictor(512 * 1024 * 1024),//缓存大小，默认512M，使用LRU算法实现
+                new File(baseDir, "exo-video-cache"),//缓存目录
+                new LeastRecentlyUsedCacheEvictor(limit),//按设备可用空间动态计算的 LRU 上限
                 new ExoDatabaseProvider(mAppContext));
+    }
+
+    /**
+     * 按缓存分区可用空间决定 LRU 上限:
+     * 目标 = 可用空间的 10%,夹在 [64MB, 512MB];设备存储极小时再压到可用空间的 1/2 以内。
+     * 获取失败(usable<=0)时回退旧行为 512MB,保证不因该优化影响播放。
+     */
+    static long computeCacheLimit(File baseDir) {
+        long usable = 0L;
+        try {
+            usable = baseDir.getUsableSpace();
+        } catch (Throwable ignored) {
+        }
+        if (usable <= 0L) return MAX_CACHE_BYTES;
+        long limit = Math.max(MIN_CACHE_BYTES, Math.min(MAX_CACHE_BYTES, usable / 10L));
+        long half = usable / 2L;
+        if (limit > half) limit = half;
+        return Math.max(1L, limit);
     }
 
     private File externalCacheDir()

@@ -40,6 +40,11 @@ import java.util.logging.Level
 object OkGoHelper {
     const val DEFAULT_MILLISECONDS: Long = 20000
 
+    // 共享连接池:TV 盒上 HLS 分片常跨多个 CDN host,OkHttp 默认 5 idle/5min 偏小,
+    // 提到 16 idle/10min 可减少重复 TLS 握手。只改池容量,不动超时与并发上限。
+    private const val POOL_MAX_IDLE = 16
+    private const val POOL_KEEP_MINUTES = 10L
+
     // 内置 doh json
     private const val dnsConfigJson = "[" +
         "{\"name\": \"腾讯\", \"url\": \"https://doh.pub/dns-query\"}," +
@@ -95,6 +100,7 @@ object OkGoHelper {
         builder.dns(CustomDns())
         ItvClient = builder.build()
         ExoMediaSourceHelper.getInstance(KtApp.instance()).setOkClient(ItvClient)
+        LOG.i("DIAG exo_http_pool idle=$POOL_MAX_IDLE keep=${POOL_KEEP_MINUTES}min perHost=10 timeout=${DEFAULT_MILLISECONDS}ms")
     }
 
     @JvmField
@@ -282,7 +288,11 @@ object OkGoHelper {
      * 全局共享连接池:default/noRedirect/doh 等客户端复用同一池,
      * 避免 TV 盒子上多 OkHttpClient 各自持有连接池导致的 socket 浪费。
      */
-    private val sharedConnectionPool = okhttp3.ConnectionPool()
+    private val sharedConnectionPool = okhttp3.ConnectionPool(
+        POOL_MAX_IDLE,
+        POOL_KEEP_MINUTES,
+        TimeUnit.MINUTES
+    )
 
     fun getDefaultClient(): OkHttpClient? = defaultClient
 
