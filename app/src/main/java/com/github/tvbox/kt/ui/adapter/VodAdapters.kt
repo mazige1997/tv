@@ -28,6 +28,10 @@ class GridAdapter(showList: Boolean, val style: ImgUtil.Style?) :
 
     private var mShowList = showList
     private var defaultWidth = 0
+    // 样式尺寸换算一次即可;每次 bind 重新赋值 layoutParams 会触发 requestLayout,
+    // 首页/分类每屏数十个 item 反复重排是滚动掉帧的主要来源。
+    private var styledWidthPx = 0
+    private var styledHeightPx = 0
 
     init {
         if (style != null) {
@@ -106,15 +110,19 @@ class GridAdapter(showList: Boolean, val style: ImgUtil.Style?) :
     }
 
     private fun applyStyleToImage(ivThumb: ImageView) {
-        if (style != null) {
-            val container = ivThumb.parent as ViewGroup
-            val width = defaultWidth
-            val height = (width / style.ratio).toInt()
-            val containerParams = container.layoutParams
-            containerParams.height = AutoSizeUtils.mm2px(mContext, height.toFloat())
-            containerParams.width = AutoSizeUtils.mm2px(mContext, width.toFloat())
-            container.layoutParams = containerParams
+        val s = style ?: return
+        val container = ivThumb.parent as? ViewGroup ?: return
+        val containerParams = container.layoutParams ?: return
+        if (styledWidthPx == 0) {
+            val height = (defaultWidth / s.ratio).toInt()
+            styledWidthPx = AutoSizeUtils.mm2px(mContext, defaultWidth.toFloat())
+            styledHeightPx = AutoSizeUtils.mm2px(mContext, height.toFloat())
         }
+        // 尺寸没变就不要回写,否则每个 item 每次复用都会触发一次 measure/layout。
+        if (containerParams.width == styledWidthPx && containerParams.height == styledHeightPx) return
+        containerParams.width = styledWidthPx
+        containerParams.height = styledHeightPx
+        container.layoutParams = containerParams
     }
 }
 
@@ -184,6 +192,8 @@ class HomeHotVodAdapter(style: ImgUtil.Style?, tvRate0: String) :
     private var defaultWidth = 0
     private val style: ImgUtil.Style?
     private var tvRateValue: String? = tvRate0
+    private var styledWidthPx = 0
+    private var styledHeightPx = 0
 
     init {
         if (style != null) {
@@ -238,15 +248,18 @@ class HomeHotVodAdapter(style: ImgUtil.Style?, tvRate0: String) :
     }
 
     private fun applyStyleToImage(ivThumb: ImageView) {
-        if (style != null) {
-            val container = ivThumb.parent as ViewGroup
-            val width = defaultWidth
-            val height = (width / style.ratio).toInt()
-            val containerParams = container.layoutParams
-            containerParams.height = AutoSizeUtils.mm2px(mContext, height.toFloat())
-            containerParams.width = AutoSizeUtils.mm2px(mContext, width.toFloat())
-            container.layoutParams = containerParams
+        val s = style ?: return
+        val container = ivThumb.parent as? ViewGroup ?: return
+        val containerParams = container.layoutParams ?: return
+        if (styledWidthPx == 0) {
+            val height = (defaultWidth / s.ratio).toInt()
+            styledWidthPx = AutoSizeUtils.mm2px(mContext, defaultWidth.toFloat())
+            styledHeightPx = AutoSizeUtils.mm2px(mContext, height.toFloat())
         }
+        if (containerParams.width == styledWidthPx && containerParams.height == styledHeightPx) return
+        containerParams.width = styledWidthPx
+        containerParams.height = styledHeightPx
+        container.layoutParams = containerParams
     }
 }
 

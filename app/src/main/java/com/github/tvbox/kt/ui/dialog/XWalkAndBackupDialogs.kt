@@ -192,18 +192,23 @@ class BackupDialog(context: Context) : BaseDialog(context) {
                         val hawkJson = String(data, Charsets.UTF_8)
                         val jsonObject = JSONObject(hawkJson)
                         val it = jsonObject.keys()
-                        var sharedPreferences: SharedPreferences =
-                            KtApp.instance().getSharedPreferences("Hawk2", Context.MODE_PRIVATE)
+                        // 原来每个 key 都 edit().commit() 一次,逐条同步落盘会卡住界面;
+                        // 改为两份 SP 各收集完再提交一次,仍然保证重启前已写盘。
+                        val mainEditor = KtApp.instance()
+                            .getSharedPreferences("Hawk2", Context.MODE_PRIVATE).edit()
+                        val cryptoEditor = KtApp.instance()
+                            .getSharedPreferences("crypto.KEY_256", Context.MODE_PRIVATE).edit()
                         while (it.hasNext()) {
                             val key = it.next()
                             val value = jsonObject.getString(key)
                             if (key == "cipher_key") {
-                                KtApp.instance().getSharedPreferences("crypto.KEY_256", Context.MODE_PRIVATE)
-                                    .edit().putString(key, value).commit()
+                                cryptoEditor.putString(key, value)
                             } else {
-                                sharedPreferences.edit().putString(key, value).commit()
+                                mainEditor.putString(key, value)
                             }
                         }
+                        mainEditor.commit()
+                        cryptoEditor.commit()
                         Toast.makeText(context, "恢复成功,即将自动重启应用!", Toast.LENGTH_SHORT).show()
                         Handler().postDelayed({ restartApp() }, 3000)
                     } else {

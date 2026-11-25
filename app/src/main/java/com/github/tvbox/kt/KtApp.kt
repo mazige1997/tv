@@ -72,7 +72,12 @@ class KtApp : Application() {
      * 完全独立于播放链路,只读取缓存目录,不影响播放。
      */
     private var lastCacheSummary: String? = null
-    private val cacheDiagHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    // 缓存统计需要递归扫描 exo-video-cache/0~9/,放到主 Looper 会周期性造成掉帧;
+    // 改用低优先级后台线程,播放/滚动完全不受影响。
+    private val cacheDiagThread = android.os.HandlerThread(
+        "cache-diag", android.os.Process.THREAD_PRIORITY_BACKGROUND
+    ).apply { start() }
+    private val cacheDiagHandler = android.os.Handler(cacheDiagThread.looper)
     private val cacheDiagRunnable = object : Runnable {
         override fun run() {
             try {

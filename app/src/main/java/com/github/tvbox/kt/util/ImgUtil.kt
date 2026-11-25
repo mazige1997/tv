@@ -97,10 +97,11 @@ object ImgUtil {
         view.scaleType = scaleType
         var radius = roundingRadius
         if (radius <= 0) radius = 1
-        val fallback = createTextDrawable(if (TextUtils.isEmpty(label)) "TVBox" else label!!, newWidth, newHeight, radius.toFloat())
-        val placeholder = createImagePlaceholderDrawable(newWidth, newHeight, radius.toFloat())
+        val fallbackLabel = if (TextUtils.isEmpty(label)) "TVBox" else label!!
+        val fallbackRadius = radius.toFloat()
+        val placeholder = createImagePlaceholderDrawable(newWidth, newHeight, fallbackRadius)
         if (isInvalidImageUrl(url)) {
-            view.setImageDrawable(fallback)
+            view.setImageDrawable(createTextDrawable(fallbackLabel, newWidth, newHeight, fallbackRadius))
             return
         }
         val options = RequestOptions()
@@ -113,8 +114,7 @@ object ImgUtil {
             .asBitmap()
             .load(getUrl(url))
             .placeholder(placeholder)
-            .error(fallback)
-            .listener(getListener(view, scaleType, fallback))
+            .listener(getListener(view, scaleType, fallbackLabel, newWidth, newHeight, fallbackRadius))
             .apply(finalOptions)
             .into(view)
     }
@@ -123,10 +123,11 @@ object ImgUtil {
         view.scaleType = ImageView.ScaleType.CENTER_CROP
         var radius = roundingRadius
         if (radius <= 0) radius = 1
-        val fallback = createTextDrawable(if (TextUtils.isEmpty(label)) "TVBox" else label!!, newWidth, newHeight, radius.toFloat())
-        val placeholder = createImagePlaceholderDrawable(newWidth, newHeight, radius.toFloat())
+        val fallbackLabel = if (TextUtils.isEmpty(label)) "TVBox" else label!!
+        val fallbackRadius = radius.toFloat()
+        val placeholder = createImagePlaceholderDrawable(newWidth, newHeight, fallbackRadius)
         if (isInvalidImageUrl(url)) {
-            view.setImageDrawable(fallback)
+            view.setImageDrawable(createTextDrawable(fallbackLabel, newWidth, newHeight, fallbackRadius))
             return
         }
         val options = RequestOptions()
@@ -139,8 +140,7 @@ object ImgUtil {
             .asBitmap()
             .load(getUrl(url))
             .placeholder(placeholder)
-            .error(fallback)
-            .listener(getListener(view, ImageView.ScaleType.CENTER_CROP, fallback))
+            .listener(getListener(view, ImageView.ScaleType.CENTER_CROP, fallbackLabel, newWidth, newHeight, fallbackRadius))
             .apply(finalOptions)
             .into(view)
     }
@@ -240,6 +240,9 @@ object ImgUtil {
     private fun getUrl(url0: String?): Any? {
         var url = url0 ?: return null
         if (url.startsWith("data:")) return url
+        // 绝大多数海报 URL 不带 @Headers/@Cookie 等附加参数。走这里可省掉
+        // 4 次正则 split、HashMap 与 LazyHeaders 构建,直接交给 Glide 当 String model。
+        if (url.indexOf('@') < 0) return url
         var header: String? = null
         var referer: String? = null
         var ua: String? = null
@@ -307,7 +310,14 @@ object ImgUtil {
         headers[key!!] = value!!.trim()
     }
 
-    private fun getListener(view: ImageView, scaleType: ImageView.ScaleType, fallback: Drawable): RequestListener<Bitmap> {
+    private fun getListener(
+        view: ImageView,
+        scaleType: ImageView.ScaleType,
+        fallbackLabel: String,
+        width: Int,
+        height: Int,
+        radius: Float
+    ): RequestListener<Bitmap> {
         return object : RequestListener<Bitmap> {
             override fun onLoadFailed(
                 e: GlideException?,
@@ -316,7 +326,8 @@ object ImgUtil {
                 isFirstResource: Boolean
             ): Boolean {
                 view.scaleType = scaleType
-                view.setImageDrawable(fallback)
+                // 只在真正失败时才生成占位图,成功加载的 item 不再白白分配一张 Bitmap。
+                view.setImageDrawable(createTextDrawable(fallbackLabel, width, height, radius))
                 return true
             }
 

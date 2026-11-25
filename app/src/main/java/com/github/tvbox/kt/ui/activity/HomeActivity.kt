@@ -98,6 +98,9 @@ class HomeActivity : BaseActivity() {
     private val mHandler = Handler()
     private var mExitTime = 0L
     private var eventBusRegistered = false
+    // 焦点切换时避免每次都走 Resources.getColor 查找。
+    private var focusTextColor = 0
+    private var normalTextColor = 0
     private val mRunnable: Runnable = object : Runnable {
         @SuppressLint("SetTextI18n")
         override fun run() {
@@ -159,8 +162,11 @@ class HomeActivity : BaseActivity() {
         this.mViewPager = findViewById(R.id.mViewPager)
         this.sortAdapter = SortAdapter()
         this.mGridView!!.layoutManager = V7LinearLayoutManager(mContext, 0, false)
+        this.mGridView!!.setHasFixedSize(true)
         this.mGridView!!.setSpacingWithMargins(0, AutoSizeUtils.dp2px(mContext, 10.0f))
         this.mGridView!!.setAdapter(this.sortAdapter)
+        focusTextColor = resources.getColor(R.color.color_FFFFFF)
+        normalTextColor = resources.getColor(R.color.color_BBFFFFFF)
         sortAdapter!!.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
             override fun onChanged() {
                 mGridView!!.post {
@@ -180,10 +186,10 @@ class HomeActivity : BaseActivity() {
                         textView.paint.isFakeBoldText = false
                         if (sortFocused == position) {
                             view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(DecelerateInterpolator()).setDuration(150).start()
-                            textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_FFFFFF))
+                            textView.setTextColor(this@HomeActivity.focusTextColor)
                         } else {
                             view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
-                            textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_BBFFFFFF))
+                            textView.setTextColor(this@HomeActivity.normalTextColor)
                             view.findViewById<View>(R.id.tvFilter).visibility = View.GONE
                             view.findViewById<View>(R.id.tvFilterColor).visibility = View.GONE
                         }
@@ -200,7 +206,7 @@ class HomeActivity : BaseActivity() {
                     view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(DecelerateInterpolator()).setDuration(150).start()
                     val textView = view.findViewById<TextView>(R.id.tvTitle)
                     textView.paint.isFakeBoldText = true
-                    textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_FFFFFF))
+                    textView.setTextColor(this@HomeActivity.focusTextColor)
                     textView.invalidate()
                     val sortData = sortAdapter!!.getItem(position)
                     if (!sortData!!.filters.isEmpty()) {
