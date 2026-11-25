@@ -51,4 +51,16 @@
         <item name="android:drawablePadding">10.0dip</item>
         <item name="android:radius">10dp</item>
     </style>
+
+    <!-- 设置页选项行统一外观:31 个选项共用,消除重复属性、加快 inflate 解析。
+         仅含视觉/焦点属性;id、layout 宽高、weight、margin 因项而异,留在各自行内。 -->
+    <style name="SettingRow">
+        <item name="android:background">@drawable/shape_setting_model_focus</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingLeft">@dimen/vs_20</item>
+        <item name="android:paddingRight">@dimen/vs_20</item>
+        <item name="android:stateListAnimator">@animator/focus_scale</item>
+    </style>
 </resources>

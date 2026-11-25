@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 分组标题左侧竖条:青色圆角小条,作为 compound drawable 使用,不占布局层级。 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <size android:width="4dp" android:height="20dp" />
+    <solid android:color="@color/tech_accent" />
+    <corners android:radius="2dp" />
+</shape>

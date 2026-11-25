@@ -24,18 +24,12 @@
                 android:orientation="vertical">
 
             <LinearLayout
+                style="@style/SettingRow"
                     android:id="@+id/llDebug"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_50"
                     android:layout_marginBottom="@dimen/vs_10"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
 
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
-                    android:paddingRight="@dimen/vs_20"
                     android:visibility="gone">
 
                 <TextView
@@ -55,7 +49,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="关"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:textSize="@dimen/ts_24" />
 
                 <TextView
@@ -79,6 +73,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -88,18 +84,13 @@
                 android:focusable="false"
                 android:orientation="horizontal">
                 <LinearLayout
+                    style="@style/SettingRow"
                     android:id="@+id/llApi"
                     android:layout_width="@dimen/vs_0"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="@dimen/vs_5"
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="3.08"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
                     android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -120,7 +111,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="middle"
                             android:singleLine="true"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -143,18 +134,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llApiHistory"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -173,7 +159,7 @@
                         android:id="@+id/tvMediaCodec1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -187,19 +173,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llApiLine"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
-                        android:paddingRight="@dimen/vs_20"
                         android:visibility="gone">
 
                     <TextView
@@ -221,7 +201,7 @@
                         android:ellipsize="middle"
                         android:gravity="right"
                         android:singleLine="true"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -243,18 +223,13 @@
                 android:focusable="false"
                 android:orientation="horizontal">
                 <LinearLayout
+                    style="@style/SettingRow"
                     android:id="@+id/llHomeApi"
                     android:layout_width="@dimen/vs_0"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="@dimen/vs_5"
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="3.08"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
                     android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -275,7 +250,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="middle"
                             android:singleLine="true"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -288,18 +263,13 @@
                             android:textSize="@dimen/ts_30" />
                 </LinearLayout>
                 <LinearLayout
+                    style="@style/SettingRow"
                     android:id="@+id/tvHomeLive"
                     android:layout_width="@dimen/vs_0"
                     android:layout_height="match_parent"
                     android:layout_marginStart="@dimen/vs_5"
                     android:layout_marginLeft="@dimen/vs_5"
                     android:layout_weight="1"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
                     android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -318,7 +288,7 @@
                         android:id="@+id/tvHomeText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:text="点播"
                         android:textSize="@dimen/ts_24" />
 
@@ -344,6 +314,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -363,18 +335,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llHomeRec"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -393,7 +360,7 @@
                             android:id="@+id/tvHomeRec"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -407,18 +374,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llHomeRecStyle"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -437,7 +399,7 @@
                             android:id="@+id/showRecStyleText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -462,18 +424,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llSearchView"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -492,7 +449,7 @@
                             android:id="@+id/tvSearchView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -506,18 +463,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/showFastSearch"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -536,7 +488,7 @@
                             android:id="@+id/showFastSearchText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -562,6 +514,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -572,18 +526,13 @@
                     android:orientation="horizontal">
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llPlay"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -602,7 +551,7 @@
                             android:id="@+id/tvPlay"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -625,18 +574,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llMediaCodec"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -655,7 +599,7 @@
                             android:id="@+id/tvMediaCodec"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -669,18 +613,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/m3u8Ad"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -699,7 +638,7 @@
                             android:id="@+id/m3u8AdText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -726,6 +665,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -736,18 +677,13 @@
                     android:orientation="horizontal">
 
                 <LinearLayout
+                    style="@style/SettingRow"
                     android:id="@+id/danmuOpen"
                     android:layout_width="@dimen/vs_0"
                     android:layout_height="match_parent"
                     android:layout_marginEnd="@dimen/vs_5"
                     android:layout_marginRight="@dimen/vs_5"
                     android:layout_weight="1"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
                     android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -766,7 +702,7 @@
                         android:id="@+id/danmuOpenText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -781,18 +717,13 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    style="@style/SettingRow"
                     android:id="@+id/danmuApi"
                     android:layout_width="@dimen/vs_0"
                     android:layout_height="match_parent"
                     android:layout_marginStart="@dimen/vs_5"
                     android:layout_marginLeft="@dimen/vs_5"
                     android:layout_weight="1"
-                    android:background="@drawable/shape_setting_model_focus"
-                    android:stateListAnimator="@animator/focus_scale"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingLeft="@dimen/vs_20"
                     android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -814,7 +745,7 @@
                         android:ellipsize="middle"
                         android:gravity="right"
                         android:singleLine="true"
-                        android:textColor="@android:color/white"
+                        android:textColor="@color/tech_value_text"
                         android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -837,18 +768,13 @@
                     android:orientation="horizontal">
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llRender"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -867,7 +793,7 @@
                             android:id="@+id/tvRenderType"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -890,18 +816,13 @@
                         android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/autoSwitchLine"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -920,7 +841,7 @@
                             android:id="@+id/autoSwitchLineText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -934,18 +855,13 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llDns"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -964,7 +880,7 @@
                             android:id="@+id/tvDns"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -989,18 +905,13 @@
                     android:orientation="horizontal">
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llParseWebVew"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -1020,7 +931,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="系统自带"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -1044,18 +955,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llHistoryMerge"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1074,7 +980,7 @@
                             android:id="@+id/tvHistoryMerge"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -1087,18 +993,13 @@
                             android:textSize="@dimen/ts_30" />
                     </LinearLayout>
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llHistoryNum"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1117,7 +1018,7 @@
                             android:id="@+id/tvHistoryNum"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -1145,6 +1046,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -1164,18 +1067,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llWp"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1201,18 +1099,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llWpRecovery"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1248,18 +1141,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llScale"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1278,7 +1166,7 @@
                             android:id="@+id/tvScaleType"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -1292,18 +1180,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/showPreview"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1322,7 +1205,7 @@
                             android:id="@+id/showPreviewText"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                         <TextView
@@ -1350,6 +1233,8 @@
                 android:textColor="@color/tech_group_title"
                 android:textSize="@dimen/ts_20"
                 android:textStyle="bold"
+                android:drawableLeft="@drawable/tech_section_marker"
+                android:drawablePadding="@dimen/vs_10"
                 android:focusable="false"
                 android:focusableInTouchMode="false" />
             <LinearLayout
@@ -1370,18 +1255,13 @@
 
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llIjkCachePlay"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1400,7 +1280,7 @@
                             android:id="@+id/tvIjkCachePlay"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:text="关闭"
                             android:textSize="@dimen/ts_24" />
 
@@ -1416,18 +1296,13 @@
 
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llClearCache"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1465,18 +1340,13 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llBackup"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1502,18 +1372,13 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        style="@style/SettingRow"
                         android:id="@+id/llAbout"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                         <TextView
@@ -1549,18 +1414,13 @@
                     android:orientation="horizontal">
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llPlayCache"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginEnd="@dimen/vs_5"
                         android:layout_marginRight="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -1580,7 +1440,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="关闭"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
@@ -1594,18 +1454,13 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    style="@style/SettingRow"
                         android:id="@+id/llLogDisk"
                         android:layout_width="@dimen/vs_0"
                         android:layout_height="match_parent"
                         android:layout_marginStart="@dimen/vs_5"
                         android:layout_marginLeft="@dimen/vs_5"
                         android:layout_weight="1"
-                        android:background="@drawable/shape_setting_model_focus"
-                        android:stateListAnimator="@animator/focus_scale"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="@dimen/vs_20"
                         android:paddingRight="@dimen/vs_20">
 
                     <TextView
@@ -1625,7 +1480,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="开启"
-                            android:textColor="@android:color/white"
+                            android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
 
                     <TextView
