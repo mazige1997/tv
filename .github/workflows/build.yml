@@ -108,19 +108,58 @@ jobs:
       - name: 编译 Rust 核心并打包 Release APK
         run: ./gradlew assembleTvRelease --no-daemon --stacktrace
 
-      # buildRustCore 在缺少 cargo/NDK 时会静默跳过,产物里就没有 .so。
-      # 这里显式列出 APK 内的 native 库,便于判断运行时究竟走 Rust 快路径还是 Kotlin 回退。
-      - name: 校验 APK 内的 native 库
+      # ABI splits 产出三个 APK:32 位(armeabi-v7a)、64 位(arm64-v8a)、通用(universal)。
+      # 逐包列出 native 库并硬校验:缺包或缺 so 直接让 CI 失败,不放行有缺陷的产物。
+      - name: 校验三个 APK 的 ABI 与 native 库
         run: |
-          APK=$(ls app/build/outputs/apk/tv/release/*.apk | head -n 1)
-          echo "APK: $APK"
-          echo "--- jniLibs ---"
-          unzip -l "$APK" | grep -E "lib/[^/]+/.*\.so" | awk '{print $4}' | sort || true
-          if unzip -l "$APK" | grep -q "libtvbox_core.so"; then
-            echo "libtvbox_core.so: PRESENT (NativeCore 快路径生效)"
-          else
-            echo "::warning::libtvbox_core.so MISSING — NativeCore 将全部走 Kotlin 回退"
+          APK_DIR=app/build/outputs/apk/tv/release
+          echo "--- 产物清单 ---"
+          ls -lh "$APK_DIR"/*.apk
+
+          COUNT=$(find "$APK_DIR" -maxdepth 1 -name '*.apk' | wc -l)
+          echo "APK 数量: $COUNT (期望 3: 32位 / 64位 / 通用)"
+          if [ "$COUNT" -ne 3 ]; then
+            echo "::error::期望 3 个 APK,实得 $COUNT 个 —— ABI splits 可能未生效"
+            exit 1
           fi
+
+          APK32=$(find "$APK_DIR" -maxdepth 1 -name '*armeabi-v7a*.apk' | head -n 1)
+          APK64=$(find "$APK_DIR" -maxdepth 1 -name '*arm64-v8a*.apk' | head -n 1)
+          APKALL=$(find "$APK_DIR" -maxdepth 1 -name '*universal*.apk' | head -n 1)
+          for item in "32位|$APK32" "64位|$APK64" "通用|$APKALL"; do
+            label="${item%%|*}"; path="${item#*|}"
+            if [ -z "$path" ]; then echo "::error::缺少 $label 包"; exit 1; fi
+          done
+
+          echo "--- 各包 native 库清单 ---"
+          for apk in "$APK_DIR"/*.apk; do
+            echo "### $(basename "$apk")"
+            unzip -l "$apk" | grep -E "lib/[^/]+/.*\.so" | awk '{print $4}' | sort || true
+          done
+
+          # 用 case 做子串匹配,避免 grep -q 提前退出触发 pipefail 下的 SIGPIPE 误报。
+          check_so() {
+            local apk="$1" abi="$2" lib="$3"
+            local listing
+            listing=$(unzip -l "$apk")
+            case "$listing" in
+              *"lib/$abi/$lib"*)
+                echo "OK  $(basename "$apk") -> $abi/$lib" ;;
+              *)
+                echo "::error::$(basename "$apk") 缺少 $abi/$lib"
+                exit 1 ;;
+            esac
+          }
+
+          echo "--- 严格校验 ---"
+          check_so "$APK32"  armeabi-v7a libtvbox_core.so
+          check_so "$APK32"  armeabi-v7a libplayer.so
+          check_so "$APK64"  arm64-v8a  libtvbox_core.so
+          check_so "$APK64"  arm64-v8a  libplayer.so
+          check_so "$APKALL" armeabi-v7a libtvbox_core.so
+          check_so "$APKALL" arm64-v8a  libtvbox_core.so
+          check_so "$APKALL" x86_64     libtvbox_core.so
+          echo "三个 APK 的 native 库校验全部通过"
 
       - name: 解析 Release 标签
         id: tag

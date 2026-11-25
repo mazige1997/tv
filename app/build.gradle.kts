@@ -104,6 +104,20 @@ android {
         }
     }
 
+    // 一次编译产出三个 APK(代码只编译一遍,仅在打包阶段按 ABI 拆分):
+    //   armeabi-v7a  -> 32 位包
+    //   arm64-v8a    -> 64 位包
+    //   universal    -> 通用包,包含上面 abiFilters 的全部 ABI(v7a / arm64 / x86_64)
+    // include 只列两种 ARM:避免额外产出一个没人用的 x86_64 单包(x86_64 的 so 只在通用包里带)。
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = true
+        }
+    }
+
     // 公开签名:keystore 与密码随仓库提交,仅用于 TVBox 社区构建,勿用于个人敏感应用
     signingConfigs {
         create("release") {
@@ -162,7 +176,12 @@ android {
     applicationVariants.all {
         outputs.all {
             val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output?.outputFileName = "TVBox_${buildType.name}-kt-${name}.apk"
+            output?.let {
+                // splits 后一个 variant 有多个 output:用 ABI 过滤器区分,universal 无过滤器。
+                // 不能再用 name(所有 split 共享同一个 variant 名),否则三个包会写同一文件名互相覆盖。
+                val abi = it.getFilter("ABI") ?: "universal"
+                it.outputFileName = "TVBox_${buildType.name}-kt-${abi}.apk"
+            }
         }
     }
 }
