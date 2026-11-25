@@ -64,6 +64,7 @@
 
             <!-- ===== 配置与数据源 ===== -->
             <TextView
+                android:id="@+id/tvGroupConfig"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -75,8 +76,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/vs_60"
@@ -305,6 +308,7 @@
 
             <!-- ===== 界面与显示 ===== -->
             <TextView
+                android:id="@+id/tvGroupDisplay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -316,8 +320,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -505,6 +511,7 @@
 
             <!-- ===== 播放与网络 ===== -->
             <TextView
+                android:id="@+id/tvGroupPlay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -516,8 +523,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -656,6 +665,7 @@
 
             <!-- ===== 弹幕设置 ===== -->
             <TextView
+                android:id="@+id/tvGroupDanmu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -667,8 +677,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -1037,6 +1049,7 @@
 
             <!-- ===== 界面高级 ===== -->
             <TextView
+                android:id="@+id/tvGroupAdvanced"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -1048,8 +1061,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/vs_60"
@@ -1224,6 +1239,7 @@
 
             <!-- ===== 缓存与工具 ===== -->
             <TextView
+                android:id="@+id/tvGroupTools"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/vs_10"
@@ -1235,8 +1251,10 @@
                 android:textStyle="bold"
                 android:drawableLeft="@drawable/tech_section_marker"
                 android:drawablePadding="@dimen/vs_10"
-                android:focusable="false"
-                android:focusableInTouchMode="false" />
+                android:background="@drawable/tech_group_header"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/vs_60"
@@ -1482,6 +1500,38 @@
                             android:text="开启"
                             android:textColor="@color/tech_value_text"
                             android:textSize="@dimen/ts_24" />
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/vs_10"
+                            android:layout_marginLeft="@dimen/vs_10"
+                            android:text=">"
+                            android:textColor="@android:color/white"
+                            android:textSize="@dimen/ts_30" />
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/SettingRow"
+                        android:id="@+id/llCheckUpdate"
+                        android:layout_width="@dimen/vs_0"
+                        android:layout_height="match_parent"
+                        android:layout_marginStart="@dimen/vs_5"
+                        android:layout_marginLeft="@dimen/vs_5"
+                        android:layout_weight="1"
+                        android:paddingRight="@dimen/vs_20">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="检查更新"
+                            android:textColor="@android:color/white"
+                            android:textSize="@dimen/ts_24" />
+
+                    <Space
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
 
                     <TextView
                             android:layout_width="wrap_content"

@@ -66,6 +66,7 @@ object HawkConfig {
     const val DANMU_SIZE_SCALE = "danmu_size_scale"
     const val DANMU_RANDOM_COLOR = "danmu_random_color"
     const val DANMU_API = "danmu_api"
+    const val SETTING_GROUP_COLLAPSED_PREFIX = "setting_group_collapsed_" // 设置页分组折叠状态
 
     @JvmField
     var hotVodDelete = false

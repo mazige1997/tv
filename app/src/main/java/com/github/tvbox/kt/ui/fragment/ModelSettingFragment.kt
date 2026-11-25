@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import com.github.tvbox.kt.R
+import com.github.tvbox.kt.KtApp
 import com.github.tvbox.kt.api.ApiConfig
 import com.github.tvbox.kt.api.DanmakuApi
 import com.github.tvbox.kt.base.BaseActivity
@@ -32,15 +33,19 @@ import com.github.tvbox.kt.ui.dialog.BackupDialog
 import com.github.tvbox.kt.ui.dialog.DanmuApiDialog
 import com.github.tvbox.kt.ui.dialog.SearchRemoteTvDialog
 import com.github.tvbox.kt.ui.dialog.SelectDialog
+import com.github.tvbox.kt.ui.dialog.UpdateDialog
 import com.github.tvbox.kt.ui.dialog.XWalkInitDialog
 import com.github.tvbox.kt.util.DanmuHelper
+import com.github.tvbox.kt.util.DefaultConfig
 import com.github.tvbox.kt.util.FastClickCheckUtil
 import com.github.tvbox.kt.util.FileUtils
 import com.github.tvbox.kt.util.HawkConfig
 import com.github.tvbox.kt.util.HistoryHelper
 import com.github.tvbox.kt.util.LOG
+import com.github.tvbox.kt.util.MD5
 import com.github.tvbox.kt.util.OkGoHelper
 import com.github.tvbox.kt.util.PlayerHelper
+import com.github.tvbox.kt.util.UpdateChecker
 import com.github.tvbox.kt.viewmodel.SourceViewModel
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.Permission
@@ -673,6 +678,70 @@ class ModelSettingFragment : BaseLazyFragment() {
         findViewById<View>(R.id.llPlayCache)!!.setOnClickListener { v -> onClickPlayCache(v) }
         findViewById<View>(R.id.llLogDisk)!!.setOnClickListener { v -> onClickLogDisk(v) }
         findViewById<View>(R.id.llClearCache)!!.setOnClickListener { v -> onClickClearCache(v) }
+        findViewById<View>(R.id.llCheckUpdate)!!.setOnClickListener { v ->
+            FastClickCheckUtil.check(v)
+            checkUpdate()
+        }
+        initSectionFolding()
+    }
+
+    private data class SettingSection(val headerId: Int, val key: String, val label: String)
+
+    private val settingSections = listOf(
+        SettingSection(R.id.tvGroupConfig, "config", "配置与数据源"),
+        SettingSection(R.id.tvGroupDisplay, "display", "界面与显示"),
+        SettingSection(R.id.tvGroupPlay, "play", "播放与网络"),
+        SettingSection(R.id.tvGroupDanmu, "danmu", "弹幕设置"),
+        SettingSection(R.id.tvGroupAdvanced, "advanced", "界面高级"),
+        SettingSection(R.id.tvGroupTools, "tools", "缓存与工具")
+    )
+
+    /** 分组标题可点击折叠;只隐藏整组子 View,不改任何选项 id 与点击绑定。 */
+    private fun initSectionFolding() {
+        val headers = settingSections.mapNotNull { findViewById<View>(it.headerId) as? TextView }
+        if (headers.size != settingSections.size) return
+        val parent = headers[0].parent as? LinearLayout ?: return
+        val headerIndices = headers.map { parent.indexOfChild(it) }
+        settingSections.forEachIndexed { index, section ->
+            val header = headers[index]
+            val start = headerIndices[index] + 1
+            val end = headerIndices.filter { it >= start }.sorted().firstOrNull() ?: parent.childCount
+            applySectionFolding(parent, header, section, start, end)
+            header.setOnClickListener { v ->
+                FastClickCheckUtil.check(v)
+                val key = HawkConfig.SETTING_GROUP_COLLAPSED_PREFIX + section.key
+                Hawk.put(key, !Hawk.get(key, false))
+                applySectionFolding(parent, header, section, start, end)
+                header.requestFocus()
+            }
+        }
+    }
+
+    private fun applySectionFolding(
+        parent: LinearLayout,
+        header: TextView,
+        section: SettingSection,
+        start: Int,
+        end: Int
+    ) {
+        val collapsed = Hawk.get(HawkConfig.SETTING_GROUP_COLLAPSED_PREFIX + section.key, false)
+        for (i in start until end) {
+            parent.getChildAt(i)?.visibility = if (collapsed) View.GONE else View.VISIBLE
+        }
+        header.text = section.label + (if (collapsed) "  ▸" else "  ▾")
+    }
+
+    private fun checkUpdate() {
+        Toast.makeText(mContext, "正在检查更新...", Toast.LENGTH_SHORT).show()
+        UpdateChecker.check { release ->
+            if (!isAdded) return@check
+            if (release == null) {
+                Toast.makeText(mContext, "检查更新失败,请稍后重试", Toast.LENGTH_SHORT).show()
+                return@check
+            }
+            val dialog = UpdateDialog(mActivity, release, DefaultConfig.getAppVersionName(mContext))
+            dialog.show()
+        }
     }
 
     private fun restartAppAfterConfigChanged() {
@@ -935,6 +1004,14 @@ class ModelSettingFragment : BaseLazyFragment() {
                 ApiConfig.get().clearSpiderCache()
                 if (cacheDir.exists()) FileUtils.cleanDirectory(cacheDir)
                 FileUtils.clearSpiderCacheFiles()
+                // 配置改为冷启动优先复用本地缓存,这里同时删掉配置缓存作为手动刷新入口
+                for (url in listOf(Hawk.get(HawkConfig.API_URL, ""), Hawk.get(HawkConfig.LIVE_API_URL, ""))) {
+                    if (url.isEmpty()) continue
+                    try {
+                        File(KtApp.instance().filesDir.absolutePath + "/" + MD5.encode(url)).delete()
+                    } catch (_: Throwable) {
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             } finally {

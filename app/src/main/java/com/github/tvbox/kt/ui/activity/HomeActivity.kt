@@ -144,11 +144,14 @@ class HomeActivity : BaseActivity() {
         ControlManager.get().startServer()
         initView()
         initViewModel()
-        useCacheConfig = false
+        // 配置已保存到本地缓存文件(filesDir/MD5(url));冷启动直接复用,
+        // 只有显式传 useCache 的入口(如设置页返回)才覆盖。地址变更时 MD5 文件名不同,
+        // 新地址没有缓存自然走网络,不会读到旧配置。
+        useCacheConfig = true
         val intent = getIntent()
-        if (intent != null && intent.extras != null) {
+        if (intent != null && intent.extras != null && intent.extras!!.containsKey("useCache")) {
             val bundle = intent.extras
-            useCacheConfig = bundle!!.getBoolean("useCache", false)
+            useCacheConfig = bundle!!.getBoolean("useCache", true)
         }
         initData()
     }
