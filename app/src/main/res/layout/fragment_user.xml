@@ -38,8 +38,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_history" />
@@ -76,8 +76,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_live" />
@@ -114,8 +114,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_search" />
@@ -152,8 +152,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_push" />
@@ -190,8 +190,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_collect" />
@@ -229,8 +229,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_setting" />
@@ -269,8 +269,8 @@
                 android:paddingRight="@dimen/vs_8">
 
                 <ImageView
-                    android:layout_width="@dimen/vs_36"
-                    android:layout_height="@dimen/vs_36"
+                    android:layout_width="@dimen/vs_35"
+                    android:layout_height="@dimen/vs_35"
                     android:layout_gravity="center"
                     android:alpha="0.85"
                     android:src="@drawable/icon_transfer" />
