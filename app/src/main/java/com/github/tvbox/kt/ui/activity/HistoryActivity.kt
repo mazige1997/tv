@@ -2,7 +2,7 @@ package com.github.tvbox.kt.ui.activity
 
 import android.os.Bundle
 import android.view.View
-import android.view.animation.BounceInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import com.github.tvbox.kt.R
@@ -83,11 +83,11 @@ class HistoryActivity : BaseActivity() {
         }
         mGridView!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
             override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {

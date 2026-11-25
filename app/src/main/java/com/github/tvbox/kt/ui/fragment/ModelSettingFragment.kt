@@ -30,7 +30,6 @@ import com.github.tvbox.kt.ui.dialog.ApiDialog
 import com.github.tvbox.kt.ui.dialog.ApiHistoryDialog
 import com.github.tvbox.kt.ui.dialog.BackupDialog
 import com.github.tvbox.kt.ui.dialog.DanmuApiDialog
-import com.github.tvbox.kt.ui.dialog.LogDialog
 import com.github.tvbox.kt.ui.dialog.SearchRemoteTvDialog
 import com.github.tvbox.kt.ui.dialog.SelectDialog
 import com.github.tvbox.kt.ui.dialog.XWalkInitDialog
@@ -185,11 +184,6 @@ class ModelSettingFragment : BaseLazyFragment() {
         findViewById<View>(R.id.llAbout)!!.setOnClickListener { v ->
             FastClickCheckUtil.check(v)
             val dialog = AboutDialog(mActivity!!)
-            dialog.show()
-        }
-        findViewById<View>(R.id.llDiagLog)!!.setOnClickListener { v ->
-            FastClickCheckUtil.check(v)
-            val dialog = LogDialog(mActivity!!)
             dialog.show()
         }
         findViewById<View>(R.id.llWp)!!.setOnClickListener { v ->

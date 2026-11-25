@@ -19,7 +19,7 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import android.view.animation.BounceInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -179,10 +179,10 @@ class HomeActivity : BaseActivity() {
                         val textView = view.findViewById<TextView>(R.id.tvTitle)
                         textView.paint.isFakeBoldText = false
                         if (sortFocused == position) {
-                            view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(BounceInterpolator()).setDuration(300).start()
+                            view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(DecelerateInterpolator()).setDuration(150).start()
                             textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_FFFFFF))
                         } else {
-                            view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(300).start()
+                            view.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).start()
                             textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_BBFFFFFF))
                             view.findViewById<View>(R.id.tvFilter).visibility = View.GONE
                             view.findViewById<View>(R.id.tvFilterColor).visibility = View.GONE
@@ -197,7 +197,7 @@ class HomeActivity : BaseActivity() {
                     currentView = view
                     isDownOrUp = false
                     sortChange = true
-                    view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(BounceInterpolator()).setDuration(300).start()
+                    view.animate().scaleX(1.1f).scaleY(1.1f).setInterpolator(DecelerateInterpolator()).setDuration(150).start()
                     val textView = view.findViewById<TextView>(R.id.tvTitle)
                     textView.paint.isFakeBoldText = true
                     textView.setTextColor(this@HomeActivity.resources.getColor(R.color.color_FFFFFF))

@@ -14,13 +14,13 @@ import com.github.tvbox.kt.util.LOG
 object NativeCore {
 
     /**
-     * 诊断隔离开关:功能验证阶段整体关闭原生核心。
+     * 原生核心总开关:false = 启用 Rust 快路径(正常形态)。
      *
-     * Rust 快路径是重构版相对原版唯一系统性新增的数据路径;关闭后所有调用方已有的
-     * `if (NativeCore.available)` 保护会让数据链路 100% 走与原版逐行一致的 Kotlin 回退实现。
-     * 功能确认稳定后把此值改回 false 即可重新启用,无需改动其它文件。
+     * 诊断期曾临时置 true,让所有调用方经 `if (NativeCore.available)` 保护回退到
+     * 与原版逐行一致的 Kotlin 实现,以隔离原生路径排查问题。功能已确认稳定,现恢复启用。
+     * 若日后需再次隔离原生路径,把此值改回 true 即可,无需改动其它文件。
      */
-    private const val FORCE_DISABLE_NATIVE = true
+    private const val FORCE_DISABLE_NATIVE = false
 
     // 注意:不可加 @JvmField —— 带 private set 的属性有自定义访问器,@JvmField 非法;
     // Kotlin 调用方照常属性访问,Java 调用方(如有)使用 getAvailable()

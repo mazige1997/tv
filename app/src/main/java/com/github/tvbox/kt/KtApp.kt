@@ -38,7 +38,7 @@ class KtApp : Application() {
         initParams()
         OkGoHelper.init() // 台标获取
         EpgUtil.init()
-        NativeCore.load() // Rust 原生核心(诊断期整体禁用,加载失败时亦自动回退 Kotlin 实现)
+        NativeCore.load() // Rust 原生核心(已启用;加载失败时自动回退 Kotlin 实现)
         logStartupDiag()
         // 初始化 Web 服务器
         ControlManager.init(this)

@@ -11,7 +11,7 @@ import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import android.view.View
-import android.view.animation.BounceInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
@@ -205,7 +205,7 @@ class FastSearchActivity : BaseActivity() {
             .scaleX(scale)
             .scaleY(scale)
             .setDuration(POSTER_FOCUS_ANIM_DURATION)
-            .setInterpolator(BounceInterpolator())
+            .setInterpolator(DecelerateInterpolator())
             .start()
     }
 
@@ -996,7 +996,7 @@ class FastSearchActivity : BaseActivity() {
         private const val SEARCH_PUMP_SECONDS = 2
         private const val SEARCH_NEXT_BATCH_SECONDS = 3
         private const val SEARCH_SITE_TIMEOUT_SECONDS = 15
-        private const val POSTER_FOCUS_ANIM_DURATION = 300L
+        private const val POSTER_FOCUS_ANIM_DURATION = 180L
         private const val POSTER_FOCUS_SCALE = 1.05f
         private const val SEARCH_ALL_NAME = "全部"
     }

@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.animation.BounceInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
@@ -224,11 +224,11 @@ class UserFragment : BaseLazyFragment(), View.OnClickListener {
 
         tvHotList.setOnItemListener(object : TvRecyclerView.OnItemListener {
             override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
@@ -322,9 +322,9 @@ class UserFragment : BaseLazyFragment(), View.OnClickListener {
 
     private val focusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
         if (hasFocus) {
-            v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(300).setInterpolator(BounceInterpolator()).start()
+            v.animate().scaleX(1.05f).scaleY(1.05f).setDuration(150).setInterpolator(DecelerateInterpolator()).start()
         } else {
-            v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(300).setInterpolator(BounceInterpolator()).start()
+            v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(150).setInterpolator(DecelerateInterpolator()).start()
         }
     }
 

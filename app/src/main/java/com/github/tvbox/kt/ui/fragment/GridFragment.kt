@@ -7,7 +7,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.view.animation.BounceInterpolator
+import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -210,11 +210,11 @@ class GridFragment : BaseLazyFragment() {
         }, mGridView)
         mGridView!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
             override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(300)?.setInterpolator(BounceInterpolator())?.start()
+                itemView?.animate()?.scaleX(1.05f)?.scaleY(1.05f)?.setDuration(150)?.setInterpolator(DecelerateInterpolator())?.start()
             }
 
             override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
