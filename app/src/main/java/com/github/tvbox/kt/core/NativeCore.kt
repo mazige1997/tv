@@ -54,9 +54,6 @@ object NativeCore {
     /** 从图片包装中提取 jar 字节;无标记时返回空数组。 */
     external fun extractJar(body: String): ByteArray
 
-    /** AES 解密(hex 数据,密钥右补 '0' 至 16 字节);cbc=false 为 ECB。 */
-    external fun aesDecryptHex(dataHex: String, key: String, iv: String?, cbc: Boolean): String?
-
     // ---------------- 直播解析 ----------------
     /** 完整数组形态 [{group, channels:[{name, urls, logo, epg, ...}]}]。 */
     external fun parseLive(text: String): String

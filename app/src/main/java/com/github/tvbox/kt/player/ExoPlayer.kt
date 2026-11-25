@@ -3,7 +3,6 @@ package com.github.tvbox.kt.player
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.util.Pair
 import com.github.tvbox.kt.util.AudioTrackMemory
 import com.github.tvbox.kt.util.HawkConfig
 import com.github.tvbox.kt.util.LOG
@@ -297,11 +296,6 @@ class ExoPlayer(context: Context) : ExoMediaPlayer(context) {
             }
         }
         return data
-    }
-
-    fun setTrack(groupIndex: Int, trackIndex: Int, playKey: String) {
-        val mappedInfo = trackSelector.currentMappedTrackInfo
-        setTrack(findAudioRendererIndex(mappedInfo), groupIndex, trackIndex, playKey)
     }
 
     fun setTrack(track: TrackInfoBean?, playKey: String) {

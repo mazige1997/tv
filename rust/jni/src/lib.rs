@@ -8,7 +8,7 @@
 //! catch_unwind 内执行纯计算,panic 一律降级为 null / 空数组,由 Kotlin 回退。
 
 use jni::objects::{JClass, JString};
-use jni::sys::{jbyteArray, jboolean, jlong, jstring};
+use jni::sys::{jbyteArray, jlong, jstring};
 use jni::JNIEnv;
 
 use tvbox_core::config;
@@ -131,39 +131,6 @@ pub extern "system" fn Java_com_github_tvbox_kt_core_NativeCore_extractJar(
     match env.byte_array_from_slice(&bytes) {
         Ok(arr) => arr.into_raw(),
         Err(_) => std::ptr::null_mut(),
-    }
-}
-
-/// aesDecryptHex(dataHex: String, key: String, iv: String?, cbc: Boolean): String?
-#[no_mangle]
-pub extern "system" fn Java_com_github_tvbox_kt_core_NativeCore_aesDecryptHex(
-    mut env: JNIEnv,
-    _class: JClass,
-    data_hex: JString,
-    key: JString,
-    iv: JString,
-    cbc: jboolean,
-) -> jstring {
-    let data_hex = to_rust(&mut env, &data_hex);
-    let key = to_rust(&mut env, &key);
-    let iv = env
-        .get_string(&iv)
-        .map(|v| v.to_string_lossy().into_owned())
-        .ok()
-        .unwrap_or_default();
-    let plain = guarded(|| {
-        let data = crypto::hex_decode(&data_hex)?;
-        let padded = crypto::right_padding(&key, "0", 16);
-        if cbc != 0 {
-            crypto::aes_cbc_decrypt(&data, padded.as_bytes(), iv.as_bytes())
-        } else {
-            crypto::aes_ecb_decrypt(&data, padded.as_bytes())
-        }
-        .map(|p| crypto::bytes_to_string(&p))
-    });
-    match plain {
-        Some(Some(out)) => to_java(&mut env, out),
-        _ => null(),
     }
 }
 

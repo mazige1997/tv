@@ -29,8 +29,6 @@ import java.net.InetAddress
 import java.net.UnknownHostException
 import java.util.ArrayList
 import java.util.Collections
-import java.util.HashSet
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
@@ -207,9 +205,6 @@ object OkGoHelper {
 
     /** 自定义 DNS 解析器(内置 hosts + 排除失效 CDN IP) */
     class CustomDns : Dns {
-        private var map: ConcurrentHashMap<String, List<InetAddress>>? = null
-        private val excludeIps = "2409:8087:6c02:14:100::14,2409:8087:6c02:14:100::18,39.134.108.253,39.134.108.245"
-
         @Throws(UnknownHostException::class)
         override fun lookup(hostname: String): List<InetAddress> {
             val originalHost = hostname
@@ -224,41 +219,6 @@ object OkGoHelper {
             } else {
                 val dns = dnsOverHttps ?: Dns.SYSTEM
                 return dns.lookup(resolved)
-            }
-        }
-
-        @Synchronized
-        @Throws(UnknownHostException::class)
-        fun mapHosts(hosts: Map<String, String>) {
-            map = ConcurrentHashMap()
-            for (entry in hosts.entries) {
-                val key = entry.key
-                val value = entry.value
-                if (isValidIpAddress(value)) {
-                    map!![key] = Collections.singletonList(InetAddress.getByName(value))
-                } else {
-                    map!![key] = getAllByName(value)
-                }
-            }
-        }
-
-        private fun getAllByName(host: String): List<InetAddress> {
-            return try {
-                val allAddresses = InetAddress.getAllByName(host)
-                if (excludeIps.isEmpty()) return allAddresses.toList()
-                val validAddresses = ArrayList<InetAddress>()
-                val excludeIpsSet = HashSet<String>()
-                for (ip in excludeIps.split(",")) {
-                    excludeIpsSet.add(ip.trim())
-                }
-                for (address in allAddresses) {
-                    if (!excludeIpsSet.contains(address.hostAddress)) {
-                        validAddresses.add(address)
-                    }
-                }
-                validAddresses
-            } catch (e: Exception) {
-                ArrayList()
             }
         }
 

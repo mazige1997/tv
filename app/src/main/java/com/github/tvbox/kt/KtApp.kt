@@ -214,8 +214,6 @@ class KtApp : Application() {
         }
     }
 
-    private var p: com.p2p.P2PClass? = null
-
     fun setDashData(data: String?) {
         dashData = data
     }

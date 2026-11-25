@@ -114,18 +114,6 @@ public final class ExoMediaSourceHelper {
         mHttpDataSourceFactory = null;
     }
 
-    public MediaSource getMediaSource(String uri) {
-        return getMediaSource(uri, null, false);
-    }
-
-    public MediaSource getMediaSource(String uri, Map<String, String> headers) {
-        return getMediaSource(uri, headers, false);
-    }
-
-    public MediaSource getMediaSource(String uri, boolean isCache) {
-        return getMediaSource(uri, null, isCache);
-    }
-
     public MediaSource getMediaSource(String uri, Map<String, String> headers, boolean isCache) {
         return getMediaSource(uri, headers, isCache, inferContentType(uri, headers));
     }
@@ -389,9 +377,5 @@ public final class ExoMediaSourceHelper {
         }
         mHttpDataSourceFactory.setUserAgent(userAgent);
         mHttpDataSourceFactory.setDefaultRequestProperties(requestHeaders);
-    }
-
-    public void setCache(Cache cache) {
-        this.mCache = cache;
     }
 }

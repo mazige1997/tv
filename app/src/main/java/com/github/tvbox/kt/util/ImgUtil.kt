@@ -145,20 +145,6 @@ object ImgUtil {
             .into(view)
     }
 
-    fun loadUrl(url: String?, view: ImageView) {
-        load(url, view, 10)
-    }
-
-    fun loadVideoScreenshot(uri: String?, imageView: ImageView, frameTimeMicros: Long) {
-        val requestOptions = RequestOptions.frameOf(frameTimeMicros * 1000)
-            .transform(CenterCrop(), RoundedCorners(10))
-        Glide.with(KtApp.instance())
-            .load(uri)
-            .skipMemoryCache(true)
-            .apply(requestOptions)
-            .into(imageView)
-    }
-
     fun getRandomColor(): Int {
         val random = Random()
         return Color.argb(255, random.nextInt(256), random.nextInt(256), random.nextInt(256))

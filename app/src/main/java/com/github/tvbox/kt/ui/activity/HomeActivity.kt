@@ -66,7 +66,6 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.File
-import java.lang.reflect.Field
 import java.text.SimpleDateFormat
 import java.util.ArrayList
 import java.util.Date

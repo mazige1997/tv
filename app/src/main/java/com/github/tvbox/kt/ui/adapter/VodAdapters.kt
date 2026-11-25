@@ -11,7 +11,6 @@ import com.chad.library.adapter.base.BaseViewHolder
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
 import com.github.tvbox.kt.bean.Movie
-import com.github.tvbox.kt.bean.SourceBean
 import com.github.tvbox.kt.bean.VodInfo
 import com.github.tvbox.kt.cache.VodCollect
 import com.github.tvbox.kt.util.HawkConfig

@@ -178,11 +178,6 @@ pub fn md5_hex(input: &str) -> String {
     to_lower_hex(&md5_bytes(input.as_bytes()))
 }
 
-/// MD5 摘要再 Base64(标准字母表),等价 `MD5.encrypt` 的编码部分。
-pub fn md5_base64(input: &str) -> String {
-    base64_encode(&md5_bytes(input.as_bytes()))
-}
-
 // ---------------------------------------------------------------------------
 // Base64(RFC 4648)
 // ---------------------------------------------------------------------------
@@ -528,11 +523,6 @@ pub fn is_json(content: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// 字节按 UTF-8 解码为字符串(非法序列用替换字符),等价 Java `new String(bytes)`(平台 UTF-8)。
-pub fn bytes_to_string(bytes: &[u8]) -> String {
-    String::from_utf8_lossy(bytes).into_owned()
-}
-
 // ---------------------------------------------------------------------------
 // 密钥补位
 // ---------------------------------------------------------------------------
@@ -550,25 +540,6 @@ pub fn right_padding(key: &str, replace: &str, length: usize) -> String {
         out.push_str(replace);
     }
     out
-}
-
-// ---------------------------------------------------------------------------
-// 便捷封装(与 Java AES.ECB/CBC 参数形态一致)
-// ---------------------------------------------------------------------------
-
-/// 等价 `AES.ECB(data, key)`:hex 数据、密钥右补 '0' 到 16 字节。
-pub fn aes_ecb_decrypt_hex_padded(data_hex: &str, key: &str) -> Option<String> {
-    let data = hex_decode(data_hex)?;
-    let padded = right_padding(key, "0", 16);
-    let plain = aes_ecb_decrypt(&data, padded.as_bytes())?;
-    Some(bytes_to_string(&plain))
-}
-
-/// 等价 `AES.CBC(data, key, iv)`:hex 数据、密钥/IV 原样使用。
-pub fn aes_cbc_decrypt_hex(data_hex: &str, key: &str, iv: &str) -> Option<String> {
-    let data = hex_decode(data_hex)?;
-    let plain = aes_cbc_decrypt(&data, key.as_bytes(), iv.as_bytes())?;
-    Some(bytes_to_string(&plain))
 }
 
 #[cfg(test)]

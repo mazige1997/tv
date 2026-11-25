@@ -340,17 +340,4 @@ object ProxyUtil {
             }
         }
     }
-
-    @Throws(IOException::class)
-    fun getM3U8Content(url: String): String {
-        val request = Request.Builder().url(url).build()
-        val client = OkGoHelper.getItvClient()
-        client!!.newCall(request).execute().use { response ->
-            if (response.isSuccessful) {
-                return response.body()!!.string()
-            } else {
-                throw IOException("请求失败,HTTP 状态码: " + response.code())
-            }
-        }
-    }
 }
