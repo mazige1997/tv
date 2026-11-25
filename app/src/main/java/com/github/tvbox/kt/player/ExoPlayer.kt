@@ -84,29 +84,43 @@ class ExoPlayer(context: Context) : ExoMediaPlayer(context) {
     }
 
     override fun initPlayer() {
-        // 缓冲调优:直播维持默认 max 15s(避免增大直播延迟),点播把 max 15s→30s,
-        // 让播放器提前多缓冲后续分片,提升弱网下的播放连续性。
-        // min/起播/重缓冲阈值一律不动,保证首帧与重缓冲速度不变。
-        // 必须在 super.initPlayer() 之前设置:DKVideo 在 super 里用 mLoadControl 构建内部
-        // player(ExoMediaPlayer.java 的 initPlayer);而 PLAYER_IS_LIVE 在
-        // LivePlayActivity.initView() 末尾才置 true,构造期读取过早,这里才是可靠时机。
+        // 缓冲调优:直播维持 DKVideo 默认(50s/50s,不改以免增大直播延迟);
+        // 点播把上限收到 30s、下限放到 15s,让播放器提前多缓冲后续分片。
+        // 注意本依赖(ExoPlayer 2.19.1)的 DEFAULT_MIN_BUFFER_MS=50000,
+        // 若只把 max 改成 30000 而 min 保持 50000,setBufferDurationsMs 会因
+        // max<min 抛 IllegalArgumentException,导致 mInternalPlayer 创建失败,
+        // 之后每条线路都在空 player 上调 setPlayWhenReady() -> NPE,表现为
+        // 「获取播放信息错误」。min/max 必须成对设置且满足:
+        //   min >= bufferForPlaybackAfterRebuffer(5000), max >= min。
         val isLive = try {
             Hawk.get(HawkConfig.PLAYER_IS_LIVE, false)
         } catch (t: Throwable) {
             false
         }
+        val minBufferMs = if (isLive) DefaultLoadControl.DEFAULT_MIN_BUFFER_MS else 15_000
         val maxBufferMs = if (isLive) DefaultLoadControl.DEFAULT_MAX_BUFFER_MS else 30_000
+        val rebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+        // 断言保护:任何异常配置都回退到依赖默认值,绝不让播放器因缓冲参数创建失败。
+        val safeMin: Int
+        val safeMax: Int
+        if (minBufferMs >= rebufferMs && maxBufferMs >= minBufferMs) {
+            safeMin = minBufferMs
+            safeMax = maxBufferMs
+        } else {
+            safeMin = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
+            safeMax = DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
+        }
         setLoadControl(
             DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
-                    DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                    maxBufferMs,
+                    safeMin,
+                    safeMax,
                     DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
-                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                    rebufferMs
                 )
                 .build()
         )
-        LOG.i("echo-exo-load-control live=$isLive maxBufferMs=$maxBufferMs")
+        LOG.i("echo-exo-load-control live=$isLive min=$safeMin max=$safeMax")
         super.initPlayer()
         bufferingHandler = Handler(mInternalPlayer.applicationLooper)
         mInternalPlayer.addListener(object : Player.Listener {
