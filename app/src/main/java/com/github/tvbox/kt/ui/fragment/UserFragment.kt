@@ -141,6 +141,11 @@ class UserFragment : BaseLazyFragment(), View.OnClickListener {
         tvCollect = findViewById(R.id.tvFavorite)!!
         tvHistory = findViewById(R.id.tvHistory)!!
         tvPush = findViewById(R.id.tvPush)!!
+        // 传输入口在非 TV 设备隐藏时,tvHistory/tvSetting 原本指向它的左右焦点会断链,改指彼此形成闭环
+        if (tvTransfer.visibility == View.GONE) {
+            tvHistory.nextFocusLeft = R.id.tvSetting
+            tvSetting.nextFocusRight = R.id.tvHistory
+        }
         tvLive.setOnClickListener(this)
         tvSearch.setOnClickListener(this)
         tvSetting.setOnClickListener(this)

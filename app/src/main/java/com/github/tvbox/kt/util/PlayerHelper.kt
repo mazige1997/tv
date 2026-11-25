@@ -52,6 +52,13 @@ object PlayerHelper {
             e.printStackTrace()
         }
         if (forcePlayerType >= 0) playerType = forcePlayerType
+        // 边下边播开启且非直播时强制走 Exo:ijkio cache 只缓存顶层 URL 字节流,
+        // HLS 分片不进缓存且缓存 playlist 会破坏刷新,达不到 Exo SimpleCache 的效果。
+        // 直播不切换,避免增加直播延迟;IJK_CACHE_PLAY 单独开启时保持 IJK 不变。
+        if (playerType == 1 && Hawk.get(HawkConfig.PLAY_CACHE, false)
+            && !Hawk.get(HawkConfig.PLAYER_IS_LIVE, false)) {
+            playerType = 2
+        }
         val codec: IJKCode = ApiConfig.get().getIJKCodec(ijkCode)
         val playerFactory: PlayerFactory<*>
         if (playerType == 1) {
@@ -81,7 +88,12 @@ object PlayerHelper {
     }
 
     fun updateCfg(videoView: VideoView<*>) {
-        val playType = Hawk.get(HawkConfig.PLAY_TYPE, 2)
+        var playType = Hawk.get(HawkConfig.PLAY_TYPE, 2)
+        // 与三参重载保持一致:边下边播开启且非直播时走 Exo,直播与单独 IJK 缓存不受影响
+        if (playType == 1 && Hawk.get(HawkConfig.PLAY_CACHE, false)
+            && !Hawk.get(HawkConfig.PLAYER_IS_LIVE, false)) {
+            playType = 2
+        }
         val playerFactory: PlayerFactory<*>
         if (playType == 1) {
             playerFactory = object : PlayerFactory<IjkMediaPlayer>() {
