@@ -1,6 +1,7 @@
 package com.github.tvbox.kt.util
 
 import com.github.catvod.crawler.SpiderDebug
+import com.github.tvbox.kt.core.NativeCore
 import com.github.tvbox.kt.server.ControlManager
 import com.github.tvbox.kt.util.parser.SuperParse
 import okhttp3.OkHttpClient
@@ -156,6 +157,30 @@ object ProxyUtil {
     }
 
     private fun processM3u8Content(m3u8Content0: String?, m3u8Url: String, params: Map<String, String>): String {
+        if (m3u8Content0 == null) return ""
+        if (NativeCore.available) {
+            try {
+                val proxyPrefix = ControlManager.get().getAddress(true) + "proxy?go=live&type="
+                val result = NativeCore.rewriteM3u8Proxy(
+                    m3u8Content0,
+                    m3u8Url,
+                    proxyPrefix,
+                    headerQuery(params)
+                )
+                if (!result.isNullOrEmpty()) return result
+            } catch (th: Throwable) {
+                System.err.println("native rewriteM3u8Proxy 失败,回退 Kotlin 实现: ${th.message}")
+            }
+        }
+        return processM3u8ContentKotlin(m3u8Content0, m3u8Url, params)
+    }
+
+    /** 纯 Kotlin 实现(语义基准,与 Rust 移植版逐行对齐)。 */
+    private fun processM3u8ContentKotlin(
+        m3u8Content0: String?,
+        m3u8Url: String,
+        params: Map<String, String>
+    ): String {
         if (m3u8Content0 == null) return ""
         var m3u8Content = m3u8Content0
         if (m3u8Content.startsWith("\uFEFF")) m3u8Content = m3u8Content.substring(1)

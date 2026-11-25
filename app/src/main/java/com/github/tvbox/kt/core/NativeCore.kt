@@ -78,6 +78,20 @@ object NativeCore {
      */
     external fun purifyM3u8(tsUrlPre: String, content: String, adsJson: String): String?
 
+    /**
+     * 等价 ProxyUtil.processM3u8Content 的原生实现(纯函数,无全局状态)。
+     *
+     * @param proxyPrefix Kotlin 侧拼好的 `"<address>proxy?go=live&type="`
+     * @param headerQuery Kotlin 侧拼好的 `"&ua=...&referer=..."`,可为空串
+     * @return 重写后的完整 m3u8 文本;native 不可用/失败时返回 null,调用方回退 Kotlin 实现
+     */
+    external fun rewriteM3u8Proxy(
+        content: String,
+        m3u8Url: String,
+        proxyPrefix: String,
+        headerQuery: String
+    ): String?
+
     // ---------------- 弹幕 ----------------
     /** 解析弹幕 XML;startPosition>0 时按毫秒过滤。
      *  @return `[{"p":"...","t":"..."}, ...]`;失败返回 null(调用方回退纯 Kotlin)。 */

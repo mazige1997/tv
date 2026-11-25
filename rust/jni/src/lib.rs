@@ -16,6 +16,7 @@ use tvbox_core::crypto;
 use tvbox_core::danmaku;
 use tvbox_core::live;
 use tvbox_core::m3u8;
+use tvbox_core::proxy;
 use tvbox_core::url;
 
 fn to_rust(env: &mut JNIEnv, s: &JString) -> String {
@@ -187,6 +188,31 @@ pub extern "system" fn Java_com_github_tvbox_kt_core_NativeCore_purifyM3u8(
     match guarded(|| m3u8::purify_to_json(&ts_url_pre, &content, &ads_json)) {
         Some(Some(json)) => to_java(&mut env, json),
         _ => null(),
+    }
+}
+
+/// rewriteM3u8Proxy(content, baseUrl, proxyPrefix, headerQuery): String?
+///
+/// 本地代理 M3U8 URI 重写入口:
+/// - `proxy_prefix`:Kotlin 侧拼好的 `"<address>proxy?go=live&type="`;
+/// - `header_query`:Kotlin 侧拼好的 `"&ua=...&referer=..."`(可为空串);
+/// - 返回重写后的完整 m3u8 文本;panic 返回 null,调用方回退纯 Kotlin 实现。
+#[no_mangle]
+pub extern "system" fn Java_com_github_tvbox_kt_core_NativeCore_rewriteM3u8Proxy(
+    mut env: JNIEnv,
+    _class: JClass,
+    content: JString,
+    base_url: JString,
+    proxy_prefix: JString,
+    header_query: JString,
+) -> jstring {
+    let content = to_rust(&mut env, &content);
+    let base_url = to_rust(&mut env, &base_url);
+    let proxy_prefix = to_rust(&mut env, &proxy_prefix);
+    let header_query = to_rust(&mut env, &header_query);
+    match guarded(|| proxy::rewrite_proxy_content(&content, &base_url, &proxy_prefix, &header_query)) {
+        Some(out) => to_java(&mut env, out),
+        None => null(),
     }
 }
 
