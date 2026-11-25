@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 首页分类 tab 与功能入口共用的胶囊焦点样式:统一圆角、配色与焦点反馈。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape>
+            <corners android:radius="@dimen/vs_20" />
+            <gradient android:angle="0" android:startColor="@color/tech_focus_start" android:endColor="@color/tech_focus_end" />
+            <stroke android:width="@dimen/vs_2" android:color="@color/tech_accent" />
+        </shape>
+    </item>
+    <item android:state_focused="false">
+        <shape>
+            <corners android:radius="@dimen/vs_20" />
+            <solid android:color="@color/tech_panel_idle" />
+            <stroke android:width="@dimen/vs_1" android:color="@color/tech_stroke_idle" />
+        </shape>
+    </item>
+</selector>
