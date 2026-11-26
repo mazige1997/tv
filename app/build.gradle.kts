@@ -162,6 +162,15 @@ android {
         jvmTarget = "17"
     }
 
+    // Jetpack Compose:Kotlin 1.9.24 官方对应 compiler 1.5.14(配错会直接编译失败)。
+    // 采用 ComposeView 混合方案,不引入 activity-compose,避免拉高 activity 版本与 appcompat 1.3.0 冲突。
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+
     lint {
         checkReleaseBuilds = false
         abortOnError = false
@@ -207,6 +216,17 @@ dependencies {
     compileOnly("javax.servlet:javax.servlet-api:3.1.0")
     implementation("com.google.zxing:core:3.3.0")
     implementation("androidx.appcompat:appcompat:1.3.0")
+
+    // ---- Jetpack Compose(设置页试点) ----
+    // BOM 2024.06.00 统一各 compose 库版本,compiler 1.5.14 与之匹配。
+    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
+    implementation(composeBom)
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material:material")
+    implementation("androidx.compose.foundation:foundation")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
     implementation("androidx.media:media:1.2.1")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
