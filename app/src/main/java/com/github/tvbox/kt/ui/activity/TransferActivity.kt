@@ -2,23 +2,21 @@ package com.github.tvbox.kt.ui.activity
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Handler
-import android.view.Gravity
-import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.FileProvider
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.base.BaseActivity
 import com.github.tvbox.kt.server.ControlManager
 import com.github.tvbox.kt.server.RemoteServer
+import com.github.tvbox.kt.ui.compose.TransferScreen
+import com.github.tvbox.kt.ui.compose.TvTheme
 import com.github.tvbox.kt.ui.tv.widget.QRCodeGen
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -27,15 +25,20 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** 网页传文件页(二维码 + 进度 + 文件管理),Kotlin 移植(与旧版 TransferActivity 一致)。 */
+/** 网页传文件页(二维码 + 进度 + 文件管理),UI 由 Jetpack Compose 承载。 */
 class TransferActivity : BaseActivity() {
-    private var fileList: LinearLayout? = null
-    private var address: String? = null
-    private var progress: ProgressBar? = null
-    private var status: TextView? = null
+    private var address: String = ""
     private var progressName: String? = null
     private var fileSignature: String? = null
     private val handler = Handler()
+
+    // Compose UI state
+    private val qrBitmap = mutableStateOf<Bitmap?>(null)
+    private val addressText = mutableStateOf("")
+    private val progressValue = mutableStateOf(0)
+    private val statusText = mutableStateOf("请在扫码后的网页查看上传进度")
+    private val fileItems = mutableStateListOf<File>()
+
     private val refresh = object : Runnable {
         override fun run() {
             loadFiles()
@@ -50,19 +53,27 @@ class TransferActivity : BaseActivity() {
     }
 
     override val layoutResID: Int
-        get() = R.layout.activity_transfer
+        get() = R.layout.activity_simple_compose
 
     override fun init() {
-        val qr = findViewById<ImageView>(R.id.ivTransferQr)
-        val addressView = findViewById<TextView>(R.id.tvTransferAddress)
-        fileList = findViewById(R.id.transferFileList)
-        progress = findViewById(R.id.transferProgress)
-        status = findViewById(R.id.tvTransferStatus)
         address = ControlManager.get().getAddress(false)
         val page = address + "transfer.html"
-        addressView.text = "手机或电脑扫描二维码，或访问：\n" + page
-        qr.setImageBitmap(QRCodeGen.generateBitmap(page, 420, 420))
+        addressText.value = "手机或电脑扫描二维码，或访问：\n" + page
+        qrBitmap.value = QRCodeGen.generateBitmap(page, 420, 420)
         loadFiles()
+        findViewById<androidx.compose.ui.platform.ComposeView>(R.id.composeView).setContent {
+            TvTheme {
+                TransferScreen(
+                    qrBitmap = qrBitmap.value,
+                    address = addressText.value,
+                    progress = progressValue.value,
+                    status = statusText.value,
+                    files = fileItems,
+                    onOpenFile = ::openFile,
+                    onDeleteFile = { file -> if (file.delete()) loadFiles() }
+                )
+            }
+        }
     }
 
     override fun onResume() {
@@ -102,15 +113,15 @@ class TransferActivity : BaseActivity() {
                 progressName = name
                 val fileReady = percent >= 100 && hasTransferFile(name)
                 val displayPercent = if (percent >= 100 && !fileReady) 99 else percent
-                progress?.progress = displayPercent
-                if (displayPercent > 0 && displayPercent < 100 && name.length > 0) {
-                    this@TransferActivity.status!!.text = "正在上传 " + name + "（" + displayPercent + "%）"
+                progressValue.value = displayPercent
+                if (displayPercent > 0 && displayPercent < 100 && name.isNotEmpty()) {
+                    statusText.value = "正在上传 " + name + "（" + displayPercent + "%）"
                 } else if (fileReady) {
-                    this@TransferActivity.status!!.text = "最近一次上传完成"
+                    statusText.value = "最近一次上传完成"
                 } else if (percent >= 100) {
-                    this@TransferActivity.status!!.text = "正在确认 " + (if (name.length > 0) name else "文件")
+                    statusText.value = "正在确认 " + (if (name.isNotEmpty()) name else "文件")
                 } else {
-                    this@TransferActivity.status!!.text = "等待网页上传"
+                    statusText.value = "等待网页上传"
                 }
             } catch (ignored: Throwable) {
             }
@@ -127,12 +138,12 @@ class TransferActivity : BaseActivity() {
     private fun loadFiles() {
         val dir = RemoteServer.getTransferDirectory()
         val fs = dir.listFiles()
-        if (progress!!.progress > 0 && progressName != null && progressName!!.isNotEmpty() && fs != null) {
+        if (progressValue.value > 0 && progressName != null && progressName!!.isNotEmpty() && fs != null) {
             for (f in fs) {
                 if (f.isFile && progressName == f.name) {
                     progressName = ""
-                    progress!!.progress = 0
-                    this@TransferActivity.status!!.text = "等待网页上传"
+                    progressValue.value = 0
+                    statusText.value = "等待网页上传"
                     break
                 }
             }
@@ -141,57 +152,9 @@ class TransferActivity : BaseActivity() {
         if (fs != null) for (f in fs) if (f.isFile) signature.append(f.name).append(':').append(f.length()).append(';')
         if (fileSignature != null && signature.toString() == fileSignature) return
         fileSignature = signature.toString()
-        fileList!!.removeAllViews()
-        if (fs == null || fs.isEmpty()) {
-            val empty = TextView(this)
-            empty.text = "暂无文件"
-            empty.setTextColor(0xffb0bec5.toInt())
-            empty.textSize = 20f
-            empty.setPadding(8, 18, 8, 18)
-            fileList!!.addView(empty)
-            return
-        }
-        for (f in fs) if (f.isFile) addFileRow(f)
-    }
-
-    private fun addFileRow(file: File) {
-        val row = LinearLayout(this)
-        row.orientation = LinearLayout.HORIZONTAL
-        row.gravity = Gravity.CENTER_VERTICAL
-        row.setPadding(8, 5, 8, 5)
-        val name = TextView(this)
-        name.id = View.generateViewId()
-        name.text = file.name + "  " + readable(file.length())
-        name.setTextColor(0xffffffff.toInt())
-        name.textSize = 20f
-        name.setSingleLine(true)
-        name.ellipsize = android.text.TextUtils.TruncateAt.MIDDLE
-        name.gravity = Gravity.CENTER_VERTICAL
-        name.isFocusable = true
-        name.isClickable = true
-        name.setBackgroundResource(R.drawable.shape_setting_model_focus)
-        name.setPadding(12, 4, 12, 4)
-        row.addView(name, LinearLayout.LayoutParams(0, resources.getDimensionPixelSize(R.dimen.vs_60), 1f))
-        val delete = Button(this)
-        delete.id = View.generateViewId()
-        delete.text = "删除"
-        delete.textSize = 18f
-        delete.setTextColor(0xffffffff.toInt())
-        delete.setBackgroundResource(R.drawable.button_danmu_setting)
-        delete.isFocusable = true
-        delete.contentDescription = "删除 " + file.name
-        val deleteParams = LinearLayout.LayoutParams(
-            resources.getDimensionPixelSize(R.dimen.vs_100),
-            resources.getDimensionPixelSize(R.dimen.vs_60)
-        )
-        deleteParams.leftMargin = resources.getDimensionPixelSize(R.dimen.vs_8)
-        row.addView(delete, deleteParams)
-        name.nextFocusRightId = delete.id
-        delete.nextFocusLeftId = name.id
-        name.setOnClickListener { _ -> openFile(file) }
-        delete.setOnClickListener { _ -> if (file.delete()) loadFiles() }
-        fileList!!.addView(row)
-        if (fileList!!.childCount == 1) name.requestFocus()
+        fileItems.clear()
+        if (fs == null || fs.isEmpty()) return
+        for (f in fs) if (f.isFile) fileItems.add(f)
     }
 
     private fun openFile(file: File) {
@@ -216,9 +179,5 @@ class TransferActivity : BaseActivity() {
         if (lower.endsWith(".mp3") || lower.endsWith(".flac")) return "audio/*"
         if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")) return "image/*"
         return "*/*"
-    }
-
-    private fun readable(n: Long): String {
-        return if (n < 1024) "$n B" else if (n < 1048576) (n / 1024).toString() + " KB" else (n / 1048576).toString() + " MB"
     }
 }
