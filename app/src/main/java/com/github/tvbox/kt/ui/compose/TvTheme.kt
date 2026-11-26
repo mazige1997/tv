@@ -24,6 +24,9 @@ object TvColors {
     val FocusEnd = Color(0xFF0C1C28)        // tech_focus_end
     val PanelIdle = Color(0x991D202A)       // tech_panel_idle
     val StrokeIdle = Color(0x26FFFFFF)      // tech_stroke_idle
+    val ScreenBg = Color(0xFF12151C)        // 页面背景
+    val BadgeBg = Color(0xCC0C1C28)         // 角标/标题底条半透明背景
+    val DeleteMask = Color(0xAA000000)      // 删除模式遮罩
 }
 
 private val TvShapes = Shapes(

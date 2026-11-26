@@ -4,12 +4,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.widget.TextView
 import com.github.tvbox.kt.R
-import com.github.tvbox.kt.bean.VodInfo
 import com.github.tvbox.kt.cache.RoomDataManger
-import com.github.tvbox.kt.cache.VodCollect
-import com.github.tvbox.kt.ui.activity.CollectActivity
-import com.github.tvbox.kt.ui.activity.HistoryActivity
-import java.util.ArrayList
 
 /** 双按钮提示对话框,Kotlin 移植(与旧版 TipDialog 一致)。 */
 class TipDialog(
@@ -44,7 +39,11 @@ class TipDialog(
 }
 
 /** 清空确认对话框,Kotlin 移植(与旧版 ConfirmClearDialog 一致)。 */
-class ConfirmClearDialog(context: Context, type: String) : BaseDialog(context) {
+class ConfirmClearDialog(
+    context: Context,
+    type: String,
+    private val onCleared: () -> Unit = {}
+) : BaseDialog(context) {
     private val tvYes: TextView
     private val tvNo: TextView
 
@@ -57,18 +56,12 @@ class ConfirmClearDialog(context: Context, type: String) : BaseDialog(context) {
         tvYes.setOnClickListener {
             // if removing all Favorites
             if (type == "Collect") {
-                val vodInfoList = ArrayList<VodCollect>()
-                // P2-1:改为空安全调用,适配宿主 Activity 销毁时静态 adapter 已置空的场景
-                CollectActivity.collectAdapter?.setNewData(vodInfoList)
-                CollectActivity.collectAdapter?.notifyDataSetChanged()
                 RoomDataManger.deleteVodCollectAll()
                 // if removing all History
             } else if (type == "History") {
-                val vodInfoList = ArrayList<VodInfo>()
-                HistoryActivity.historyAdapter?.setNewData(vodInfoList)
-                HistoryActivity.historyAdapter?.notifyDataSetChanged()
                 RoomDataManger.deleteVodRecordAll()
             }
+            onCleared()
             dismiss()
         }
         tvNo.setOnClickListener { dismiss() }
