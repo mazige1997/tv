@@ -380,7 +380,7 @@ class SearchActivity : BaseActivity() {
             }
             setNormalWordTitle()
             wordsSwitch!!.isFocusable = true
-            wordsSwitch!!.setBackgroundResource(R.drawable.shape_user_focus)
+            wordsSwitch!!.setBackgroundResource(R.drawable.shape_search_word)
             mGridViewWord!!.layoutManager = V7LinearLayoutManager(this.mContext, 1, false)
             mGridViewWord!!.setAdapter(wordAdapter)
         }
@@ -421,7 +421,10 @@ class SearchActivity : BaseActivity() {
                 item.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
                 item.minWidth = minWidth
                 item.setPadding(paddingH, 0, paddingH, 0)
-                item.setBackgroundResource(R.drawable.shape_user_focus)
+                item.setBackgroundResource(R.drawable.shape_search_word)
+                item.stateListAnimator = android.animation.AnimatorInflater.loadAnimator(
+                    this@SearchActivity, R.animator.focus_scale
+                ) as android.animation.StateListAnimator
                 item.measure(
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
                     View.MeasureSpec.makeMeasureSpec(itemHeight, View.MeasureSpec.EXACTLY)

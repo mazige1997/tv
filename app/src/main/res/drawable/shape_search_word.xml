@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 搜索页词条(热词/历史词)焦点样式:搜索专用,不复用全局 shape_user_focus,避免误伤首页/直播等。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape>
+            <corners android:radius="@dimen/vs_20" />
+            <gradient android:angle="0" android:startColor="@color/tech_focus_start" android:endColor="@color/tech_focus_end" />
+            <stroke android:width="@dimen/vs_2" android:color="@color/tech_accent" />
+        </shape>
+    </item>
+    <item android:state_focused="false">
+        <shape>
+            <corners android:radius="@dimen/vs_20" />
+            <solid android:color="@color/tech_panel_idle" />
+            <stroke android:width="@dimen/vs_1" android:color="@color/tech_stroke_idle" />
+        </shape>
+    </item>
+</selector>

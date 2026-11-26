@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 搜索页海报焦点样式:科技风青色渐变描边。搜索专用(与全局 shape_user_focus 隔离,避免误伤首页/直播等)。
+     圆角保持 vs_8 矩形卡片:海报是大图,用胶囊圆角会切掉四角。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape>
+            <corners android:radius="@dimen/vs_8" />
+            <gradient android:angle="0" android:startColor="@color/tech_focus_start" android:endColor="@color/tech_focus_end" />
+            <stroke android:width="@dimen/vs_2" android:color="@color/tech_accent" />
+        </shape>
+    </item>
+    <item android:state_focused="false">
+        <shape>
+            <corners android:radius="@dimen/vs_8" />
+            <solid android:color="@color/tech_panel_idle" />
+            <stroke android:width="@dimen/vs_1" android:color="@color/tech_stroke_idle" />
+        </shape>
+    </item>
+</selector>
