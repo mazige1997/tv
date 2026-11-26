@@ -1,7 +1,6 @@
 package com.github.tvbox.kt.ui.compose
 
 import android.widget.ImageView
-import androidx.compose.animation.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -224,7 +223,6 @@ private fun GridMediaCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val scale by animateFloatAsState(if (focused) 1.05f else 1f)
     val shape = RoundedCornerShape(10.dp)
     LaunchedEffect(focused) {
         if (focused) onFocused()
@@ -238,7 +236,7 @@ private fun GridMediaCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.vs_280))
-            .scale(scale)
+            .then(if (focused) Modifier.scale(1.05f) else Modifier)
             .background(color = TvColors.PanelIdle, shape = shape)
             .border(
                 width = if (focused) 3.dp else 1.dp,
