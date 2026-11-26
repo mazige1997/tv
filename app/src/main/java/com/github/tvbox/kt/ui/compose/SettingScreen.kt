@@ -401,7 +401,9 @@ private fun <T> showSingleChoice(
     display: (T) -> String,
     onPicked: (T) -> Unit
 ) {
-    showSelect(context, tip, data, select.coerceAtLeast(0), diff, display, onPicked)
+    showSelect(context, tip, data, select.coerceAtLeast(0), diff, display) { value, _ ->
+        onPicked(value)
+    }
 }
 
 private fun showHomeSource(context: Context, onPicked: (String) -> Unit) {
