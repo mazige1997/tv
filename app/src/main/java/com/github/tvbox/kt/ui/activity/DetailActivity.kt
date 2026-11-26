@@ -5,10 +5,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.Configuration
-import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Paint
-import android.graphics.PointF
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
@@ -21,13 +19,18 @@ import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.runtime.mutableStateOf
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearSmoothScroller
-import com.chad.library.adapter.base.BaseQuickAdapter
-import com.chad.library.adapter.base.BaseViewHolder
+import com.github.tvbox.kt.ui.compose.DetailScrollTarget
+import com.github.tvbox.kt.ui.compose.DetailSeriesUi
+import com.github.tvbox.kt.ui.compose.DetailFlagUi
+import com.github.tvbox.kt.ui.compose.DetailUiSnapshot
+import com.github.tvbox.kt.ui.compose.DetailScreen
+import com.github.tvbox.kt.ui.compose.TvTheme
 import com.github.tvbox.kt.KtApp
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
@@ -38,13 +41,10 @@ import com.github.tvbox.kt.bean.SourceBean
 import com.github.tvbox.kt.bean.VodInfo
 import com.github.tvbox.kt.cache.RoomDataManger
 import com.github.tvbox.kt.event.RefreshEvent
-import com.github.tvbox.kt.ui.adapter.SeriesAdapter
-import com.github.tvbox.kt.ui.adapter.SeriesFlagAdapter
 import com.github.tvbox.kt.ui.dialog.DescDialog
 import com.github.tvbox.kt.ui.dialog.QuickSearchDialog
 import com.github.tvbox.kt.ui.fragment.PlayFragment
 import com.github.tvbox.kt.util.DefaultConfig
-import com.github.tvbox.kt.util.FastClickCheckUtil
 import com.github.tvbox.kt.util.HawkConfig
 import com.github.tvbox.kt.util.ImgUtil
 import com.github.tvbox.kt.util.LOG
@@ -53,9 +53,6 @@ import com.github.tvbox.kt.util.SubtitleHelper
 import com.github.tvbox.kt.viewmodel.SourceViewModel
 import com.lzy.okgo.OkGo
 import com.orhanobut.hawk.Hawk
-import com.owen.tvrecyclerview.widget.TvRecyclerView
-import com.owen.tvrecyclerview.widget.V7GridLayoutManager
-import com.owen.tvrecyclerview.widget.V7LinearLayoutManager
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -67,7 +64,6 @@ import java.util.HashSet
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.regex.Matcher
 import java.util.regex.Pattern
 import me.jessyan.autosize.utils.AutoSizeUtils
 
@@ -80,56 +76,54 @@ import me.jessyan.autosize.utils.AutoSizeUtils
  * Java/Kotlin 调用方 detail.getPlayFragment() 由属性自动生成。
  */
 class DetailActivity : BaseActivity() {
+    // 播放器浮层保留原生:Fragment 事务依赖容器 id,全屏切换直接改 LayoutParams
     private var llLayout: LinearLayout? = null
     private var llPlayerFragmentContainer: FragmentContainerView? = null
     private var llPlayerFragmentContainerBlock: View? = null
-    private var llPlayerPlace: View? = null
 
     /** 对应旧版 getPlayFragment()(公开属性,JVM getter 为 getPlayFragment()) */
     var playFragment: PlayFragment? = null
-    private var thumbContainer: View? = null
-    private var ivThumb: ImageView? = null
-    private var tvName: TextView? = null
-    private var tvYear: TextView? = null
-    private var tvSite: TextView? = null
-    private var tvArea: TextView? = null
-    private var tvLang: TextView? = null
-    private var tvType: TextView? = null
-    private var tvActor: TextView? = null
-    private var tvDirector: TextView? = null
-    private var tvPlayUrl: TextView? = null
-    private var tvDes: TextView? = null
-    private var tvPlay: TextView? = null
-    //    private TextView tvSort;
-    private var tvDesc: TextView? = null
-    private var tvSeriesSort: TextView? = null
-    private var tvQuickSearch: TextView? = null
-    private var tvChangeSource: TextView? = null
-    private var tvCollect: TextView? = null
-    private var mGridViewFlag: TvRecyclerView? = null
-    private var mGridViewQuality: TvRecyclerView? = null
-    private var mGridView: TvRecyclerView? = null
-    private var mSeriesGroupView: TvRecyclerView? = null
-    private var mEmptyPlayList: LinearLayout? = null
-    private var tvSeriesGroup: LinearLayout? = null
+
+    // ===== Compose UI state =====
+    private val uiState = mutableStateOf(DetailUiSnapshot())
+    private val seriesScroll = mutableStateOf(DetailScrollTarget())
+    private val flagScroll = mutableStateOf(DetailScrollTarget())
+    private val flagFocusRequester = FocusRequester()
+    private val seriesFocusRequester = FocusRequester()
+    private var scrollToken = 0L
+
+    // 信息区文本(供 Compose 快照读取)
+    private var tvNameText = ""
+    private var tvSiteText = ""
+    private var tvYearText = ""
+    private var tvAreaText = ""
+    private var tvLangText = ""
+    private var tvTypeText = ""
+    private var tvActorText = ""
+    private var tvDirectorText = ""
+    private var tvPlayUrlText = ""
+    private var tvDesText = ""
+    private var tvCollectText = "加入收藏"
+    private var tvSortText = "正序"
+    private var tvPlayText = "立即播放"
+
+    // 海报
+    private var posterUrl = ""
+    private var posterName = ""
+
     private var sourceViewModel: SourceViewModel? = null
     private var mVideo: Movie.Video? = null
     private var vodInfo: VodInfo? = null
-    private var seriesFlagAdapter: SeriesFlagAdapter? = null
-    private var qualityAdapter: BaseQuickAdapter<String, BaseViewHolder>? = null
-    private var seriesGroupAdapter: BaseQuickAdapter<String, BaseViewHolder>? = null
-    private var seriesAdapter: SeriesAdapter? = null
     var vodId: String = ""
     var sourceKey: String = ""
     var firstsourceKey: String = ""
     private var fromCollect = false
     private var seriesSelect = false
-    private var seriesFlagFocus: View? = null
     private var isReverse = false
     private var preFlag = ""
     private var routeSwitchSeries: VodInfo.VodSeries? = null
     private var firstReverse = false
-    private var mGridViewLayoutMgr: V7GridLayoutManager? = null
+    private var seriesColumns = 6
     private var mCheckSources: HashMap<String, String>? = null
     private val seriesGroupOptions = ArrayList<String>()
     private val qualityOptions = ArrayList<String>()
@@ -138,8 +132,6 @@ class DetailActivity : BaseActivity() {
     private var GroupCount = 0
     private var qualityPosition = 0
     private var showPreview = Hawk.get(HawkConfig.SHOW_PREVIEW, true) // true 开启 false 关闭
-
-    private var smoothScroller: LinearSmoothScroller? = null
 
     private var pauseRunnable: MutableList<Runnable>? = null
     private var searchTitle = ""
@@ -199,7 +191,7 @@ class DetailActivity : BaseActivity() {
     }
 
     override val layoutResID: Int
-        get() = R.layout.activity_detail
+        get() = R.layout.activity_detail_compose
 
     override fun init() {
         EventBus.getDefault().register(this)
@@ -208,119 +200,13 @@ class DetailActivity : BaseActivity() {
         initData()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     private fun initView() {
         llLayout = findViewById(R.id.llLayout)
-        llPlayerPlace = findViewById(R.id.previewPlayerPlace)
         llPlayerFragmentContainer = findViewById(R.id.previewPlayer)
         llPlayerFragmentContainerBlock = findViewById(R.id.previewPlayerBlock)
         applyPreviewRoundCorners()
-        thumbContainer = findViewById(R.id.thumbContainer)
-        ivThumb = findViewById(R.id.ivThumb)
-        applyThumbPreviewStyle()
-        tvName = findViewById(R.id.tvName)
-        tvYear = findViewById(R.id.tvYear)
-        tvSite = findViewById(R.id.tvSite)
-        tvArea = findViewById(R.id.tvArea)
-        tvLang = findViewById(R.id.tvLang)
-        tvType = findViewById(R.id.tvType)
-        tvActor = findViewById(R.id.tvActor)
-        tvDirector = findViewById(R.id.tvDirector)
-        tvPlayUrl = findViewById(R.id.tvPlayUrl)
-        tvDes = findViewById(R.id.tvDes)
-        tvPlay = findViewById(R.id.tvPlay)
-        //        tvSort = findViewById(R.id.tvSort);
-        tvDesc = findViewById(R.id.tvDesc)
-        tvSeriesSort = findViewById(R.id.mSeriesSortTv)
-        tvCollect = findViewById(R.id.tvCollect)
-        tvQuickSearch = findViewById(R.id.tvQuickSearch)
-        tvChangeSource = findViewById(R.id.tvChangeSource)
-        mEmptyPlayList = findViewById(R.id.mEmptyPlaylist)
-        mGridView = findViewById(R.id.mGridView)
-        mGridView!!.setHasFixedSize(false)
-        this.mGridViewLayoutMgr = V7GridLayoutManager(this.mContext, 6)
-        mGridView!!.layoutManager = this.mGridViewLayoutMgr
-        //        mGridView.setLayoutManager(new V7LinearLayoutManager(this.mContext, 0, false));
-
-        smoothScroller = object : LinearSmoothScroller(mContext) {
-            override fun calculateSpeedPerPixel(displayMetrics: android.util.DisplayMetrics): Float {
-                return 100f / displayMetrics.densityDpi
-            }
-
-            override fun computeScrollVectorForPosition(targetPosition: Int): PointF? {
-                return mGridViewLayoutMgr!!.computeScrollVectorForPosition(targetPosition)
-            }
-        }
-
-        seriesAdapter = SeriesAdapter(this.mGridViewLayoutMgr!!)
-        mGridView!!.setAdapter(seriesAdapter)
-        mGridViewFlag = findViewById(R.id.mGridViewFlag)
-        mGridViewFlag!!.setHasFixedSize(true)
-        mGridViewFlag!!.layoutManager = V7LinearLayoutManager(this.mContext, 0, false)
-        seriesFlagAdapter = SeriesFlagAdapter()
-        mGridViewFlag!!.setAdapter(seriesFlagAdapter)
-        mGridViewQuality = findViewById(R.id.mGridViewQuality)
-        mGridViewQuality!!.setHasFixedSize(true)
-        mGridViewQuality!!.layoutManager = V7LinearLayoutManager(this.mContext, 0, false)
-        qualityAdapter = object : BaseQuickAdapter<String, BaseViewHolder>(R.layout.item_series_flag, qualityOptions) {
-            override fun convert(helper: BaseViewHolder, item: String) {
-                helper.setText(R.id.tvSeriesFlag, item)
-                helper.getView<View>(R.id.tvSeriesFlagSelect).visibility =
-                    if (helper.layoutPosition == qualityPosition) View.VISIBLE else View.GONE
-                helper.itemView.nextFocusUpId =
-                    if (tvSeriesGroup!!.visibility == View.VISIBLE) R.id.mSeriesSortTv else R.id.mGridViewFlag
-                helper.itemView.nextFocusDownId = R.id.mGridView
-            }
-        }
-        mGridViewQuality!!.setAdapter(qualityAdapter)
-        mGridViewQuality!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {}
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {}
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                if (playFragment == null) return
-                if (position == qualityPosition) {
-                    if (showPreview && !fullWindows && playFragment!!.getPlayer()!!.isPlaying) enterFullPreview()
-                    return
-                }
-                if (playFragment!!.selectQuality(position)) {
-                    qualityPosition = position
-                    qualityAdapter!!.notifyDataSetChanged()
-                }
-            }
-        })
-        isReverse = false
-        firstReverse = false
-        preFlag = ""
-        if (showPreview) {
-            ensurePlayFragment()
-            tvPlay!!.text = "全屏"
-        }
         llPlayerFragmentContainerBlock!!.isFocusable = showPreview
-
-        mSeriesGroupView = findViewById(R.id.mSeriesGroupView)
-        tvSeriesGroup = findViewById(R.id.mSeriesGroupTv)
-        mSeriesGroupView!!.setHasFixedSize(true)
-        mSeriesGroupView!!.layoutManager = V7LinearLayoutManager(this.mContext, 0, false)
-        seriesGroupAdapter = object : BaseQuickAdapter<String, BaseViewHolder>(R.layout.item_series_flag, seriesGroupOptions) {
-            override fun convert(helper: BaseViewHolder, item: String) {
-                val tvSeries = helper.getView<TextView>(R.id.tvSeriesFlag)
-                tvSeries.text = item
-                helper.getView<View>(R.id.tvSeriesFlagSelect).visibility =
-                    if (helper.layoutPosition == selectedSeriesGroupPosition) View.VISIBLE else View.GONE
-                helper.itemView.nextFocusUpId = R.id.mGridViewFlag
-                if (helper.layoutPosition == data.size - 1) {
-                    helper.itemView.id = View.generateViewId()
-                    helper.itemView.nextFocusRightId = helper.itemView.id
-                } else {
-                    helper.itemView.nextFocusRightId = View.NO_ID
-                }
-            }
-        }
-        mSeriesGroupView!!.setAdapter(seriesGroupAdapter)
-
-        llPlayerFragmentContainerBlock!!.setOnClickListener { v ->
+        llPlayerFragmentContainerBlock!!.setOnClickListener {
             enterFullPreview()
             if (firstReverse) {
                 jumpToPlay()
@@ -328,287 +214,324 @@ class DetailActivity : BaseActivity() {
             }
         }
 
-        tvPlay!!.setOnClickListener { v ->
-            FastClickCheckUtil.check(v)
-            if (showPreview) {
-                enterFullPreview()
-                if (firstReverse) {
-                    jumpToPlay()
-                    firstReverse = false
-                }
-            } else {
-                jumpToPlay()
-            }
-        }
-
-        tvQuickSearch!!.setOnClickListener { v ->
-            startQuickSearch()
-            val quickSearchDialog = QuickSearchDialog(this@DetailActivity)
-            EventBus.getDefault().post(RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH, quickSearchData))
-            EventBus.getDefault().post(RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH_WORD, quickSearchWord))
-            quickSearchDialog.show()
-            if (pauseRunnable != null && pauseRunnable!!.size > 0) {
-                searchExecutorService = Executors.newFixedThreadPool(5)
-                for (runnable in pauseRunnable!!) {
-                    searchExecutorService!!.execute(runnable)
-                }
-                pauseRunnable!!.clear()
-                pauseRunnable = null
-            }
-            quickSearchDialog.setOnDismissListener {
-                try {
-                    if (searchExecutorService != null) {
-                        pauseRunnable = searchExecutorService!!.shutdownNow()
-                        searchExecutorService = null
-                    }
-                } catch (th: Throwable) {
-                    th.printStackTrace()
-                }
-            }
-        }
-        tvChangeSource!!.setOnClickListener { v ->
-            FastClickCheckUtil.check(v)
-            startDetailFallbackFromMenu()
-        }
-        tvCollect!!.setOnClickListener { v ->
-            val text = tvCollect!!.text.toString()
-            if ("加入收藏" == text) {
-                RoomDataManger.insertVodCollect(sourceKey, vodInfo!!)
-                Toast.makeText(this@DetailActivity, "已加入收藏夹", Toast.LENGTH_SHORT).show()
-                tvCollect!!.text = "取消收藏"
-            } else {
-                RoomDataManger.deleteVodCollect(sourceKey, vodInfo!!)
-                Toast.makeText(this@DetailActivity, "已移除收藏夹", Toast.LENGTH_SHORT).show()
-                tvCollect!!.text = "加入收藏"
-            }
-        }
-        tvPlayUrl!!.setOnClickListener { v ->
-            //获取剪切板管理器
-            val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            //设置内容到剪切板
-            cm.setPrimaryClip(ClipData.newPlainText(null, tvPlayUrl!!.text.toString().replace("播放地址：", "")))
-            Toast.makeText(this@DetailActivity, "已复制", Toast.LENGTH_SHORT).show()
-        }
-
-        tvSeriesSort!!.setOnClickListener { v ->
-            if (vodInfo != null && vodInfo!!.seriesMap!!.size > 0) {
-                vodInfo!!.reverseSort = !vodInfo!!.reverseSort
-                isReverse = !isReverse
-                tvSeriesSort!!.text = if (isReverse) "倒序" else "正序"
-                vodInfo!!.reverse()
-                if (vodInfo!!.playIndex >= 0) {
-                    vodInfo!!.playIndex =
-                        (vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size - 1) - vodInfo!!.playIndex
-                }
-                firstReverse = !firstReverse
-                setSeriesGroupOptions()
-                seriesAdapter!!.notifyDataSetChanged()
-
-                if (vodInfo!!.playIndex >= 0) customSeriesScrollPos(vodInfo!!.playIndex)
-                if (currentSeriesGroupView != null) {
-                    val txtView = currentSeriesGroupView!!.findViewById<TextView>(R.id.tvSeriesFlag)
-                    txtView.setTextColor(Color.WHITE)
-                }
-            }
-        }
-        tvDesc!!.setOnClickListener { v ->
-            runOnUiThread {
-                FastClickCheckUtil.check(v)
-                val dialog = DescDialog(this@DetailActivity)
-                dialog.setDescribe(removeHtmlTag(mVideo!!.des))
-                dialog.show()
-            }
-        }
-
-        mGridView!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                seriesSelect = false
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                seriesSelect = true
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {}
-        })
-        mGridViewFlag!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            private fun refresh(itemView: View, position: Int) {
-                val newFlag = seriesFlagAdapter!!.data[position].name
-                if (vodInfo != null && vodInfo!!.playFlag != newFlag) {
-                    val oldFlag = vodInfo!!.playFlag
-                    val oldIndex = vodInfo!!.playIndex
-                    var currentSeries = getPlayingSeries(previewVodInfo, previewVodInfo?.playFlag)
-                    val oldSeriesList = vodInfo!!.seriesMap!![oldFlag ?: ""]
-                    if (currentSeries == null && previewVodInfo == null && oldIndex >= 0 && oldSeriesList != null && oldSeriesList.isNotEmpty()) {
-                        val safeOldIndex = Math.max(0, Math.min(oldIndex, oldSeriesList.size - 1))
-                        currentSeries = oldSeriesList[safeOldIndex]
-                    }
-                    if (currentSeries == null) {
-                        currentSeries = routeSwitchSeries
-                    }
-                    for (i in vodInfo!!.seriesFlags!!.indices) {
-                        val flag = vodInfo!!.seriesFlags!![i]
-                        if (flag.name == oldFlag) {
-                            flag.selected = false
-                            val oldItemView = mGridViewFlag!!.layoutManager?.findViewByPosition(i)
-                            if (oldItemView != null) oldItemView.findViewById<View>(R.id.tvSeriesFlagSelect).visibility = View.GONE
-                            break
-                        }
-                    }
-                    val flag = vodInfo!!.seriesFlags!![position]
-                    flag.selected = true
-                    itemView.findViewById<View>(R.id.tvSeriesFlagSelect).visibility = View.VISIBLE
-                    // clean pre flag select status
-                    if (oldSeriesList != null && oldIndex >= 0 && oldSeriesList.size > oldIndex) {
-                        oldSeriesList[oldIndex].selected = false
-                    }
-                    vodInfo!!.playFlag = newFlag
-                    val newSeriesList = vodInfo!!.seriesMap!![newFlag ?: ""]
-                    if (newSeriesList != null && newSeriesList.isNotEmpty()) {
-                        vodInfo!!.playIndex = findMatchingEpisodeIndex(currentSeries, newSeriesList)
-                        for (series in newSeriesList) {
-                            series.selected = false
-                        }
-                        if (vodInfo!!.playIndex >= 0) {
-                            newSeriesList[vodInfo!!.playIndex].selected = true
-                            routeSwitchSeries = newSeriesList[vodInfo!!.playIndex]
-                        } else if (currentSeries != null) {
-                            routeSwitchSeries = currentSeries
-                        }
-                    }
-                    refreshList()
-                }
-                seriesFlagFocus = itemView
-            }
-
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                //                seriesSelect = false;
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                if (itemView != null) refresh(itemView, position)
-                //                if(isReverse)vodInfo.reverse();
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                if (itemView != null) refresh(itemView, position)
-                //                if(isReverse)vodInfo.reverse();
-            }
-        })
-        seriesAdapter!!.setOnItemClickListener { _, view, position ->
-            FastClickCheckUtil.check(view)
-            if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
-                var reload = false
-                for (j in 0 until vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size) {
-                    seriesAdapter!!.data[j].selected = false
-                    seriesAdapter!!.notifyItemChanged(j)
-                }
-                //解决倒叙不刷新
-                if (vodInfo!!.playIndex != position) {
-                    seriesAdapter!!.data[position].selected = true
-                    seriesAdapter!!.notifyItemChanged(position)
-                    vodInfo!!.playIndex = position
-                    routeSwitchSeries = seriesAdapter!!.data[position]
-
-                    reload = true
-                }
-                //解决当前集不刷新的BUG
-                if (preFlag.isNotEmpty() && vodInfo!!.playFlag != preFlag) {
-                    reload = true
-                }
-                val isCurrentPlaying = !showPreview || isCurrentPreviewPlaying(position)
-                if (showPreview && !isCurrentPlaying) {
-                    reload = true
-                }
-
-                seriesAdapter!!.data[vodInfo!!.playIndex].selected = true
-                seriesAdapter!!.notifyItemChanged(vodInfo!!.playIndex)
-                //选集全屏 想选集不全屏的注释下面一行
-                if (showPreview && !fullWindows && previewVodInfo != null && TextUtils.equals(vodInfo!!.playFlag, previewVodInfo!!.playFlag) && (playFragment!!.getPlayer()!!.isPlaying || isCurrentPlaying)) enterFullPreview()
-                if (!showPreview || reload) {
-                    jumpToPlay()
-                    firstReverse = false
-                }
-            }
-        }
-
-        mSeriesGroupView!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                val txtView = itemView!!.findViewById<TextView>(R.id.tvSeriesFlag)
-                txtView.setTextColor(Color.WHITE)
-                //                currentSeriesGroupView = null;
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                selectSeriesGroup(itemView!!, position)
-                if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
-                    val targetPos = position * GroupCount
-                    //                    mGridView.smoothScrollToPosition(targetPos);
-                    customSeriesScrollPos(targetPos)
-                }
-                currentSeriesGroupView = itemView
-                currentSeriesGroupView!!.isSelected
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {}
-        })
-        tvSeriesSort!!.setOnFocusChangeListener { view, hasFocus ->
-            if (hasFocus) {
-                if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
-                    val firstVisible = mGridView!!.firstVisiblePosition
-                    val lastVisible = mGridView!!.lastVisiblePosition
-                    if (vodInfo!!.playIndex >= 0 && (vodInfo!!.playIndex < firstVisible || vodInfo!!.playIndex > lastVisible)) {
-                        customSeriesScrollPos(vodInfo!!.playIndex)
-                    }
-                }
-            } else {
-                tvSeriesSort!!.setTextColor(Color.WHITE)
-            }
-        }
-        seriesGroupAdapter!!.setOnItemClickListener { _, view, position ->
-            FastClickCheckUtil.check(view)
-            selectSeriesGroup(view, position)
-            if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
-                val targetPos = position * GroupCount + 1
-
-                customSeriesScrollPos(targetPos)
-            }
-            if (currentSeriesGroupView != null) {
-                val txtView = currentSeriesGroupView!!.findViewById<TextView>(R.id.tvSeriesFlag)
-                txtView.setTextColor(Color.WHITE)
-            }
-            currentSeriesGroupView = view
-            currentSeriesGroupView!!.isSelected
-        }
-
+        isReverse = false
+        firstReverse = false
+        preFlag = ""
         if (showPreview) {
-            llPlayerFragmentContainerBlock!!.requestFocus()
-        } else {
-            tvPlay!!.requestFocus()
+            ensurePlayFragment()
+            tvPlayText = "全屏"
         }
+
+        val composeView = findViewById<ComposeView>(R.id.detailComposeView)
+        composeView.setContent {
+            TvTheme {
+                val s = uiState.value
+                DetailScreen(
+                    state = s,
+                    seriesScroll = seriesScroll.value,
+                    flagScroll = flagScroll.value,
+                    flagFocusRequester = flagFocusRequester,
+                    seriesFocusRequester = seriesFocusRequester,
+                    bindPoster = ::bindPoster,
+                    onPlay = ::onPlayClick,
+                    onQuickSearch = ::onQuickSearchClick,
+                    onDesc = ::onDescClick,
+                    onCollect = ::onCollectClick,
+                    onChangeSource = ::onChangeSourceClick,
+                    onPlayUrlClick = ::onPlayUrlClick,
+                    onSort = ::onSortClick,
+                    onFlagSelected = ::onFlagSelected,
+                    onSeriesSelected = ::onSeriesSelected,
+                    onGroupSelected = ::onGroupSelected,
+                    onQualitySelected = ::onQualitySelected
+                )
+            }
+        }
+
         setLoadSir(llLayout!!)
         if (fullWindows) {
             setFullPreview(true)
         }
+        // 初始焦点:Compose 组合完成后再请求,避免 FocusRequester 未 attach
+        composeView.post {
+            try {
+                if (showPreview) {
+                    llPlayerFragmentContainerBlock?.requestFocus()
+                } else {
+                    seriesFocusRequester.requestFocus()
+                }
+            } catch (_: Throwable) {
+            }
+        }
+        pushUiState()
     }
 
-    //解决类似海贼王的超长动漫 焦点滚动失败的问题
-    private fun selectSeriesGroup(selectedView: View, position: Int) {
-        if (selectedSeriesGroupPosition == position) return
-        val previousView = mSeriesGroupView!!.layoutManager?.findViewByPosition(selectedSeriesGroupPosition)
-        if (previousView != null) previousView.findViewById<View>(R.id.tvSeriesFlagSelect).visibility = View.GONE
+    /** 海报绑定:复用 ImgUtil 的 Glide 缓存与文字 fallback。 */
+    private fun bindPoster(iv: ImageView, url: String, name: String) {
+        if (url.isNotEmpty()) {
+            ImgUtil.loadCenterCrop(
+                DefaultConfig.checkReplaceProxy(url), iv,
+                AutoSizeUtils.mm2px(mContext, 10f), AutoSizeUtils.mm2px(mContext, 300f),
+                AutoSizeUtils.mm2px(mContext, 400f), name
+            )
+        } else {
+            iv.setImageDrawable(ImgUtil.createTextDrawable(name))
+        }
+    }
+
+    /** 把当前字段/数据打包成 UI 快照,驱动 Compose 重组。 */
+    private fun pushUiState() {
+        val info = vodInfo
+        val flags = mutableListOf<DetailFlagUi>()
+        info?.seriesFlags?.let { list ->
+            for (f in list) flags.add(DetailFlagUi(f.name ?: "", f.selected))
+        }
+        val series = mutableListOf<DetailSeriesUi>()
+        val curList = info?.seriesMap?.get(info.playFlag ?: "")
+        curList?.let { list ->
+            for (s in list) series.add(DetailSeriesUi(s.name ?: "", s.selected))
+        }
+        val hasData = info != null && info.seriesMap != null && info.seriesMap!!.size > 0
+        uiState.value = DetailUiSnapshot(
+            title = tvNameText,
+            site = tvSiteText,
+            year = tvYearText,
+            area = tvAreaText,
+            lang = tvLangText,
+            type = tvTypeText,
+            actor = tvActorText,
+            director = tvDirectorText,
+            playUrl = tvPlayUrlText,
+            des = tvDesText,
+            collectText = tvCollectText,
+            sortText = tvSortText,
+            playText = tvPlayText,
+            posterUrl = posterUrl,
+            posterName = posterName,
+            hasPlayData = hasData,
+            showPreview = showPreview,
+            fullScreen = fullWindows,
+            flags = flags,
+            series = series,
+            groups = ArrayList(seriesGroupOptions),
+            selectedGroup = selectedSeriesGroupPosition,
+            showGroups = hasData && seriesGroupOptions.size > 0,
+            qualities = ArrayList(qualityOptions),
+            selectedQuality = qualityPosition,
+            showQualities = showPreview && qualityOptions.size > 1,
+            columns = seriesColumns,
+            selectedFlag = flags.indexOfFirst { it.selected }.coerceAtLeast(0)
+        )
+    }
+
+    fun requestSeriesScroll(target: Int) {
+        scrollToken++
+        seriesScroll.value = DetailScrollTarget(target, scrollToken)
+    }
+
+    private fun requestFlagScroll(target: Int) {
+        scrollToken++
+        flagScroll.value = DetailScrollTarget(target, scrollToken)
+    }
+
+    private fun onPlayClick() {
+        if (showPreview) {
+            enterFullPreview()
+            if (firstReverse) {
+                jumpToPlay()
+                firstReverse = false
+            }
+        } else {
+            jumpToPlay()
+        }
+    }
+
+    private fun onQuickSearchClick() {
+        startQuickSearch()
+        val quickSearchDialog = QuickSearchDialog(this@DetailActivity)
+        EventBus.getDefault().post(RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH, quickSearchData))
+        EventBus.getDefault().post(RefreshEvent(RefreshEvent.TYPE_QUICK_SEARCH_WORD, quickSearchWord))
+        quickSearchDialog.show()
+        if (pauseRunnable != null && pauseRunnable!!.size > 0) {
+            searchExecutorService = Executors.newFixedThreadPool(5)
+            for (runnable in pauseRunnable!!) {
+                searchExecutorService!!.execute(runnable)
+            }
+            pauseRunnable!!.clear()
+            pauseRunnable = null
+        }
+        quickSearchDialog.setOnDismissListener {
+            try {
+                if (searchExecutorService != null) {
+                    pauseRunnable = searchExecutorService!!.shutdownNow()
+                    searchExecutorService = null
+                }
+            } catch (th: Throwable) {
+                th.printStackTrace()
+            }
+        }
+    }
+
+    private fun onChangeSourceClick() {
+        startDetailFallbackFromMenu()
+    }
+
+    private fun onCollectClick() {
+        if (vodInfo == null) return
+        if ("加入收藏" == tvCollectText) {
+            RoomDataManger.insertVodCollect(sourceKey, vodInfo!!)
+            Toast.makeText(this@DetailActivity, "已加入收藏夹", Toast.LENGTH_SHORT).show()
+            tvCollectText = "取消收藏"
+        } else {
+            RoomDataManger.deleteVodCollect(sourceKey, vodInfo!!)
+            Toast.makeText(this@DetailActivity, "已移除收藏夹", Toast.LENGTH_SHORT).show()
+            tvCollectText = "加入收藏"
+        }
+        pushUiState()
+    }
+
+    private fun onPlayUrlClick() {
+        val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText(null, tvPlayUrlText.replace("播放地址：", "")))
+        Toast.makeText(this@DetailActivity, "已复制", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onDescClick() {
+        val m = mVideo ?: return
+        runOnUiThread {
+            val dialog = DescDialog(this@DetailActivity)
+            dialog.setDescribe(removeHtmlTag(m.des))
+            dialog.show()
+        }
+    }
+
+    private fun onSortClick() {
+        if (vodInfo != null && vodInfo!!.seriesMap!!.size > 0) {
+            vodInfo!!.reverseSort = !vodInfo!!.reverseSort
+            isReverse = !isReverse
+            tvSortText = if (isReverse) "倒序" else "正序"
+            vodInfo!!.reverse()
+            if (vodInfo!!.playIndex >= 0) {
+                vodInfo!!.playIndex =
+                    (vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size - 1) - vodInfo!!.playIndex
+            }
+            firstReverse = !firstReverse
+            setSeriesGroupOptions()
+            pushUiState()
+            if (vodInfo!!.playIndex >= 0) customSeriesScrollPos(vodInfo!!.playIndex)
+        }
+    }
+
+    private fun onFlagSelected(position: Int) {
+        if (position < 0 || vodInfo == null) return
+        val newFlag = vodInfo!!.seriesFlags?.getOrNull(position)?.name ?: return
+        if (vodInfo!!.playFlag == newFlag) return
+        val oldFlag = vodInfo!!.playFlag
+        val oldIndex = vodInfo!!.playIndex
+        var currentSeries = getPlayingSeries(previewVodInfo, previewVodInfo?.playFlag)
+        val oldSeriesList = vodInfo!!.seriesMap!![oldFlag ?: ""]
+        if (currentSeries == null && previewVodInfo == null && oldIndex >= 0 && oldSeriesList != null && oldSeriesList.isNotEmpty()) {
+            val safeOldIndex = Math.max(0, Math.min(oldIndex, oldSeriesList.size - 1))
+            currentSeries = oldSeriesList[safeOldIndex]
+        }
+        if (currentSeries == null) {
+            currentSeries = routeSwitchSeries
+        }
+        for (i in vodInfo!!.seriesFlags!!.indices) {
+            val flag = vodInfo!!.seriesFlags!![i]
+            flag.selected = flag.name == newFlag
+        }
+        if (oldSeriesList != null && oldIndex >= 0 && oldSeriesList.size > oldIndex) {
+            oldSeriesList[oldIndex].selected = false
+        }
+        vodInfo!!.playFlag = newFlag
+        val newSeriesList = vodInfo!!.seriesMap!![newFlag]
+        if (newSeriesList != null && newSeriesList.isNotEmpty()) {
+            vodInfo!!.playIndex = findMatchingEpisodeIndex(currentSeries, newSeriesList)
+            for (series in newSeriesList) {
+                series.selected = false
+            }
+            if (vodInfo!!.playIndex >= 0) {
+                newSeriesList[vodInfo!!.playIndex].selected = true
+                routeSwitchSeries = newSeriesList[vodInfo!!.playIndex]
+            } else if (currentSeries != null) {
+                routeSwitchSeries = currentSeries
+            }
+        }
+        refreshList()
+    }
+
+    private fun onSeriesSelected(position: Int) {
+        if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
+            var reload = false
+            val list = vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!
+            for (j in list.indices) {
+                list[j].selected = false
+            }
+            if (vodInfo!!.playIndex != position) {
+                list[position].selected = true
+                vodInfo!!.playIndex = position
+                routeSwitchSeries = list[position]
+                reload = true
+            }
+            if (preFlag.isNotEmpty() && vodInfo!!.playFlag != preFlag) {
+                reload = true
+            }
+            val isCurrentPlaying = !showPreview || isCurrentPreviewPlaying(position)
+            if (showPreview && !isCurrentPlaying) {
+                reload = true
+            }
+            if (vodInfo!!.playIndex >= 0 && vodInfo!!.playIndex < list.size) {
+                list[vodInfo!!.playIndex].selected = true
+            }
+            if (showPreview && !fullWindows && previewVodInfo != null &&
+                TextUtils.equals(vodInfo!!.playFlag, previewVodInfo!!.playFlag) &&
+                (playFragment?.getPlayer()?.isPlaying == true || isCurrentPlaying)
+            ) {
+                enterFullPreview()
+            }
+            pushUiState()
+            if (!showPreview || reload) {
+                jumpToPlay()
+                firstReverse = false
+            }
+        }
+    }
+
+    private fun onGroupSelected(position: Int) {
+        if (position == selectedSeriesGroupPosition) return
         selectedSeriesGroupPosition = position
-        selectedView.findViewById<View>(R.id.tvSeriesFlagSelect).visibility = View.VISIBLE
+        if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
+            val targetPos = position * GroupCount
+            customSeriesScrollPos(targetPos)
+        }
+        pushUiState()
     }
 
+    private fun onQualitySelected(position: Int) {
+        if (playFragment == null) return
+        if (position == qualityPosition) {
+            if (showPreview && !fullWindows && playFragment?.getPlayer()?.isPlaying == true) enterFullPreview()
+            return
+        }
+        if (playFragment!!.selectQuality(position)) {
+            qualityPosition = position
+            pushUiState()
+        }
+    }
+
+    // 分组选中态由 Compose 快照驱动,这里只更新索引并刷新
+    private fun selectSeriesGroup(position: Int) {
+        if (selectedSeriesGroupPosition == position) return
+        selectedSeriesGroupPosition = position
+        pushUiState()
+    }
+
+    // 剧集网格滚动由 Compose 的 LazyGridState 承担
     private fun customSeriesScrollPos(targetPos: Int) {
         if (targetPos < 0) return
-        mGridViewLayoutMgr!!.scrollToPositionWithOffset(if (targetPos > 10) targetPos - 10 else 0, 0)
-        mGridView!!.postDelayed({
-            this.smoothScroller!!.setTargetPosition(targetPos)
-            mGridViewLayoutMgr!!.startSmoothScroll(smoothScroller)
-            mGridView!!.smoothScrollToPosition(targetPos)
-        }, 50)
+        val safe = Math.max(0, Math.min(targetPos, (vodInfo?.seriesMap?.get(vodInfo?.playFlag ?: "")?.size ?: 1) - 1))
+        requestSeriesScroll(safe)
     }
 
     private fun initCheckedSourcesForSearch() {
@@ -619,7 +542,8 @@ class DetailActivity : BaseActivity() {
         if (vodInfo != null && vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size > 0) {
             preFlag = vodInfo!!.playFlag!!
             //更新播放地址
-            setTextShow(tvPlayUrl!!, "播放地址：", vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!![vodInfo!!.playIndex].url)
+            tvPlayUrlText = setTextShow("播放地址：", vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!![vodInfo!!.playIndex].url)
+            pushUiState()
             val bundle = Bundle()
             //保存历史
             insertVod(firstsourceKey, vodInfo!!)
@@ -676,7 +600,6 @@ class DetailActivity : BaseActivity() {
         }
 
         val pFont = Paint()
-        //        pFont.setTypeface(Typeface.DEFAULT );
         val rect = Rect()
 
         val list = vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!
@@ -694,13 +617,12 @@ class DetailActivity : BaseActivity() {
         var offset = screenWidth / w
         if (offset <= 2) offset = 2
         if (offset > 6) offset = 6
-        mGridViewLayoutMgr!!.spanCount = offset
-        seriesAdapter!!.setNewData(vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""])
+        seriesColumns = offset
 
         setSeriesGroupOptions()
+        pushUiState()
 
-        mGridView!!.postDelayed({
-            //                mGridView.smoothScrollToPosition(vodInfo.playIndex);
+        llLayout?.postDelayed({
             if (vodInfo!!.playIndex >= 0) customSeriesScrollPos(vodInfo!!.playIndex)
         }, 100)
     }
@@ -709,19 +631,17 @@ class DetailActivity : BaseActivity() {
     private fun setSeriesGroupOptions() {
         val list = vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!
         val listSize = list.size
-        val offset = mGridViewLayoutMgr!!.spanCount
+        val offset = seriesColumns
         seriesGroupOptions.clear()
         GroupCount = if (offset == 3 || offset == 6) 30 else 20
         if (listSize > 100 && listSize <= 400) GroupCount = 60
         if (listSize > 400) GroupCount = 120
         if (listSize > 1) {
-            tvSeriesGroup!!.visibility = View.VISIBLE
             val remainedOptionSize = listSize % GroupCount
             val optionSize = listSize / GroupCount
 
             for (i in 0 until optionSize) {
                 if (vodInfo!!.reverseSort)
-                //                    seriesGroupOptions.add(String.format("%d - %d", i * GroupCount + GroupCount, i * GroupCount + 1));
                     seriesGroupOptions.add(
                         String.format(
                             "%d - %d",
@@ -734,7 +654,6 @@ class DetailActivity : BaseActivity() {
             }
             if (remainedOptionSize > 0) {
                 if (vodInfo!!.reverseSort)
-                //                    seriesGroupOptions.add(String.format("%d - %d", optionSize * GroupCount + remainedOptionSize, optionSize * GroupCount + 1));
                     seriesGroupOptions.add(
                         String.format(
                             "%d - %d",
@@ -751,16 +670,10 @@ class DetailActivity : BaseActivity() {
                         )
                     )
             }
-            //            if(vodInfo.reverseSort) Collections.reverse(seriesGroupOptions);
 
             selectedSeriesGroupPosition = Math.max(0, Math.min(vodInfo!!.playIndex / GroupCount, seriesGroupOptions.size - 1))
-            seriesGroupAdapter!!.notifyDataSetChanged()
-        } else {
-            tvSeriesGroup!!.visibility = View.GONE
         }
-        if (!mGridViewFlag!!.hasFocus()) seriesFlagAdapter!!.notifyDataSetChanged()
-        mGridViewQuality!!.nextFocusUpId =
-            if (tvSeriesGroup!!.visibility == View.VISIBLE) R.id.mSeriesSortTv else R.id.mGridViewFlag
+        pushUiState()
     }
 
     private fun updateQualityOptions(result: JSONObject?) {
@@ -784,32 +697,20 @@ class DetailActivity : BaseActivity() {
         if (qualityOptions == options) {
             if (qualityPosition == 0) return
             qualityPosition = 0
-            qualityAdapter!!.notifyDataSetChanged()
+            pushUiState()
             return
         }
         qualityOptions.clear()
         qualityOptions.addAll(options)
         qualityPosition = 0
-        val visible = showPreview && options.size > 1
-        mGridViewQuality!!.visibility = if (visible) View.VISIBLE else View.GONE
-        seriesFlagAdapter!!.notifyDataSetChanged()
-        seriesAdapter!!.notifyDataSetChanged()
-        qualityAdapter!!.setNewData(ArrayList(qualityOptions))
-        val up = if (tvSeriesGroup!!.visibility == View.VISIBLE) R.id.mSeriesSortTv else R.id.mGridViewFlag
-        val down = if (visible) R.id.mGridViewQuality else R.id.mGridView
-        mGridViewQuality!!.nextFocusUpId = up
-        mGridViewQuality!!.nextFocusDownId = R.id.mGridView
-        tvSeriesSort!!.nextFocusDownId = down
-        mSeriesGroupView!!.nextFocusDownId = down
+        pushUiState()
     }
 
-    private fun setTextShow(view: TextView, tag: String, info: String?) {
+    private fun setTextShow(tag: String, info: String?): String {
         if (info == null || info.trim().isEmpty()) {
-            view.visibility = View.GONE
-            return
+            return ""
         }
-        view.visibility = View.VISIBLE
-        view.text = Html.fromHtml(getHtml(tag, info))
+        return tag + info.trim()
     }
 
     private fun removeHtmlTag(info: String?): String {
@@ -837,15 +738,6 @@ class DetailActivity : BaseActivity() {
         llPlayerFragmentContainer!!.outlineProvider = provider
         llPlayerFragmentContainerBlock!!.clipToOutline = true
         llPlayerFragmentContainerBlock!!.outlineProvider = provider
-    }
-
-    private fun applyThumbPreviewStyle() {
-        thumbContainer!!.visibility = if (showPreview) View.GONE else View.VISIBLE
-        llPlayerPlace!!.visibility = if (showPreview) View.VISIBLE else View.GONE
-        ivThumb!!.visibility = if (!showPreview) View.VISIBLE else View.GONE
-        thumbContainer!!.setBackgroundResource(
-            if (showPreview) R.drawable.shape_detail_thumb_bg else R.drawable.shape_detail_thumb_idle_bg
-        )
     }
 
     private fun setPreviewRoundClip(enable: Boolean) {
@@ -902,39 +794,28 @@ class DetailActivity : BaseActivity() {
                 vodInfo!!.sourceKey = mVideo!!.sourceKey
                 sourceKey = mVideo!!.sourceKey ?: ""
 
-                tvName!!.text = mVideo!!.name
+                tvNameText = mVideo!!.name ?: ""
                 var displaySource = ApiConfig.get().getSource(firstsourceKey)
                 if (displaySource == null) {
                     displaySource = ApiConfig.get().getSource(sourceKey)
                 }
-                setTextShow(tvSite!!, "来源：", displaySource?.name ?: "")
-                setTextShow(tvYear!!, "年份：", if (mVideo!!.year == 0) "" else mVideo!!.year.toString())
-                setTextShow(tvArea!!, "地区：", mVideo!!.area)
-                setTextShow(tvLang!!, "语言：", mVideo!!.lang)
+                tvSiteText = setTextShow("来源：", displaySource?.name ?: "")
+                tvYearText = setTextShow("年份：", if (mVideo!!.year == 0) "" else mVideo!!.year.toString())
+                tvAreaText = setTextShow("地区：", mVideo!!.area)
+                tvLangText = setTextShow("语言：", mVideo!!.lang)
                 if (firstsourceKey != sourceKey) {
                     val parsedName = ApiConfig.get().getSource(sourceKey)?.name ?: sourceKey
-                    setTextShow(tvType!!, "类型：", "[$parsedName] 解析")
+                    tvTypeText = setTextShow("类型：", "[$parsedName] 解析")
                 } else {
-                    setTextShow(tvType!!, "类型：", mVideo!!.type)
+                    tvTypeText = setTextShow("类型：", mVideo!!.type)
                 }
-                setTextShow(tvActor!!, "演员：", removeHtmlTag(mVideo!!.actor))
-                setTextShow(tvDirector!!, "导演：", removeHtmlTag(mVideo!!.director))
-                setTextShow(tvDes!!, "内容简介：", removeHtmlTag(mVideo!!.des))
-                if (!TextUtils.isEmpty(mVideo!!.pic)) {
-                    ImgUtil.loadCenterCrop(
-                        DefaultConfig.checkReplaceProxy(mVideo!!.pic!!), ivThumb!!,
-                        AutoSizeUtils.mm2px(mContext, 10f), AutoSizeUtils.mm2px(mContext, 300f),
-                        AutoSizeUtils.mm2px(mContext, 400f), mVideo!!.name
-                    )
-                } else {
-                    ivThumb!!.setImageDrawable(ImgUtil.createTextDrawable(mVideo!!.name!!))
-                }
+                tvActorText = setTextShow("演员：", removeHtmlTag(mVideo!!.actor))
+                tvDirectorText = setTextShow("导演：", removeHtmlTag(mVideo!!.director))
+                tvDesText = setTextShow("内容简介：", removeHtmlTag(mVideo!!.des))
+                posterUrl = if (!TextUtils.isEmpty(mVideo!!.pic)) DefaultConfig.checkReplaceProxy(mVideo!!.pic!!) else ""
+                posterName = mVideo!!.name ?: ""
 
                 if (vodInfo!!.seriesMap != null && vodInfo!!.seriesMap!!.size > 0) {
-                    mGridViewFlag!!.visibility = View.VISIBLE
-                    mGridView!!.visibility = View.VISIBLE
-                    tvPlay!!.visibility = View.VISIBLE
-                    mEmptyPlayList!!.visibility = View.GONE
 
                     val vodInfoRecord = RoomDataManger.getVodInfo(sourceKey, vodId)
                     // 读取历史记录
@@ -972,9 +853,8 @@ class DetailActivity : BaseActivity() {
                             flag.selected = false
                     }
                     //设置播放地址
-                    setTextShow(tvPlayUrl!!, "播放地址：", playingSeriesList[vodInfo!!.playIndex].url)
-                    seriesFlagAdapter!!.setNewData(vodInfo!!.seriesFlags)
-                    mGridViewFlag!!.scrollToPosition(flagScrollTo)
+                    tvPlayUrlText = setTextShow("播放地址：", playingSeriesList[vodInfo!!.playIndex].url)
+                    requestFlagScroll(flagScrollTo)
 
                     refreshList()
                     if (showPreview) {
@@ -983,13 +863,8 @@ class DetailActivity : BaseActivity() {
                         llPlayerFragmentContainerBlock!!.visibility = View.VISIBLE
                         toggleSubtitleTextSize()
                     }
-                    // startQuickSearch();
                 } else {
-                    mGridViewFlag!!.visibility = View.GONE
-                    mGridView!!.visibility = View.GONE
-                    tvSeriesGroup!!.visibility = View.GONE
-                    tvPlay!!.visibility = View.GONE
-                    mEmptyPlayList!!.visibility = View.VISIBLE
+                    pushUiState()
                     handleNoPlayableDetail()
                 }
             } else {
@@ -1068,11 +943,8 @@ class DetailActivity : BaseActivity() {
         }
         sourceViewModel!!.getDetail(sourceKey, vodId, fallback && detailFallbackActive)
         val isVodCollect = RoomDataManger.isVodCollect(sourceKey, vodId)
-        if (isVodCollect) {
-            tvCollect!!.text = "取消收藏"
-        } else {
-            tvCollect!!.text = "加入收藏"
-        }
+        tvCollectText = if (isVodCollect) "取消收藏" else "加入收藏"
+        pushUiState()
     }
 
     private fun handleEmptyDetail(data: AbsXml?) {
@@ -1536,15 +1408,17 @@ class DetailActivity : BaseActivity() {
                     syncPlayingVodInfo(event.obj as VodInfo)
                 } else if (event.obj is Int) {
                     val index = event.obj as Int
-                    for (j in 0 until vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!.size) {
-                        seriesAdapter!!.data[j].selected = false
-                        seriesAdapter!!.notifyItemChanged(j)
+                    val list = vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]!!
+                    for (j in list.indices) {
+                        list[j].selected = false
                     }
-                    seriesAdapter!!.data[index].selected = true
-                    seriesAdapter!!.notifyItemChanged(index)
-                    if (!isFirstLoad) mGridView!!.setSelection(index)
+                    if (index >= 0 && index < list.size) {
+                        list[index].selected = true
+                        routeSwitchSeries = list[index]
+                        if (!isFirstLoad) customSeriesScrollPos(index)
+                    }
                     vodInfo!!.playIndex = index
-                    routeSwitchSeries = seriesAdapter!!.data[index]
+                    pushUiState()
                     //保存历史
                     insertVod(firstsourceKey, vodInfo!!)
                     isFirstLoad = false
@@ -1693,12 +1567,8 @@ class DetailActivity : BaseActivity() {
             routeSwitchSeries = newSeriesList[newIndex]
         }
 
-        seriesFlagAdapter!!.notifyDataSetChanged()
         if (sameFlag && newIndex >= 0 && oldIndex >= 0 && oldIndex < newSeriesList.size) {
-            if (oldIndex != newIndex) {
-                seriesAdapter!!.notifyItemChanged(oldIndex)
-                seriesAdapter!!.notifyItemChanged(newIndex)
-            }
+            pushUiState()
         } else {
             refreshList()
         }
@@ -1714,14 +1584,12 @@ class DetailActivity : BaseActivity() {
             }
         }
         if (flagIndex >= 0) {
-            mGridViewFlag!!.scrollToPosition(flagIndex)
-            if (mGridViewFlag!!.hasFocus()) {
-                mGridViewFlag!!.setSelection(flagIndex)
-            }
+            requestFlagScroll(flagIndex)
         }
         if (!isFirstLoad && newIndex >= 0) {
-            mGridView!!.setSelection(newIndex)
+            customSeriesScrollPos(newIndex)
         }
+        pushUiState()
 
         insertVod(firstsourceKey, vodInfo!!)
         isFirstLoad = false
@@ -1869,22 +1737,6 @@ class DetailActivity : BaseActivity() {
             exitFullPreview()
             return
         }
-        if (mGridView != null && mGridView!!.hasFocus()
-            && mGridViewFlag != null && mGridViewFlag!!.visibility == View.VISIBLE
-        ) {
-            try {
-                if (seriesFlagFocus != null && seriesFlagFocus!!.isShown
-                    && seriesFlagFocus!!.requestFocus()
-                ) {
-                    return
-                }
-                if (mGridViewFlag!!.requestFocus()) {
-                    return
-                }
-            } catch (th: Throwable) {
-                th.printStackTrace()
-            }
-        }
         if (showPreview && playFragment != null) {
             try {
                 playFragment!!.setPlayTitle(false)
@@ -1947,33 +1799,31 @@ class DetailActivity : BaseActivity() {
     }
 
     private fun refreshSeriesAfterFullPreview() {
-        if (seriesAdapter == null || vodInfo == null || vodInfo!!.seriesMap == null || TextUtils.isEmpty(vodInfo!!.playFlag)) return
+        if (vodInfo == null || vodInfo!!.seriesMap == null || TextUtils.isEmpty(vodInfo!!.playFlag)) return
         if (vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""] == null) return
-        mGridView!!.post {
-            mGridView!!.recycledViewPool.clear()
-            mGridView!!.setAdapter(seriesAdapter)
+        llLayout?.post {
             refreshList()
         }
     }
 
     private fun syncSeriesSelectionAfterFullPreview() {
-        if (seriesAdapter == null || vodInfo == null || vodInfo!!.seriesMap == null || TextUtils.isEmpty(vodInfo!!.playFlag)) return
+        if (vodInfo == null || vodInfo!!.seriesMap == null || TextUtils.isEmpty(vodInfo!!.playFlag)) return
         val list = vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]
         if (list == null || list.isEmpty()) return
         if (vodInfo!!.playIndex >= list.size) {
             vodInfo!!.playIndex = list.size - 1
         }
         setSeriesGroupOptions()
-        mGridView!!.post {
-            val firstVisible = mGridView!!.firstVisiblePosition
-            val lastVisible = mGridView!!.lastVisiblePosition
-            if (vodInfo!!.playIndex >= 0 && (vodInfo!!.playIndex < firstVisible || vodInfo!!.playIndex > lastVisible)) {
+        llLayout?.post {
+            if (vodInfo!!.playIndex >= 0) {
                 customSeriesScrollPos(vodInfo!!.playIndex)
             }
         }
-        mSeriesGroupView!!.post {
-            if (mSeriesGroupView!!.visibility == View.VISIBLE) {
-                mSeriesGroupView!!.scrollToPosition(selectedSeriesGroupPosition)
+        pushUiState()
+        llLayout?.post {
+            try {
+                seriesFocusRequester.requestFocus()
+            } catch (_: Throwable) {
             }
         }
     }
@@ -1998,19 +1848,16 @@ class DetailActivity : BaseActivity() {
         llPlayerFragmentContainer!!.layoutParams = if (fullWindows) windowsFull else windowsPreview
         setPreviewRoundClip(!fullWindows)
         llPlayerFragmentContainerBlock!!.visibility = if (!fullWindows && showPreview) View.VISIBLE else View.GONE
-        mGridView!!.visibility = if (fullWindows) View.GONE else View.VISIBLE
-        mGridViewFlag!!.visibility = if (fullWindows) View.GONE else View.VISIBLE
-        if (fullWindows) {
-            tvSeriesGroup!!.visibility = View.GONE
-        } else {
-            val list =
-                if (vodInfo == null || vodInfo!!.seriesMap == null || TextUtils.isEmpty(vodInfo!!.playFlag)) null else vodInfo!!.seriesMap!![vodInfo!!.playFlag ?: ""]
-            tvSeriesGroup!!.visibility = if (list != null && list.size > 1) View.VISIBLE else View.GONE
-            seriesFlagAdapter!!.notifyDataSetChanged()
-            if (showPreview) mGridView!!.requestFocus()
-            else {
-                if (playFragment != null) playFragment!!.pauseForHidden()
-                mGridView!!.requestFocus()
+        if (!fullWindows && !showPreview && playFragment != null) {
+            playFragment!!.pauseForHidden()
+        }
+        pushUiState()
+        if (!fullWindows) {
+            llLayout?.post {
+                try {
+                    seriesFocusRequester.requestFocus()
+                } catch (_: Throwable) {
+                }
             }
         }
         toggleSubtitleTextSize()
@@ -2046,7 +1893,8 @@ class DetailActivity : BaseActivity() {
     }
 
     private fun setTvPlayUrl(url: String?) {
-        setTextShow(tvPlayUrl!!, "播放地址：", url)
+        tvPlayUrlText = setTextShow("播放地址：", url)
+        pushUiState()
     }
 
     companion object {

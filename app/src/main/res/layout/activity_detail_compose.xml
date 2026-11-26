@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 详情页主体(信息区 + 线路/分组/清晰度/剧集列表)由 Jetpack Compose 承载。
+         LoadSir 仍挂载在 llLayout 上,保持 showLoading/showEmpty/showSuccess 行为不变。 -->
+    <LinearLayout
+        android:id="@+id/llLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/detailComposeView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+
+    <!-- 预览播放浮层:Fragment 事务依赖该容器 id,全屏切换直接改 LayoutParams,保留原生。 -->
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/previewPlayer"
+        android:layout_width="@dimen/vs_470"
+        android:layout_height="@dimen/vs_300"
+        android:layout_marginStart="@dimen/vs_50"
+        android:layout_marginLeft="@dimen/vs_50"
+        android:layout_marginTop="@dimen/vs_20"
+        android:layout_marginBottom="@dimen/vs_10"
+        android:background="@drawable/preview_player_round"
+        android:visibility="gone" />
+
+    <!-- 预览焦点拦截块:原生 View 承载 focus/click 进入全屏,保留。 -->
+    <View
+        android:id="@+id/previewPlayerBlock"
+        android:layout_width="@dimen/vs_470"
+        android:layout_height="@dimen/vs_300"
+        android:focusable="true"
+        android:background="@drawable/preview_player_block"
+        android:layout_marginStart="@dimen/vs_50"
+        android:layout_marginLeft="@dimen/vs_50"
+        android:layout_marginTop="@dimen/vs_20"
+        android:layout_marginBottom="@dimen/vs_10"
+        android:visibility="gone" />
+</FrameLayout>
