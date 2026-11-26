@@ -5,50 +5,46 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Environment
 import android.view.KeyEvent
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.base.BaseActivity
-import com.github.tvbox.kt.ui.adapter.LocalFileAdapter
-import com.owen.tvrecyclerview.widget.TvRecyclerView
-import com.owen.tvrecyclerview.widget.V7LinearLayoutManager
-import me.jessyan.autosize.utils.AutoSizeUtils
+import com.github.tvbox.kt.ui.compose.LocalFileItem
+import com.github.tvbox.kt.ui.compose.LocalFileScreen
+import com.github.tvbox.kt.ui.compose.TvTheme
 import java.io.File
-import java.util.ArrayList
+import java.text.DecimalFormat
 import java.util.Arrays
 import java.util.Collections
 
-/** 本地文件选择页(直播/点播配置文件),Kotlin 移植(与旧版 LocalFileActivity 一致)。 */
+/** 本地文件选择页(直播/点播配置文件),UI 由 Jetpack Compose 承载。 */
 class LocalFileActivity : BaseActivity() {
-    private var fileList: TvRecyclerView? = null
-    private var tvTitle: TextView? = null
-    private var tvPath: TextView? = null
-    private var tvEmpty: TextView? = null
-    private var adapter: LocalFileAdapter? = null
+    private val fileItems = mutableStateListOf<LocalFileItem>()
+    private val titleText = mutableStateOf("")
+    private val pathText = mutableStateOf("")
+    private var files = ArrayList<File>()
     private var currentDir: File? = null
     private var rootDir: File? = null
 
     override val layoutResID: Int
-        get() = R.layout.activity_local_file
+        get() = R.layout.activity_simple_compose
 
     override fun init() {
-        tvTitle = findViewById(R.id.tvTitle)
-        tvPath = findViewById(R.id.tvPath)
-        tvEmpty = findViewById(R.id.tvEmpty)
-        fileList = findViewById(R.id.fileList)
-        adapter = LocalFileAdapter()
-        fileList!!.setAdapter(adapter)
-        fileList!!.layoutManager = V7LinearLayoutManager(this, 1, false)
-        fileList!!.setSpacingWithMargins(0, AutoSizeUtils.mm2px(this, 8f))
-        adapter!!.setOnItemClickListener { adapter0, view, position ->
-            val item = adapter0.getItem(position) as File?
-            if (item != null) open(item)
-        }
         initRoot()
         val live = intent != null && intent.getBooleanExtra(EXTRA_LIVE, false)
-        tvTitle?.text = if (live) "选择直播配置文件" else "选择点播配置文件"
+        titleText.value = if (live) "选择直播配置文件" else "选择点播配置文件"
         loadDir(rootDir)
+        findViewById<androidx.compose.ui.platform.ComposeView>(R.id.composeView).setContent {
+            TvTheme {
+                LocalFileScreen(
+                    title = titleText.value,
+                    path = pathText.value,
+                    files = fileItems,
+                    onFileClick = ::openAt
+                )
+            }
+        }
     }
 
     private fun initRoot() {
@@ -64,24 +60,34 @@ class LocalFileActivity : BaseActivity() {
             return
         }
         currentDir = dir
-        tvPath?.text = dir.absolutePath
-        val files = ArrayList<File>()
+        pathText.value = dir.absolutePath
+        val list = ArrayList<File>()
         val parent = dir.parentFile
-        if (!isStorageRoot(dir) && parent != null) files.add(parent)
+        val isRoot = isStorageRoot(dir)
+        if (!isRoot && parent != null) list.add(parent)
         val children = dir.listFiles()
-        if (children != null) files.addAll(Arrays.asList(*children))
-        adapter?.setParentDir(if (isStorageRoot(dir)) null else parent)
-        Collections.sort(files) { left, right ->
+        if (children != null) list.addAll(Arrays.asList(*children))
+        Collections.sort(list) { left, right ->
             if (left == currentDir?.parentFile) return@sort -1
             if (right == currentDir?.parentFile) return@sort 1
             if (left.isDirectory != right.isDirectory) return@sort if (left.isDirectory) -1 else 1
             (left.name ?: "").compareTo(right.name ?: "", ignoreCase = true)
         }
-        adapter?.setNewData(files)
-        tvEmpty?.visibility = if (files.isEmpty()) View.VISIBLE else View.GONE
-        fileList?.postDelayed({
-            fileList?.requestFocus()
-        }, 100)
+        files = list
+        val newItems = list.map { f ->
+            val isParent = !isRoot && parent != null && f == parent
+            LocalFileItem(
+                name = if (isParent) ".." else f.name,
+                type = if (f.isDirectory) "目录" else "文件",
+                info = if (f.isDirectory) "进入" else formatSize(f.length())
+            )
+        }
+        fileItems.clear(); fileItems.addAll(newItems)
+    }
+
+    private fun openAt(position: Int) {
+        if (position !in files.indices) return
+        open(files[position])
     }
 
     private fun open(item: File) {
@@ -114,8 +120,18 @@ class LocalFileActivity : BaseActivity() {
         }
     }
 
+    private fun formatSize(size: Long): String {
+        if (size < 1024) return "$size B"
+        val kb = size / 1024.0
+        if (kb < 1024) return SIZE_FORMAT.format(kb) + " KB"
+        val mb = kb / 1024.0
+        if (mb < 1024) return SIZE_FORMAT.format(mb) + " MB"
+        return SIZE_FORMAT.format(mb / 1024.0) + " GB"
+    }
+
     companion object {
         @JvmField
         val EXTRA_LIVE = "live"
+        private val SIZE_FORMAT = DecimalFormat("0.#")
     }
 }

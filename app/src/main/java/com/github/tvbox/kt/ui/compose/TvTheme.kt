@@ -27,6 +27,7 @@ object TvColors {
     val ScreenBg = Color(0xFF12151C)        // 页面背景
     val BadgeBg = Color(0xCC0C1C28)         // 角标/标题底条半透明背景
     val DeleteMask = Color(0xAA000000)      // 删除模式遮罩
+    val HintText = Color(0xBBFFFFFF)        // 次要/提示文字(color_CCFFFFFF)
 }
 
 private val TvShapes = Shapes(
