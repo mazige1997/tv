@@ -83,6 +83,10 @@ fun GridMediaScreen(
     val gridState = rememberLazyGridState()
     var focusedIndex by remember { mutableStateOf(-1) }
     val focusRequesters = remember(mediaItems.size) { List(mediaItems.size) { FocusRequester() } }
+    // 在 Composable 作用域预先计算 item 高度(px)，避免在 LaunchedEffect 的非 Composable lambda 中调用 @Composable API
+    val itemHeightPx = with(LocalDensity.current) {
+        dimensionResource(R.dimen.vs_280).toPx().toInt()
+    }
 
     // 进入页面默认聚焦第一个 item（首个可聚焦项），保证遥控器立即可操作
     LaunchedEffect(mediaItems.size) {
@@ -97,9 +101,6 @@ fun GridMediaScreen(
         if (idx in mediaItems.indices) {
             val info = gridState.layoutInfo
             val viewport = info.viewportEndOffset - info.viewportStartOffset
-            val itemHeightPx = with(LocalDensity.current) {
-                dimensionResource(R.dimen.vs_280).toPx().toInt()
-            }
             val offset = ((viewport - itemHeightPx) / 2).coerceAtLeast(0)
             try {
                 gridState.animateScrollToItem(idx, scrollOffset = -offset)
