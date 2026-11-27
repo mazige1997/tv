@@ -1,19 +1,12 @@
 package com.github.tvbox.kt.ui.activity
 
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import android.text.SpannableString
-import android.text.Spanned
 import android.text.TextUtils
-import android.text.style.ForegroundColorSpan
-import android.text.style.RelativeSizeSpan
-import android.text.style.StyleSpan
-import android.view.View
-import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.ViewModelProvider
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
@@ -24,17 +17,14 @@ import com.github.tvbox.kt.bean.SourceBean
 import com.github.tvbox.kt.core.spider.JsLoader
 import com.github.tvbox.kt.event.RefreshEvent
 import com.github.tvbox.kt.event.ServerEvent
-import com.github.tvbox.kt.ui.adapter.FastListAdapter
-import com.github.tvbox.kt.ui.adapter.FastSearchAdapter
-import com.github.tvbox.kt.ui.adapter.SearchWordAdapter
-import com.github.tvbox.kt.util.FastClickCheckUtil
+import com.github.tvbox.kt.ui.compose.FastSearchUiSnapshot
+import com.github.tvbox.kt.ui.compose.FastSearchScreen
+import com.github.tvbox.kt.ui.compose.FastVideoUi
+import com.github.tvbox.kt.ui.compose.TvTheme
 import com.github.tvbox.kt.util.HistoryHelper
 import com.github.tvbox.kt.util.SearchHelper
 import com.github.tvbox.kt.viewmodel.SourceViewModel
 import com.lzy.okgo.OkGo
-import com.owen.tvrecyclerview.widget.TvRecyclerView
-import com.owen.tvrecyclerview.widget.V7GridLayoutManager
-import com.owen.tvrecyclerview.widget.V7LinearLayoutManager
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -59,17 +49,8 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class FastSearchActivity : BaseActivity() {
     private var llLayout: LinearLayout? = null
-    private var mSearchTitle: TextView? = null
-    private var mGridView: TvRecyclerView? = null
-    private var mGridViewFilter: TvRecyclerView? = null
-    private var mGridViewWord: TvRecyclerView? = null
-    private var mGridViewWordFenci: TvRecyclerView? = null
     private var sourceViewModel: SourceViewModel? = null
 
-    private var searchWordAdapter: SearchWordAdapter? = null
-    private var searchAdapter: FastSearchAdapter? = null
-    private var searchAdapterFilter: FastSearchAdapter? = null
-    private var spListAdapter: FastListAdapter? = null
     private var searchTitle = ""
     private lateinit var spNames: HashMap<String, String>
     private var isFilterMode = false
@@ -81,8 +62,20 @@ class FastSearchActivity : BaseActivity() {
     private var selectedWordName = ""
     private var mCheckSources: HashMap<String, String>? = null
 
+    // ===== Compose 状态:UI 由快照驱动,业务逻辑保持不变 =====
+    private val uiState = mutableStateOf(FastSearchUiSnapshot())
+    private val mainResults = ArrayList<FastVideoUi>()
+    private val filterResults = ArrayList<FastVideoUi>()
+    private val siteWords = ArrayList<String>()
+    private val fenciWords = ArrayList<String>()
+    private var showMainGrid = true
+    private var showResults = true
+    private var statusLine1 = "准备搜索"
+    private var statusLine2 = "结果 0"
+    private var siteFocusToken = 0
+
     override val layoutResID: Int
-        get() = R.layout.activity_fast_search
+        get() = R.layout.activity_fast_search_compose
 
     override fun init() {
         spNames = HashMap()
@@ -102,111 +95,61 @@ class FastSearchActivity : BaseActivity() {
     private fun initView() {
         EventBus.getDefault().register(this)
         llLayout = findViewById(R.id.llLayout)
-        mSearchTitle = findViewById(R.id.mSearchTitle)
-        mGridView = findViewById(R.id.mGridView)
-        mGridViewWord = findViewById(R.id.mGridViewWord)
-        mGridViewFilter = findViewById(R.id.mGridViewFilter)
-
-        mGridViewWord!!.setHasFixedSize(true)
-        mGridViewWord!!.layoutManager = V7LinearLayoutManager(mContext, 1, false)
-        spListAdapter = FastListAdapter()
-        mGridViewWord!!.setAdapter(spListAdapter)
-
-        spListAdapter!!.setOnItemClickListener { _, _, position ->
-            selectWord(spListAdapter!!.getItem(position))
-        }
-
-        mGridViewWord!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                selectWord(spListAdapter!!.getItem(position))
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                selectWord(spListAdapter!!.getItem(position))
-            }
-        })
-        mGridViewWord!!.setOnInBorderKeyEventListener { direction, _ ->
-            direction == View.FOCUS_UP
-        }
-
-        mGridView!!.setHasFixedSize(true)
-        mGridView!!.layoutManager = V7GridLayoutManager(mContext, 4)
-
-        searchAdapter = FastSearchAdapter()
-        mGridView!!.setAdapter(searchAdapter)
-        mGridView!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                setPosterFocusScale(itemView, false)
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                setPosterFocusScale(itemView, true)
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
-            }
-        })
-
-        searchAdapter!!.setOnItemClickListener { _, view, position ->
-            FastClickCheckUtil.check(view)
-            val video = searchAdapter!!.data[position]
-            if (video != null) {
-                openSearchVideo(video, false)
-            }
-        }
-
-        mGridViewFilter!!.layoutManager = V7GridLayoutManager(mContext, 4)
-        searchAdapterFilter = FastSearchAdapter()
-        mGridViewFilter!!.setAdapter(searchAdapterFilter)
-        mGridViewFilter!!.setOnItemListener(object : TvRecyclerView.OnItemListener {
-            override fun onItemPreSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                setPosterFocusScale(itemView, false)
-            }
-
-            override fun onItemSelected(parent: TvRecyclerView?, itemView: View?, position: Int) {
-                setPosterFocusScale(itemView, true)
-            }
-
-            override fun onItemClick(parent: TvRecyclerView?, itemView: View?, position: Int) {
-            }
-        })
-        searchAdapterFilter!!.setOnItemClickListener { _, view, position ->
-            FastClickCheckUtil.check(view)
-            val video = searchAdapterFilter!!.data[position]
-            if (video != null) {
-                openSearchVideo(video, true)
-            }
-        }
-
         setLoadSir(llLayout!!)
 
-        // 分词
-        searchWordAdapter = SearchWordAdapter()
-        mGridViewWordFenci = findViewById(R.id.mGridViewWordFenci)
-        mGridViewWordFenci!!.setAdapter(searchWordAdapter)
-        mGridViewWordFenci!!.layoutManager = V7LinearLayoutManager(mContext, 0, false)
-        searchWordAdapter!!.setOnItemClickListener { _, _, position ->
-            val str = searchWordAdapter!!.getItem(position)
-            search(str)
+        val composeView = findViewById<ComposeView>(R.id.fastSearchComposeView)
+        composeView.setContent {
+            TvTheme {
+                FastSearchScreen(
+                    state = uiState.value,
+                    onWordClick = { word -> search(word) },
+                    onSiteFocus = { name -> selectWord(name) },
+                    onSiteClick = { name -> selectWord(name) },
+                    onResultClick = { index, filterMode -> onResultClicked(index, filterMode) }
+                )
+            }
         }
-        searchWordAdapter!!.setNewData(ArrayList())
+        pushUiState()
     }
 
-    private fun setPosterFocusScale(itemView: View?, focused: Boolean) {
-        if (itemView == null) return
-        if (focused) {
-            itemView.bringToFront()
+    /** 站名列/结果点击:站名由 onSiteFocus/onSiteClick 处理;这里处理结果海报点击。 */
+    private fun onResultClicked(position: Int, filterMode: Boolean) {
+        val source = if (filterMode) resultVideosForClick(true) else resultVideosForClick(false)
+        if (position in source.indices) {
+            openSearchVideo(source[position], filterMode)
         }
-        val scale = if (focused) POSTER_FOCUS_SCALE else 1.0f
-        itemView.animate()
-            .scaleX(scale)
-            .scaleY(scale)
-            .setDuration(POSTER_FOCUS_ANIM_DURATION)
-            .setInterpolator(DecelerateInterpolator())
-            .start()
+    }
+
+    /** 供点击取数:返回当前主/过滤列表对应的原始视频对象。 */
+    private val currentMainVideos = ArrayList<Movie.Video>()
+    private val currentFilterVideos = ArrayList<Movie.Video>()
+    private fun resultVideosForClick(filterMode: Boolean): List<Movie.Video> =
+        if (filterMode) currentFilterVideos else currentMainVideos
+
+    /** 把原始视频列表转换成 Compose 快照数据(站点名 + 角标)。 */
+    private fun videosToUi(list: List<Movie.Video>): List<FastVideoUi> = list.map { video ->
+        FastVideoUi(
+            name = video.name ?: "",
+            pic = video.pic,
+            siteName = ApiConfig.get().getSource(video.sourceKey)?.name ?: "",
+            note = video.note
+        )
+    }
+
+    /** 统一推送 UI 快照,驱动 Compose 重组。 */
+    private fun pushUiState() {
+        uiState.value = FastSearchUiSnapshot(
+            statusLine1 = statusLine1,
+            statusLine2 = statusLine2,
+            words = ArrayList(fenciWords),
+            sites = ArrayList(siteWords),
+            selectedSite = selectedWordName.ifEmpty { SEARCH_ALL_NAME },
+            mainResults = ArrayList(mainResults),
+            filterResults = ArrayList(filterResults),
+            showMainGrid = showMainGrid,
+            showResults = showResults,
+            siteFocusToken = siteFocusToken
+        )
     }
 
     private fun initViewModel() {
@@ -219,22 +162,29 @@ class FastSearchActivity : BaseActivity() {
                 return@observe
             }
             showSuccess()
+            val list = data.movie!!.videoList ?: ArrayList()
             if (folderFilterMode) {
-                mGridView!!.visibility = View.GONE
-                mGridViewFilter!!.visibility = View.VISIBLE
-                searchAdapterFilter!!.setNewData(data.movie!!.videoList)
+                showMainGrid = false
+                currentFilterVideos.clear()
+                currentFilterVideos.addAll(list)
+                filterResults.clear()
+                filterResults.addAll(videosToUi(list))
             } else {
-                mGridViewFilter!!.visibility = View.GONE
-                mGridView!!.visibility = View.VISIBLE
-                searchAdapter!!.setNewData(data.movie!!.videoList)
+                showMainGrid = true
+                currentMainVideos.clear()
+                currentMainVideos.addAll(list)
+                mainResults.clear()
+                mainResults.addAll(videosToUi(list))
             }
+            showResults = true
+            pushUiState()
         }
     }
 
     private fun openSearchVideo(video: Movie.Video, filterMode: Boolean) {
         pauseSearchTasks()
         if (TextUtils.equals("folder", video.tag)) {
-            folderHistory.add(ArrayList(if (filterMode) searchAdapterFilter!!.data else searchAdapter!!.data))
+            folderHistory.add(ArrayList(if (filterMode) currentFilterVideos else currentMainVideos))
             folderHistoryFilter.add(filterMode)
             folderHistorySiteKeys.add(selectedSearchSiteKey)
             folderFilterMode = filterMode
@@ -271,14 +221,20 @@ class FastSearchActivity : BaseActivity() {
             folderFilterMode = filterMode
             showSuccess()
             if (filterMode) {
-                mGridView!!.visibility = View.GONE
-                mGridViewFilter!!.visibility = View.VISIBLE
-                searchAdapterFilter!!.setNewData(previous)
+                showMainGrid = false
+                currentFilterVideos.clear()
+                currentFilterVideos.addAll(previous)
+                filterResults.clear()
+                filterResults.addAll(videosToUi(previous))
             } else {
-                mGridViewFilter!!.visibility = View.GONE
-                mGridView!!.visibility = View.VISIBLE
-                searchAdapter!!.setNewData(previous)
+                showMainGrid = true
+                currentMainVideos.clear()
+                currentMainVideos.addAll(previous)
+                mainResults.clear()
+                mainResults.addAll(videosToUi(previous))
             }
+            showResults = true
+            pushUiState()
             return
         }
         super.onBackPressed()
@@ -298,23 +254,33 @@ class FastSearchActivity : BaseActivity() {
         selectedWordName = spName!!
         setSelectedWordName(spName)
         if (TextUtils.equals(spName, SEARCH_ALL_NAME)) {
-            mGridView!!.visibility = View.VISIBLE
-            mGridViewFilter!!.visibility = View.GONE
+            showMainGrid = true
+            pushUiState()
             return
         }
-        mGridView!!.visibility = View.GONE
-        mGridViewFilter!!.visibility = View.VISIBLE
+        showMainGrid = false
         val key = spNames[spName]
-        if (TextUtils.isEmpty(key)) return
+        if (TextUtils.isEmpty(key)) {
+            pushUiState()
+            return
+        }
 
-        if (TextUtils.equals(searchFilterKey, key)) return
+        if (TextUtils.equals(searchFilterKey, key)) {
+            pushUiState()
+            return
+        }
         searchFilterKey = key
 
         var list = resultVods[key]
         if (list == null) {
             list = ArrayList()
         }
-        searchAdapterFilter!!.setNewData(list)
+        currentFilterVideos.clear()
+        currentFilterVideos.addAll(list)
+        filterResults.clear()
+        filterResults.addAll(videosToUi(list))
+        showResults = true
+        pushUiState()
     }
 
     private fun selectWord(spName: String?) {
@@ -322,73 +288,32 @@ class FastSearchActivity : BaseActivity() {
         filterResult(spName)
     }
 
-    private fun updateWordListWhenIdle(action: Runnable?) {
-        if (action == null) return
-        if (mGridViewWord == null) {
-            action.run()
-            return
-        }
-        if (mGridViewWord!!.isComputingLayout) {
-            mGridViewWord!!.post {
-                updateWordListWhenIdle(action)
-            }
-            return
-        }
-        action.run()
-    }
-
     private fun setSelectedWordName(spName: String?) {
-        updateWordListWhenIdle(Runnable {
-            spListAdapter!!.setSelectedName(spName)
-            spListAdapter!!.refreshVisibleSelection(mGridViewWord)
-        })
+        // Compose 下选中态由快照的 selectedSite 驱动,无需刷新可见 View
+        pushUiState()
     }
 
     private fun setWordListData(data: List<String>) {
-        val wordList = ArrayList(data)
         wordListVersion += 1
-        val version = wordListVersion
+        siteWords.clear()
+        siteWords.addAll(data)
         wordListNames.clear()
-        wordListNames.addAll(wordList)
-        updateWordListWhenIdle(Runnable {
-            if (version != wordListVersion) return@Runnable
-            spListAdapter!!.setNewData(wordList)
-            if (wordList.size > 0 && TextUtils.equals(wordList[0], SEARCH_ALL_NAME)) {
-                mGridViewWord!!.setSelectedPosition(0)
-                mGridViewWord!!.setSelection(0)
-                requestWordListFirstFocus()
-            }
-        })
+        wordListNames.addAll(data)
+        if (data.isNotEmpty() && TextUtils.equals(data[0], SEARCH_ALL_NAME)) {
+            requestWordListFirstFocus()
+        }
+        pushUiState()
     }
 
     private fun requestWordListFirstFocus() {
-        if (mGridViewWord == null) return
-        mGridViewWord!!.post {
-            if (isFinishing || mGridViewWord == null) return@post
-            mGridViewWord!!.setSelectedPosition(0)
-            mGridViewWord!!.setSelection(0)
-            val firstChild = mGridViewWord!!.getChildAt(0)
-            if (firstChild != null) {
-                firstChild.requestFocus()
-            } else {
-                mGridViewWord!!.requestFocus()
-            }
-        }
+        siteFocusToken++
+        pushUiState()
     }
 
     private fun addWordListDataIfAbsent(name: String?) {
         if (TextUtils.isEmpty(name) || !wordListNames.add(name!!)) return
-        val version = wordListVersion
-        updateWordListWhenIdle(Runnable {
-            if (version != wordListVersion) return@Runnable
-            val names = spListAdapter!!.data
-            for (i in names.indices) {
-                if (TextUtils.equals(name, names[i])) {
-                    return@Runnable
-                }
-            }
-            spListAdapter!!.addData(name)
-        })
+        siteWords.add(name)
+        pushUiState()
     }
 
     private fun fenci() {
@@ -462,7 +387,8 @@ class FastSearchActivity : BaseActivity() {
         } else if (event.type == RefreshEvent.TYPE_QUICK_SEARCH_WORD) {
             if (event.obj != null) {
                 val data = event.obj as List<String>
-                searchWordAdapter!!.setNewData(data)
+                fenciWords.clear()
+                fenciWords.addAll(data)
             }
         }
         updateSearchStatus()
@@ -477,10 +403,11 @@ class FastSearchActivity : BaseActivity() {
         showLoading()
         this.searchTitle = title ?: ""
         fenci()
-        mGridView!!.visibility = View.INVISIBLE
-        mGridViewFilter!!.visibility = View.GONE
-        searchAdapter!!.setNewData(ArrayList())
-        searchAdapterFilter!!.setNewData(ArrayList())
+        showResults = false
+        mainResults.clear()
+        filterResults.clear()
+        currentMainVideos.clear()
+        currentFilterVideos.clear()
 
         selectedWordName = ""
         filterResult(SEARCH_ALL_NAME)
@@ -532,8 +459,12 @@ class FastSearchActivity : BaseActivity() {
         } catch (th: Throwable) {
             th.printStackTrace()
         } finally {
-            searchAdapter!!.setNewData(ArrayList())
-            searchAdapterFilter!!.setNewData(ArrayList())
+            mainResults.clear()
+            filterResults.clear()
+            currentMainVideos.clear()
+            currentFilterVideos.clear()
+            showResults = false
+            pushUiState()
             allRunCount.set(0)
             pendingSearchKeys.clear()
             waitingSearchTasks.clear()
@@ -612,13 +543,18 @@ class FastSearchActivity : BaseActivity() {
 
     private fun addMainSearchResults(data: List<Movie.Video>?) {
         if (data == null || data.isEmpty()) return
-        if (searchAdapter!!.data.size > 0) {
-            searchAdapter!!.addData(data)
+        if (currentMainVideos.isNotEmpty()) {
+            currentMainVideos.addAll(data)
+            mainResults.addAll(videosToUi(data))
         } else {
             showSuccess()
-            if (!isFilterMode) mGridView!!.visibility = View.VISIBLE
-            searchAdapter!!.setNewData(data)
+            if (!isFilterMode) showMainGrid = true
+            currentMainVideos.addAll(data)
+            mainResults.clear()
+            mainResults.addAll(videosToUi(data))
         }
+        showResults = true
+        pushUiState()
     }
 
     private fun searchData(absXml: AbsXml?) {
@@ -882,7 +818,7 @@ class FastSearchActivity : BaseActivity() {
         if (allRunCount.get() > 0) return
         searchPaused = false
         updateSearchStatus()
-        if (searchAdapter!!.data.size == 0 && resultVods.isEmpty()) {
+        if (currentMainVideos.isEmpty() && resultVods.isEmpty()) {
             showEmpty()
         }
         cancel()
@@ -899,7 +835,7 @@ class FastSearchActivity : BaseActivity() {
     }
 
     private fun getResultCount(): Int {
-        return if (searchAdapter == null) 0 else searchAdapter!!.data.size
+        return currentMainVideos.size
     }
 
     private fun updateSearchStatus() {
@@ -939,15 +875,9 @@ class FastSearchActivity : BaseActivity() {
     }
 
     private fun setSearchStatusText(firstLine: String, secondLine: String) {
-        if (mSearchTitle == null) return
-        val text = firstLine + "\n" + secondLine
-        val span = SpannableString(text)
-        val split = firstLine.length
-        span.setSpan(StyleSpan(Typeface.BOLD), 0, split, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        span.setSpan(RelativeSizeSpan(1.05f), 0, split, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        span.setSpan(RelativeSizeSpan(0.78f), split + 1, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        span.setSpan(ForegroundColorSpan(0xCCFFFFFF.toInt()), split + 1, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        mSearchTitle!!.text = span
+        statusLine1 = firstLine
+        statusLine2 = secondLine
+        pushUiState()
     }
 
     private inner class SearchTask(val sourceKey: String, val title: String, val searchToken: String) : Runnable {
@@ -996,8 +926,6 @@ class FastSearchActivity : BaseActivity() {
         private const val SEARCH_PUMP_SECONDS = 2
         private const val SEARCH_NEXT_BATCH_SECONDS = 3
         private const val SEARCH_SITE_TIMEOUT_SECONDS = 15
-        private const val POSTER_FOCUS_ANIM_DURATION = 180L
-        private const val POSTER_FOCUS_SCALE = 1.05f
         private const val SEARCH_ALL_NAME = "全部"
     }
 }

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 极速搜索页主体(状态栏 + 分词 + 站名列 + 结果/过滤网格)由 Jetpack Compose 承载。
+         LoadSir 仍挂载在 llLayout 上,保持 showLoading/showEmpty/showSuccess 行为不变。 -->
+    <LinearLayout
+        android:id="@+id/llLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/fastSearchComposeView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </LinearLayout>
+</FrameLayout>
