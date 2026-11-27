@@ -106,12 +106,13 @@ fun FastSearchScreen(
             .background(TvColors.ScreenBg)
     ) {
         // ===== 顶部:状态条 + 分词横排 =====
+        // 高度需容纳 vs_50 的 chip + 上下 padding,否则 chip 顶部被裁切
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.vs_50))
+                .height(dimensionResource(R.dimen.vs_70))
                 .padding(
-                    start = 20.dp,
+                    start = dimensionResource(R.dimen.vs_20),
                     top = dimensionResource(R.dimen.vs_10),
                     bottom = dimensionResource(R.dimen.vs_10)
                 ),
@@ -173,8 +174,8 @@ private fun SearchStatus(line1: String, line2: String) {
             .width(dimensionResource(R.dimen.vs_220))
             .height(dimensionResource(R.dimen.vs_50))
             .padding(end = dimensionResource(R.dimen.vs_40))
-            .background(TvColors.PanelIdle, RoundedCornerShape(10.dp))
-            .border(1.dp, TvColors.StrokeIdle, RoundedCornerShape(10.dp)),
+            .background(TvColors.PanelIdle, RoundedCornerShape(TvSpec.CornerChip))
+            .border(1.dp, TvColors.StrokeIdle, RoundedCornerShape(TvSpec.CornerChip)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -269,9 +270,14 @@ private fun ResultGrid(
         state = gridState,
         modifier = Modifier
             .fillMaxSize()
-            .padding(vertical = dimensionResource(R.dimen.vs_10)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+            .padding(
+                start = dimensionResource(R.dimen.vs_5),
+                end = dimensionResource(R.dimen.vs_5),
+                top = dimensionResource(R.dimen.vs_10),
+                bottom = dimensionResource(R.dimen.vs_10)
+            ),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15)),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15))
     ) {
         repeat(results.size) { index ->
             item {
@@ -291,11 +297,11 @@ private fun ResultGrid(
 private fun WordChip(text: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Text(
         text = text,
         color = Color.White,
-        fontSize = 20.sp,
+        fontSize = TvSpec.Body,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         textAlign = TextAlign.Center,
@@ -334,7 +340,7 @@ private fun SiteChip(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     LaunchedEffect(focused) {
         if (focused) onFocus()
     }
@@ -362,7 +368,7 @@ private fun SiteChip(
         Text(
             text = text,
             color = if (selected) TvColors.Accent else Color.White,
-            fontSize = 20.sp,
+            fontSize = TvSpec.Body,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -380,7 +386,7 @@ private fun SearchPosterCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerCard)
     val radiusPx = AutoSizeUtils.mm2px(context, 10f)
     val targetW = AutoSizeUtils.mm2px(context, 214f)
     val targetH = AutoSizeUtils.mm2px(context, 280f)
@@ -422,13 +428,13 @@ private fun SearchPosterCard(
             Text(
                 text = item.siteName,
                 color = Color.White,
-                fontSize = 20.sp,
+                fontSize = TvSpec.Caption,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(dimensionResource(R.dimen.vs_5))
-                    .background(TvColors.BadgeBg, RoundedCornerShape(4.dp))
+                    .background(TvColors.BadgeBg, RoundedCornerShape(TvSpec.CornerChip))
                     .padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
         }
@@ -444,7 +450,7 @@ private fun SearchPosterCard(
                 Text(
                     text = item.note,
                     color = TvColors.ValueText,
-                    fontSize = 18.sp,
+                    fontSize = TvSpec.Value,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -452,7 +458,7 @@ private fun SearchPosterCard(
             Text(
                 text = item.name,
                 color = Color.White,
-                fontSize = 22.sp,
+                fontSize = TvSpec.Section,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis

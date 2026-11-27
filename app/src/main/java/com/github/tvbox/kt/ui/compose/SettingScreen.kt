@@ -156,10 +156,10 @@ fun SettingScreen(activity: BaseActivity) {
                 .padding(
                     start = dimensionResource(R.dimen.vs_40),
                     end = dimensionResource(R.dimen.vs_40),
-                    top = dimensionResource(R.dimen.vs_15),
-                    bottom = dimensionResource(R.dimen.vs_50)
+                    top = dimensionResource(R.dimen.vs_10),
+                    bottom = dimensionResource(R.dimen.vs_80)
                 ),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15))
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_12))
         ) {
         // ===== 配置与数据源 =====
         SettingGroupHeader("配置与数据源", collapsed["config"] == true) { toggleSection("config") }
