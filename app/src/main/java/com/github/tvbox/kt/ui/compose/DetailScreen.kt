@@ -21,11 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items as lazyItems
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -219,15 +217,17 @@ fun DetailScreen(
                     .padding(top = dimensionResource(R.dimen.vs_0)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
-                lazyItems(state.flags.size) { index ->
-                    val item = state.flags[index]
-                    FlagChip(
-                        text = item.name,
-                        selected = item.selected,
-                        onFocus = { onFlagSelected(index) },
-                        onClick = { onFlagSelected(index) },
-                        focusRequester = if (index == 0) flagFocusRequester else null
-                    )
+                repeat(state.flags.size) { index ->
+                    item {
+                        val flag = state.flags[index]
+                        FlagChip(
+                            text = flag.name,
+                            selected = flag.selected,
+                            onFocus = { onFlagSelected(index) },
+                            onClick = { onFlagSelected(index) },
+                            focusRequester = if (index == 0) flagFocusRequester else null
+                        )
+                    }
                 }
             }
         }
@@ -256,14 +256,16 @@ fun DetailScreen(
                         .fillMaxHeight(),
                     horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
                 ) {
-                    lazyItems(state.groups.size) { index ->
-                        FlagChip(
-                            text = state.groups[index],
-                            selected = index == state.selectedGroup,
-                            onFocus = { onGroupSelected(index) },
-                            onClick = { onGroupSelected(index) },
-                            focusRequester = null
-                        )
+                    repeat(state.groups.size) { index ->
+                        item {
+                            FlagChip(
+                                text = state.groups[index],
+                                selected = index == state.selectedGroup,
+                                onFocus = { onGroupSelected(index) },
+                                onClick = { onGroupSelected(index) },
+                                focusRequester = null
+                            )
+                        }
                     }
                 }
             }
@@ -280,14 +282,16 @@ fun DetailScreen(
                     .padding(top = dimensionResource(R.dimen.vs_10)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
-                lazyItems(state.qualities.size) { index ->
-                    FlagChip(
-                        text = state.qualities[index],
-                        selected = index == state.selectedQuality,
-                        onFocus = { onQualitySelected(index) },
-                        onClick = { onQualitySelected(index) },
-                        focusRequester = null
-                    )
+                repeat(state.qualities.size) { index ->
+                    item {
+                        FlagChip(
+                            text = state.qualities[index],
+                            selected = index == state.selectedQuality,
+                            onFocus = { onQualitySelected(index) },
+                            onClick = { onQualitySelected(index) },
+                            focusRequester = null
+                        )
+                    }
                 }
             }
         }
@@ -312,14 +316,16 @@ fun DetailScreen(
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
-                gridItems(state.series.size) { index ->
-                    val item = state.series[index]
-                    SeriesCell(
-                        text = item.name,
-                        selected = item.selected,
-                        onClick = { onSeriesSelected(index) },
-                        focusRequester = if (index == 0) seriesFocusRequester else null
-                    )
+                repeat(state.series.size) { index ->
+                    item {
+                        val series = state.series[index]
+                        SeriesCell(
+                            text = series.name,
+                            selected = series.selected,
+                            onClick = { onSeriesSelected(index) },
+                            focusRequester = if (index == 0) seriesFocusRequester else null
+                        )
+                    }
                 }
             }
         }
