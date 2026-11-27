@@ -182,7 +182,7 @@ private fun SearchStatus(line1: String, line2: String) {
         Text(
             text = line1,
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = TvSpec.Caption,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -190,7 +190,7 @@ private fun SearchStatus(line1: String, line2: String) {
         Text(
             text = line2,
             color = TvColors.HintText,
-            fontSize = 13.sp,
+            fontSize = TvSpec.Micro,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

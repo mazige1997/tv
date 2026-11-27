@@ -71,12 +71,12 @@ fun LocalFileScreen(
                 vertical = dimensionResource(R.dimen.vs_30)
             )
     ) {
-        Text(text = title, color = Color.White, fontSize = 30.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = title, color = Color.White, fontSize = TvSpec.Title, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_10)))
         Text(
             text = path,
             color = TvColors.HintText,
-            fontSize = 20.sp,
+            fontSize = TvSpec.Body,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -86,7 +86,7 @@ fun LocalFileScreen(
             Text(
                 text = "当前目录为空",
                 color = TvColors.HintText,
-                fontSize = 22.sp,
+                fontSize = TvSpec.Section,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -119,7 +119,7 @@ private fun LocalFileRow(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerSm)
     val focusModifier = if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier
 
     Row(
@@ -142,14 +142,14 @@ private fun LocalFileRow(
         Text(
             text = file.type,
             color = Color.White,
-            fontSize = 22.sp,
+            fontSize = TvSpec.Section,
             maxLines = 1,
             modifier = Modifier.width(dimensionResource(R.dimen.vs_80))
         )
         Text(
             text = file.name,
             color = Color.White,
-            fontSize = 24.sp,
+            fontSize = TvSpec.Heading,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -157,7 +157,7 @@ private fun LocalFileRow(
         Text(
             text = file.info,
             color = TvColors.HintText,
-            fontSize = 20.sp,
+            fontSize = TvSpec.Body,
             maxLines = 1,
             modifier = Modifier.width(dimensionResource(R.dimen.vs_220)),
             textAlign = androidx.compose.ui.text.style.TextAlign.End

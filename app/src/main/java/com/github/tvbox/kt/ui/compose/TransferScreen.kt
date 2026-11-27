@@ -96,7 +96,7 @@ fun TransferScreen(
             Text(
                 text = address,
                 color = Color.White,
-                fontSize = 20.sp,
+                fontSize = TvSpec.Body,
                 lineHeight = 26.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.vs_10))
@@ -121,7 +121,7 @@ fun TransferScreen(
             Text(
                 text = status,
                 color = TvColors.HintText,
-                fontSize = 18.sp,
+                fontSize = TvSpec.Value,
                 textAlign = TextAlign.Center
             )
         }
@@ -131,7 +131,7 @@ fun TransferScreen(
             modifier = Modifier
                 .width(dimensionResource(R.dimen.vs_1))
                 .fillMaxHeight()
-                .background(Color(0x33FFFFFF))
+                .background(TvDivider.Line)
         )
 
         // 右栏：已上传文件列表
@@ -148,7 +148,7 @@ fun TransferScreen(
             Text(
                 text = "已上传文件",
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = TvSpec.Heading,
                 modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_12))
             )
 
@@ -162,7 +162,7 @@ fun TransferScreen(
                         Text(
                             text = "暂无文件",
                             color = TvColors.HintText,
-                            fontSize = 20.sp,
+                            fontSize = TvSpec.Body,
                             modifier = Modifier.padding(
                                 horizontal = dimensionResource(R.dimen.vs_10),
                                 vertical = dimensionResource(R.dimen.vs_20)
@@ -227,7 +227,7 @@ private fun RowScope.FocusPill(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerSm)
     val base = Modifier
         .height(dimensionResource(R.dimen.vs_60))
         .then(if (fixedWidth != null) Modifier.width(fixedWidth) else Modifier.weight(weight))
@@ -248,7 +248,7 @@ private fun RowScope.FocusPill(
         Text(
             text = text,
             color = Color.White,
-            fontSize = 18.sp,
+            fontSize = TvSpec.Value,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = textAlign

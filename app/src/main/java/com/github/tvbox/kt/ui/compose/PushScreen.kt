@@ -65,7 +65,7 @@ fun PushScreen(
         Text(
             text = address,
             color = Color.White,
-            fontSize = 24.sp,
+            fontSize = TvSpec.Heading,
             textAlign = TextAlign.Center,
             lineHeight = 36.sp,
             modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.vs_40))
@@ -75,7 +75,7 @@ fun PushScreen(
 
         val interactionSource = remember { MutableInteractionSource() }
         val focused by interactionSource.collectIsFocusedAsState()
-        val shape = RoundedCornerShape(10.dp)
+        val shape = RoundedCornerShape(TvSpec.CornerMd)
         Box(
             modifier = Modifier
                 .then(if (focused) Modifier.scale(1.05f) else Modifier)
@@ -93,7 +93,7 @@ fun PushScreen(
                 .padding(dimensionResource(R.dimen.vs_10)),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "推送剪贴板内容", color = Color.White, fontSize = 24.sp)
+            Text(text = "推送剪贴板内容", color = Color.White, fontSize = TvSpec.Heading)
         }
     }
 }

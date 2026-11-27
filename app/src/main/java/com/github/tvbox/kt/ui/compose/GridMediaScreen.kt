@@ -127,14 +127,14 @@ fun GridMediaScreen(
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 34.sp
+                fontSize = TvSpec.Hero
             )
             Spacer(modifier = Modifier.weight(1f))
             if (delMode) {
                 Text(
                     text = "确定键删除当前选中项",
                     color = Color.White,
-                    fontSize = 24.sp,
+                    fontSize = TvSpec.Heading,
                     modifier = Modifier.padding(end = dimensionResource(R.dimen.vs_10))
                 )
             }
@@ -183,7 +183,7 @@ private fun focusRequesterFor(index: Int, list: List<FocusRequester>): FocusRequ
 private fun TvIconButton(iconRes: Int, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerMd)
     Box(
         modifier = Modifier
             .size(dimensionResource(R.dimen.vs_50))
@@ -223,7 +223,7 @@ private fun GridMediaCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerMd)
     LaunchedEffect(focused) {
         if (focused) onFocused()
     }
@@ -278,13 +278,13 @@ private fun GridMediaCard(
             Text(
                 text = item.sourceName,
                 color = Color.White,
-                fontSize = 20.sp,
+                fontSize = TvSpec.Body,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(dimensionResource(R.dimen.vs_5))
-                    .background(TvColors.BadgeBg, RoundedCornerShape(4.dp))
+                    .background(TvColors.BadgeBg, RoundedCornerShape(TvSpec.CornerXs))
                     .padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
         }
@@ -302,7 +302,7 @@ private fun GridMediaCard(
                 Text(
                     text = item.note,
                     color = TvColors.ValueText,
-                    fontSize = 18.sp,
+                    fontSize = TvSpec.Value,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -310,7 +310,7 @@ private fun GridMediaCard(
             Text(
                 text = item.name,
                 color = Color.White,
-                fontSize = 22.sp,
+                fontSize = TvSpec.Section,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis

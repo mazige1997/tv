@@ -393,7 +393,7 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = dimensionResource(R.dimen.vs_50))
-            .background(TvColors.PanelIdle, RoundedCornerShape(12.dp))
+            .background(TvColors.PanelIdle, RoundedCornerShape(TvSpec.CornerCard))
             .padding(
                 horizontal = dimensionResource(R.dimen.vs_10),
                 vertical = dimensionResource(R.dimen.vs_10)
@@ -470,7 +470,7 @@ private fun MediaPosterCard(
             Text(
                 text = badge, color = Color.White, fontSize = TvSpec.Body, maxLines = 1,
                 modifier = Modifier.align(Alignment.TopStart).padding(dimensionResource(R.dimen.vs_5))
-                    .background(TvColors.BadgeBg, RoundedCornerShape(4.dp)).padding(horizontal = dimensionResource(R.dimen.vs_5))
+                    .background(TvColors.BadgeBg, RoundedCornerShape(TvSpec.CornerXs)).padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
         }
         BottomTitle(name, note)
@@ -509,7 +509,7 @@ private fun HotCard(
             Text(
                 text = tvRate, color = Color.White, fontSize = TvSpec.Body, maxLines = 1,
                 modifier = Modifier.align(Alignment.TopStart).padding(dimensionResource(R.dimen.vs_5))
-                    .background(TvColors.BadgeBg, RoundedCornerShape(4.dp)).padding(horizontal = dimensionResource(R.dimen.vs_5))
+                    .background(TvColors.BadgeBg, RoundedCornerShape(TvSpec.CornerXs)).padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
         }
         BottomTitle(video.name ?: "", video.note)
@@ -518,7 +518,7 @@ private fun HotCard(
                 modifier = Modifier.fillMaxSize().background(TvColors.DeleteMask),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "删除", color = TvColors.Accent, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text(text = "删除", color = TvColors.Accent, fontSize = TvSpec.Title, fontWeight = FontWeight.Bold)
             }
         }
     }

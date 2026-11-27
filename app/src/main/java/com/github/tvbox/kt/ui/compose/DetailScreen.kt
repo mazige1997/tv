@@ -558,7 +558,7 @@ private fun EmptyPlaylist() {
         Text(
             text = "暂无播放数据",
             color = Color.White,
-            fontSize = 24.sp
+            fontSize = TvSpec.Heading
         )
     }
 }

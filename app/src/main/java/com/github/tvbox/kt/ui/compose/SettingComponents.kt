@@ -98,7 +98,7 @@ fun RowScope.SettingRow(
             Text(
                 text = "›",
                 color = if (focused) TvColors.Accent else TvColors.HintText,
-                fontSize = 30.sp,
+                fontSize = TvSpec.Title,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -126,7 +126,7 @@ fun SettingGroupHeader(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerSm)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -151,7 +151,7 @@ fun SettingGroupHeader(
             modifier = Modifier
                 .width(4.dp)
                 .height(22.dp)
-                .background(TvColors.Accent, RoundedCornerShape(2.dp))
+                .background(TvColors.Accent, RoundedCornerShape(TvSpec.CornerXs))
         )
         Text(
             text = title,
