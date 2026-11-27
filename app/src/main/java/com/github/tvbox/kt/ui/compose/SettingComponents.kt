@@ -8,11 +8,13 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
@@ -24,15 +26,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.tvbox.kt.R
 
 /**
- * 单个设置行:标题在左、当前值在右、末尾 ">" 箭头。
- * TV 焦点:获得焦点时显示青色渐变背景 + 描边并轻微放大;上下左右导航由 Compose 焦点系统处理,
- * 遥控器确认键由 clickable 自动响应。
+ * 单个设置行:标题在左、当前值在右、末尾箭头。
+ * TV 焦点:青色渐变背景 + 2dp 描边 + 1.05 倍放大,与首页卡片焦点风格统一。
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -47,10 +49,8 @@ fun RowScope.SettingRow(
     if (!visible) return
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
     val rowHeight = dimensionResource(R.dimen.vs_60)
-    val padH = dimensionResource(R.dimen.vs_20)
-    val labelSize = 24.sp
     val bg = if (focused) {
         Modifier.background(
             brush = Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)),
@@ -59,27 +59,27 @@ fun RowScope.SettingRow(
     } else {
         Modifier.background(color = TvColors.PanelIdle, shape = shape)
     }
-    val border = Modifier.border(
-        width = if (focused) 2.dp else 1.dp,
-        color = if (focused) TvColors.Accent else TvColors.StrokeIdle,
-        shape = shape
-    )
     Row(
         modifier = Modifier
             .weight(weight)
             .height(rowHeight)
-            .then(if (focused) Modifier.scale(1.03f) else Modifier)
+            .then(if (focused) Modifier.scale(1.05f) else Modifier)
             .then(bg)
-            .then(border)
+            .border(
+                width = if (focused) 2.dp else 1.dp,
+                color = if (focused) TvColors.Accent else TvColors.StrokeIdle,
+                shape = shape
+            )
             .focusable(interactionSource = interactionSource)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = padH),
+            .padding(horizontal = dimensionResource(R.dimen.vs_15)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             color = TvColors.RowText,
-            fontSize = labelSize,
+            fontSize = 23.sp,
+            fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false)
@@ -88,37 +88,35 @@ fun RowScope.SettingRow(
             Text(
                 text = value,
                 color = TvColors.ValueText,
-                fontSize = labelSize,
+                fontSize = 21.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 10.dp).widthIn(max = 220.dp)
+                modifier = Modifier.padding(start = 12.dp).widthIn(max = 200.dp)
             )
         }
         if (showArrow) {
             Text(
-                text = ">",
-                color = TvColors.RowText,
+                text = "›",
+                color = if (focused) TvColors.Accent else TvColors.HintText,
                 fontSize = 30.sp,
-                modifier = Modifier.padding(start = 10.dp)
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
     }
 }
 
-/** 一行中并列 1~3 个设置项(与原布局的多列行一致)。 */
+/** 一行中并列 1~3 个设置项,等宽且间距统一。 */
 @Composable
 fun SettingRowGroup(content: @Composable RowScope.() -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = dimensionResource(R.dimen.vs_10)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_5))
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_8))
     ) {
         content()
     }
 }
 
-/** 分组标题,可点击折叠;折叠状态用 ▾/▸ 表示。 */
+/** 分组标题:左侧青色竖条 + 标题 + 折叠箭头,与设置行形成明确层级区分。 */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SettingGroupHeader(
@@ -129,35 +127,46 @@ fun SettingGroupHeader(
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
     val shape = RoundedCornerShape(8.dp)
-    val bg = if (focused) {
-        Modifier.background(
-            brush = Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)),
-            shape = shape
-        )
-    } else {
-        Modifier.background(color = TvColors.PanelIdle, shape = shape)
-    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_50))
-            .then(bg)
+            .height(dimensionResource(R.dimen.vs_45))
+            .then(
+                if (focused) Modifier.background(
+                    brush = Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)),
+                    shape = shape
+                ) else Modifier
+            )
             .border(
-                width = 1.dp,
-                color = if (focused) TvColors.Accent else TvColors.StrokeIdle,
+                width = if (focused) 2.dp else 0.dp,
+                color = TvColors.Accent,
                 shape = shape
             )
             .focusable(interactionSource = interactionSource)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = dimensionResource(R.dimen.vs_10)),
+            .padding(horizontal = dimensionResource(R.dimen.vs_12)),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(22.dp)
+                .background(TvColors.Accent, RoundedCornerShape(2.dp))
+        )
         Text(
-            text = (if (collapsed) "▸  " else "▾  ") + title,
+            text = title,
             color = TvColors.GroupTitle,
             fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 12.dp).weight(1f)
+        )
+        Text(
+            text = if (collapsed) "▸" else "▾",
+            color = TvColors.GroupTitle,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

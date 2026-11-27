@@ -5,19 +5,30 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import com.github.tvbox.kt.KtApp
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
@@ -132,9 +143,23 @@ fun SettingScreen(activity: BaseActivity) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(dimensionResource(R.dimen.vs_20))
+            .background(TvColors.ScreenBg)
     ) {
+        // 固定标题栏:与首页 TopBar 同一视觉语言
+        SettingPageHeader(homeApi.value)
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(
+                    start = dimensionResource(R.dimen.vs_40),
+                    end = dimensionResource(R.dimen.vs_40),
+                    top = dimensionResource(R.dimen.vs_10),
+                    bottom = dimensionResource(R.dimen.vs_30)
+                ),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_12))
+        ) {
         // ===== 配置与数据源 =====
         SettingGroupHeader("配置与数据源", collapsed["config"] == true) { toggleSection("config") }
         if (collapsed["config"] != true) {
@@ -146,7 +171,7 @@ fun SettingScreen(activity: BaseActivity) {
                 }
             }
             SettingRowGroup {
-                SettingRow("配置地址", api.value, weight = 3.08f) {
+                SettingRow("配置地址", api.value) {
                     showApiDialog(context, activity, api, showLine, apiLine, ::restartAfterConfig)
                 }
                 SettingRow("配置历史") { showApiHistory(context, api, apiLine, showLine, ::restartAfterConfig) }
@@ -155,7 +180,7 @@ fun SettingScreen(activity: BaseActivity) {
                 }
             }
             SettingRowGroup {
-                SettingRow("首页站源", homeApi.value, weight = 3.08f) {
+                SettingRow("首页站源", homeApi.value) {
                     showHomeSource(context) { homeApi.value = it }
                 }
                 SettingRow("下次进入", homeLive.value) {
@@ -353,6 +378,35 @@ fun SettingScreen(activity: BaseActivity) {
                 SettingRow("检查更新") { checkUpdate(context, activity) }
             }
         }
+        }
+    }
+}
+
+/** 设置页标题栏:左侧"设置"+青色强调,右侧当前站源,与首页 TopBar 风格统一。 */
+@Composable
+private fun SettingPageHeader(siteName: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(dimensionResource(R.dimen.vs_50))
+            .background(TvColors.BadgeBg)
+            .padding(horizontal = dimensionResource(R.dimen.vs_40)),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "设置",
+            color = Color.White,
+            fontSize = 30.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = siteName,
+            color = TvColors.GroupTitle,
+            fontSize = 20.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
