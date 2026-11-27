@@ -6,8 +6,12 @@ import androidx.compose.material.Shapes
 import androidx.compose.material.Typography
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -81,12 +85,35 @@ private val TvColorsMaterial = lightColors(
     onSurface = TvColors.RowText
 )
 
+/**
+ * Compose 统一主题。
+ *
+ * 根因：原生页面用 AndroidAutoSize 的 mm 子单位（design_width=1280，vs_50 即设计稿 50px，
+ * 在 2772px 屏上渲染为 108px），而 Compose 的 .sp/.dp 走的是设备原始 density，
+ * 与 mm 的缩放比例不一致 —— 字号相对容器忽大忽小，在框里显示不全。
+ *
+ * 修复：把 Compose 的 LocalDensity 设为「屏幕宽度 / 设计宽度(1280)」，
+ * 使 .dp/.sp 与 mm 走同一缩放比例（今日头条方案在 Compose 的标准落地，Google 官方推荐）。
+ * dimensionResource(vs_xx) 不受影响：它取资源的 px 再除 density 转 Dp，渲染时再乘回，density 抵消。
+ * 保留系统 fontScale，尊重用户的字体大小设置。
+ */
 @Composable
 fun TvTheme(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val fontScale = LocalDensity.current.fontScale
+    val widthPixels = context.resources.displayMetrics.widthPixels
+    val designWidthPx = 1280f
+    val adaptedDensity = (widthPixels / designWidthPx).coerceAtLeast(0.1f)
     MaterialTheme(
         colors = TvColorsMaterial,
         typography = TvTypography,
         shapes = TvShapes,
-        content = content
+        content = {
+            CompositionLocalProvider(
+                LocalDensity provides Density(density = adaptedDensity, fontScale = fontScale)
+            ) {
+                content()
+            }
+        }
     )
 }
