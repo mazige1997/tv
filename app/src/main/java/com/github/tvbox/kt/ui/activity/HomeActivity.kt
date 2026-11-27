@@ -42,6 +42,7 @@ import com.github.tvbox.kt.util.DefaultConfig
 import com.github.tvbox.kt.util.FastClickCheckUtil
 import com.github.tvbox.kt.util.FileUtils
 import com.github.tvbox.kt.util.HawkConfig
+import com.github.tvbox.kt.util.ImgUtil
 import com.github.tvbox.kt.util.LOG
 import com.github.tvbox.kt.util.MD5
 import com.github.tvbox.kt.util.ScreenUtils
@@ -613,7 +614,7 @@ class HomeActivity : BaseActivity() {
 
     /** 站点名点击:清缓存(原 tvName.setOnClickListener)。 */
     private fun onSiteClicked() {
-        FastClickCheckUtil.check(contentLayout)
+        FastClickCheckUtil.check(contentLayout!!)
         if (dataInitOk && jarInitOk) {
             val jar = ApiConfig.get().homeSourceBean.jar
             val jarUrl = if (!jar.isNullOrEmpty()) jar else ApiConfig.get().getSpider() ?: ""

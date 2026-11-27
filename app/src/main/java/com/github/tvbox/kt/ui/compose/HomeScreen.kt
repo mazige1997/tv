@@ -5,10 +5,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.align
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -145,7 +147,7 @@ private fun TopBar(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
-                .clickable(
+                .combinedClickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onSiteClick,
@@ -447,7 +449,7 @@ private fun MediaPosterCard(
             .background(TvColors.PanelIdle, shape)
             .border(width = if (focused) 2.dp else 1.dp, color = if (focused) TvColors.Accent else TvColors.StrokeIdle, shape = shape)
             .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick, onLongClick = onLongClick)
+            .combinedClickable(interactionSource = interactionSource, indication = null, onClick = onClick, onLongClick = onLongClick)
     ) {
         PosterImage(name, pic, context, radiusPx, targetW, targetH, Modifier.fillMaxSize())
         if (badge.isNotEmpty()) {
@@ -486,7 +488,7 @@ private fun HotCard(
             .background(TvColors.PanelIdle, shape)
             .border(width = if (focused) 2.dp else 1.dp, color = if (focused) TvColors.Accent else TvColors.StrokeIdle, shape = shape)
             .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick, onLongClick = onLongClick)
+            .combinedClickable(interactionSource = interactionSource, indication = null, onClick = onClick, onLongClick = onLongClick)
     ) {
         PosterImage(video.name ?: "", video.pic, context, radiusPx, targetW, targetH, Modifier.fillMaxSize())
         if (tvRate.isNotEmpty()) {
