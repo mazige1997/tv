@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -86,6 +88,7 @@ fun HomeScreen(
             onSiteClick = onSiteClick,
             onSiteLongClick = onSiteLongClick
         )
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_10)))
         CategoryBar(
             tabs = ui.tabs,
             selected = ui.selected,
@@ -94,6 +97,7 @@ fun HomeScreen(
             onClick = onTabClick,
             onUp = onTabUp
         )
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_10)))
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (showUserPage) {
                 UserHomePage(
@@ -348,9 +352,11 @@ private fun UserHomePage(
                 LazyRow(
                     state = page.listState,
                     modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_20)),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = dimensionResource(R.dimen.vs_50)
+                        horizontal = dimensionResource(R.dimen.vs_50),
+                        vertical = dimensionResource(R.dimen.vs_10)
                     )
                 ) {
                     repeat(page.videos.size) { index ->
@@ -385,7 +391,12 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensionResource(R.dimen.vs_50), vertical = dimensionResource(R.dimen.vs_10)),
+            .padding(horizontal = dimensionResource(R.dimen.vs_50))
+            .background(TvColors.PanelIdle, RoundedCornerShape(12.dp))
+            .padding(
+                horizontal = dimensionResource(R.dimen.vs_10),
+                vertical = dimensionResource(R.dimen.vs_10)
+            ),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
     ) {
         repeat(entries.size) { index ->
@@ -396,7 +407,7 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun EntryChip(text: String, onClick: () -> Unit) {
+private fun RowScope.EntryChip(text: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
     val shape = RoundedCornerShape(10.dp)
@@ -406,8 +417,10 @@ private fun EntryChip(text: String, onClick: () -> Unit) {
         fontSize = 26.sp,
         fontWeight = if (focused) FontWeight.Bold else FontWeight.Normal,
         textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = Modifier
-            .width(dimensionResource(R.dimen.vs_70))
+            .weight(1f)
             .height(dimensionResource(R.dimen.vs_45))
             .background(
                 brush = if (focused) Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)) else Brush.horizontalGradient(listOf(TvColors.PanelIdle, TvColors.PanelIdle)),
