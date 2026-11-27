@@ -116,12 +116,12 @@ fun DetailScreen(
             .fillMaxSize()
             .background(TvColors.ScreenBg)
             .padding(
-                start = dimensionResource(R.dimen.vs_40),
-                end = dimensionResource(R.dimen.vs_40),
-                top = dimensionResource(R.dimen.vs_15),
-                bottom = dimensionResource(R.dimen.vs_20)
+                start = TvSpec.PageGutter,
+                end = TvSpec.ContentGutter,
+                top = TvSpec.PreviewInset,
+                bottom = TvSpec.PreviewInset
             ),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+        verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
     ) {
         if (!state.hasPlayData) {
             EmptyPlaylist()
@@ -132,13 +132,14 @@ fun DetailScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.vs_300)),
+                .height(TvSpec.PreviewHeight),
             verticalAlignment = Alignment.Top
         ) {
-            // 海报 / 预览占位
+            // 海报 / 预览占位:宽度必须与 activity_detail_compose.xml 中原生浮层一致,
+            // 否则文字和按钮会被盖在播放器下面(截图 02 的错位根因)。
             Box(
                 modifier = Modifier
-                    .width(dimensionResource(R.dimen.vs_280))
+                    .width(TvSpec.PreviewWidth)
                     .fillMaxHeight(),
                 contentAlignment = Alignment.TopStart
             ) {
@@ -163,7 +164,7 @@ fun DetailScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(start = dimensionResource(R.dimen.vs_20)),
+                    .padding(start = TvSpec.SpaceXl),
                 verticalArrangement = Arrangement.Top
             ) {
                 Text(
@@ -224,8 +225,8 @@ fun DetailScreen(
                 state = flagListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45)),
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+                    .height(TvSpec.ChipHeight),
+                horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
             ) {
                 repeat(state.flags.size) { index ->
                     item {
@@ -247,7 +248,7 @@ fun DetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45)),
+                    .height(TvSpec.ChipHeight),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FocusChip(
@@ -263,7 +264,7 @@ fun DetailScreen(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+                    horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
                 ) {
                     repeat(state.groups.size) { index ->
                         item {
@@ -287,8 +288,8 @@ fun DetailScreen(
                 state = qualityListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45)),
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+                    .height(TvSpec.ChipHeight),
+                horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
             ) {
                 repeat(state.qualities.size) { index ->
                     item {
@@ -321,8 +322,8 @@ fun DetailScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
-                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+                verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd),
+                horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
             ) {
                 repeat(state.series.size) { index ->
                     item {
@@ -389,7 +390,7 @@ private fun ActionButtons(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
     ) {
         ActionButton(playText, onPlay)
         ActionButton("快速搜索", onQuickSearch)
@@ -408,8 +409,8 @@ private fun RowScope.ActionButton(text: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .weight(1f)
-            .height(dimensionResource(R.dimen.vs_40))
-            .then(if (focused) Modifier.scale(1.05f) else Modifier)
+            .height(TvSpec.ActionHeight)
+            .then(if (focused) Modifier.scale(1.04f) else Modifier)
             .background(color = TvColors.PanelIdle, shape = shape)
             .border(
                 width = if (focused) 2.dp else 1.dp,
@@ -420,7 +421,7 @@ private fun RowScope.ActionButton(text: String, onClick: () -> Unit) {
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, color = if (focused) TvColors.Accent else Color.White, fontSize = TvSpec.Caption)
+        Text(text = text, color = if (focused) TvColors.Accent else Color.White, fontSize = TvSpec.Value)
     }
 }
 
@@ -437,7 +438,7 @@ private fun FocusChip(
     val shape = RoundedCornerShape(TvSpec.CornerChip)
     Box(
         modifier = modifier
-            .height(dimensionResource(R.dimen.vs_45))
+            .height(TvSpec.ChipHeight)
             .then(if (focused) Modifier.scale(1.04f) else Modifier)
             .background(color = TvColors.PanelIdle, shape = shape)
             .border(
@@ -477,7 +478,7 @@ private fun FlagChip(
     val shape = RoundedCornerShape(TvSpec.CornerChip)
     Column(
         modifier = Modifier
-            .height(dimensionResource(R.dimen.vs_45))
+            .height(TvSpec.ChipHeight)
             .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .then(if (focused) Modifier.scale(1.04f) else Modifier)
             .background(color = TvColors.PanelIdle, shape = shape)

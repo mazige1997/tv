@@ -89,7 +89,7 @@ fun HomeScreen(
             onSiteClick = onSiteClick,
             onSiteLongClick = onSiteLongClick
         )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_15)))
+        Spacer(modifier = Modifier.height(TvSpec.SpaceMd))
         CategoryBar(
             tabs = ui.tabs,
             selected = ui.selected,
@@ -98,7 +98,7 @@ fun HomeScreen(
             onClick = onTabClick,
             onUp = onTabUp
         )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_10)))
+        Spacer(modifier = Modifier.height(TvSpec.SpaceLg))
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             if (showUserPage) {
                 UserHomePage(
@@ -192,9 +192,9 @@ private fun CategoryBar(
         state = listState,
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_45))
-            .padding(horizontal = dimensionResource(R.dimen.vs_50)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+            .height(TvSpec.ChipHeight)
+            .padding(horizontal = TvSpec.PageGutter),
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
     ) {
         repeat(tabs.size) { index ->
             item {
@@ -227,7 +227,7 @@ private fun TabChip(
     val focused by interactionSource.collectIsFocusedAsState()
     LaunchedEffect(focused) { if (focused) onFocus() }
     var mod = Modifier
-        .height(dimensionResource(R.dimen.vs_45))
+        .height(TvSpec.ChipHeight)
         .background(
             brush = if (focused || isSelected) {
                 Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd))
@@ -287,13 +287,13 @@ private fun GridHomePage(
             onLoadMore()
         }
     }
-    Box(modifier = Modifier.fillMaxSize().padding(horizontal = dimensionResource(R.dimen.vs_50))) {
+    Box(modifier = Modifier.fillMaxSize().padding(horizontal = TvSpec.PageGutter)) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(columns),
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+            horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg),
+            verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
         ) {
             repeat(page.videos.size) { index ->
                 item {
@@ -324,16 +324,22 @@ private fun UserHomePage(
     onItemLongClick: (Movie.Video) -> Unit
 ) {
     val context = LocalContext.current
-    Column(modifier = Modifier.fillMaxSize()) {
+    // 入口栏与海报行作为一个整体垂直居中:既保留分类条下方的呼吸感,
+    // 又避免“入口贴着分类、海报却悬在屏幕中间”的割裂感。
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center
+    ) {
         EntryRow(onEntryClick = onEntryClick)
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            if (page.useGridStyle) {
+        Spacer(modifier = Modifier.height(TvSpec.SpaceXxl))
+        if (page.useGridStyle) {
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(page.columns.coerceIn(1, 8)),
                     state = page.gridState,
-                    modifier = Modifier.fillMaxSize().padding(horizontal = dimensionResource(R.dimen.vs_50)),
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
-                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+                    modifier = Modifier.fillMaxSize().padding(horizontal = TvSpec.PageGutter),
+                    horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg),
+                    verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
                 ) {
                     repeat(page.videos.size) { index ->
                         item {
@@ -349,21 +355,23 @@ private fun UserHomePage(
                         }
                     }
                 }
-            } else {
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxWidth().height(TvSpec.PosterHeight)) {
                 LazyRow(
                     state = page.listState,
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_20)),
+                    horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceXl),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = dimensionResource(R.dimen.vs_50),
-                        vertical = dimensionResource(R.dimen.vs_10)
+                        horizontal = TvSpec.PageGutter,
+                        vertical = 0.dp
                     )
                 ) {
                     repeat(page.videos.size) { index ->
                         item {
                             val video = page.videos[index]
-                            Box(modifier = Modifier.width(dimensionResource(R.dimen.vs_214))) {
+                            Box(modifier = Modifier.width(TvSpec.PosterWidth)) {
                                 HotCard(
                                     video = video,
                                     tvRate = page.tvRate,
@@ -392,13 +400,13 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensionResource(R.dimen.vs_50))
+            .padding(horizontal = TvSpec.PageGutter)
             .background(TvColors.PanelIdle, RoundedCornerShape(TvSpec.CornerCard))
             .padding(
-                horizontal = dimensionResource(R.dimen.vs_10),
-                vertical = dimensionResource(R.dimen.vs_10)
+                horizontal = TvSpec.SpaceMd,
+                vertical = TvSpec.SpaceSm
             ),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
     ) {
         repeat(entries.size) { index ->
             EntryChip(text = entries[index].second, onClick = { onEntryClick(entries[index].first) })
@@ -422,7 +430,7 @@ private fun RowScope.EntryChip(text: String, onClick: () -> Unit) {
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
             .weight(1f)
-            .height(dimensionResource(R.dimen.vs_45))
+            .height(TvSpec.ChipHeight)
             .background(
                 brush = if (focused) Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)) else Brush.horizontalGradient(listOf(TvColors.PanelIdle, TvColors.PanelIdle)),
                 shape = shape
@@ -458,7 +466,7 @@ private fun MediaPosterCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_280))
+            .height(TvSpec.PosterHeight)
             .then(if (focused) Modifier.scale(1.05f) else Modifier)
             .background(TvColors.PanelIdle, shape)
             .border(width = if (focused) 2.dp else 1.dp, color = if (focused) TvColors.Accent else TvColors.StrokeIdle, shape = shape)
@@ -497,7 +505,7 @@ private fun HotCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_280))
+            .height(TvSpec.PosterHeight)
             .then(if (focused) Modifier.scale(1.05f) else Modifier)
             .background(TvColors.PanelIdle, shape)
             .border(width = if (focused) 2.dp else 1.dp, color = if (focused) TvColors.Accent else TvColors.StrokeIdle, shape = shape)

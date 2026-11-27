@@ -41,6 +41,25 @@ object TvSpec {
     val CornerCard = 12.dp  // 卡片/行/入口底板圆角
     val CornerChip = 12.dp  // chip/按钮圆角
     val CornerLg = 14.dp    // 大面板
+
+    // ===== 间距阶梯(单位与设计稿 mm 对齐,TvTheme density 已做映射) =====
+    val SpaceXs = 4.dp
+    val SpaceSm = 8.dp
+    val SpaceMd = 12.dp
+    val SpaceLg = 16.dp
+    val SpaceXl = 24.dp
+    val SpaceXxl = 32.dp
+    val PageGutter = 50.dp
+    val ContentGutter = 40.dp
+
+    // ===== 关键组件几何:Compose 与原生浮层必须共用同一组数字 =====
+    val PreviewWidth = 470.dp
+    val PreviewHeight = 300.dp
+    val PreviewInset = 20.dp
+    val PosterWidth = 214.dp
+    val PosterHeight = 280.dp
+    val ChipHeight = 45.dp
+    val ActionHeight = 45.dp
 }
 
 object TvDivider {

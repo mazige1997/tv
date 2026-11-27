@@ -123,7 +123,9 @@ fun FastSearchScreen(
         }
 
         // ===== 主体:左侧站名列 + 右侧结果区 =====
-        Row(modifier = Modifier.fillMaxSize()) {
+        // 必须用 weight 而不是 fillMaxSize:后者会把 70dp 的状态条高度重复计入,
+        // 使结果网格底部被裁掉,看起来像图片互相挤压。
+        Row(modifier = Modifier.fillMaxWidth().weight(1f)) {
             SiteColumn(
                 sites = state.sites,
                 selectedSite = state.selectedSite,
@@ -133,7 +135,7 @@ fun FastSearchScreen(
                 modifier = Modifier
                     .width(dimensionResource(R.dimen.vs_240))
                     .fillMaxHeight()
-                    .padding(start = 20.dp, bottom = dimensionResource(R.dimen.vs_20))
+                    .padding(start = TvSpec.SpaceXl, bottom = TvSpec.SpaceXl)
             )
 
             Box(
@@ -141,9 +143,9 @@ fun FastSearchScreen(
                     .weight(1f)
                     .fillMaxHeight()
                     .padding(
-                        start = 40.dp,
-                        end = dimensionResource(R.dimen.vs_60),
-                        bottom = dimensionResource(R.dimen.vs_20)
+                        start = TvSpec.ContentGutter,
+                        end = TvSpec.PageGutter,
+                        bottom = TvSpec.SpaceXl
                     )
             ) {
                 if (state.showResults) {
@@ -205,7 +207,7 @@ private fun WordRow(words: List<String>, onWordClick: (String) -> Unit) {
     LazyRow(
         state = listState,
         modifier = Modifier.fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_5))
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceSm)
     ) {
         repeat(words.size) { index ->
             item {
@@ -235,7 +237,7 @@ private fun SiteColumn(
     LazyColumn(
         state = listState,
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_5))
+        verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceSm)
     ) {
         repeat(sites.size) { index ->
             item {
@@ -271,13 +273,14 @@ private fun ResultGrid(
         modifier = Modifier
             .fillMaxSize()
             .padding(
-                start = dimensionResource(R.dimen.vs_5),
-                end = dimensionResource(R.dimen.vs_5),
-                top = dimensionResource(R.dimen.vs_10),
-                bottom = dimensionResource(R.dimen.vs_10)
+                start = TvSpec.SpaceSm,
+                end = TvSpec.SpaceSm,
+                top = TvSpec.SpaceMd,
+                bottom = TvSpec.SpaceMd
             ),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15)),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15))
+        // 焦点卡片会放大 3%,间距必须大于放大后的外扩量,否则视觉上会重叠。
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceXl),
+        verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceXl)
     ) {
         repeat(results.size) { index ->
             item {
@@ -394,8 +397,8 @@ private fun SearchPosterCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_280))
-            .then(if (focused) Modifier.scale(1.05f) else Modifier)
+            .height(TvSpec.PosterHeight)
+            .then(if (focused) Modifier.scale(1.03f) else Modifier)
             .background(TvColors.PanelIdle, shape)
             .border(
                 width = if (focused) 2.dp else 1.dp,

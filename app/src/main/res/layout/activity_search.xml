@@ -224,8 +224,8 @@
             android:clipToPadding="false"
             android:paddingRight="@dimen/vs_20"
             android:visibility="invisible"
-            app:tv_horizontalSpacingWithMargins="@dimen/vs_5"
+            app:tv_horizontalSpacingWithMargins="@dimen/vs_15"
             app:tv_selectedItemIsCentered="true"
-            app:tv_verticalSpacingWithMargins="@dimen/vs_5" />
+            app:tv_verticalSpacingWithMargins="@dimen/vs_15" />
     </LinearLayout>
 </LinearLayout>
