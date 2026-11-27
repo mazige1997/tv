@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -137,9 +138,9 @@ fun DetailScreen(
             // 海报 / 预览占位
             Box(
                 modifier = Modifier
-                    .width(dimensionResource(R.dimen.vs_480))
+                    .width(dimensionResource(R.dimen.vs_280))
                     .fillMaxHeight(),
-                contentAlignment = Alignment.TopCenter
+                contentAlignment = Alignment.TopStart
             ) {
                 if (!state.showPreview) {
                     AndroidView(
@@ -386,7 +387,10 @@ private fun ActionButtons(
     onCollect: () -> Unit,
     onChangeSource: () -> Unit
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
+    ) {
         ActionButton(playText, onPlay)
         ActionButton("快速搜索", onQuickSearch)
         ActionButton("简介", onDesc)
@@ -397,13 +401,14 @@ private fun ActionButtons(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ActionButton(text: String, onClick: () -> Unit) {
+private fun RowScope.ActionButton(text: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
     val shape = RoundedCornerShape(TvSpec.CornerChip)
     Box(
         modifier = Modifier
-            .size(width = dimensionResource(R.dimen.vs_120), height = dimensionResource(R.dimen.vs_40))
+            .weight(1f)
+            .height(dimensionResource(R.dimen.vs_40))
             .then(if (focused) Modifier.scale(1.05f) else Modifier)
             .background(color = TvColors.PanelIdle, shape = shape)
             .border(

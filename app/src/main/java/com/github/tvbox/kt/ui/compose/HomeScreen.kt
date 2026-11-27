@@ -88,7 +88,7 @@ fun HomeScreen(
             onSiteClick = onSiteClick,
             onSiteLongClick = onSiteLongClick
         )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_10)))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.vs_15)))
         CategoryBar(
             tabs = ui.tabs,
             selected = ui.selected,
@@ -128,7 +128,7 @@ private fun TopBar(
     onSiteClick: () -> Unit,
     onSiteLongClick: () -> Unit
 ) {
-    val height = if (hidden) 1.dp else dimensionResource(R.dimen.vs_50)
+    val height = if (hidden) 1.dp else dimensionResource(R.dimen.vs_60)
     val alpha = if (hidden) 0f else 1f
     val interactionSource = remember { MutableInteractionSource() }
     Row(
@@ -139,13 +139,13 @@ private fun TopBar(
             .padding(
                 start = dimensionResource(R.dimen.vs_50),
                 end = dimensionResource(R.dimen.vs_50),
-                top = dimensionResource(R.dimen.vs_10)
+                top = dimensionResource(R.dimen.vs_5)
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = siteName,
-            color = TvColors.GroupTitle,
+            color = Color.White,
             fontSize = TvSpec.Title,
             fontWeight = FontWeight.Bold,
             maxLines = 1,

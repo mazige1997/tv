@@ -396,7 +396,7 @@ private fun SettingPageHeader(siteName: String) {
     ) {
         Text(
             text = "设置",
-            color = TvColors.GroupTitle,
+            color = Color.White,
             fontSize = TvSpec.Title,
             fontWeight = FontWeight.Bold
         )
