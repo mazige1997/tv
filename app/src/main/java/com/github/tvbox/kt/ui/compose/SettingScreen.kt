@@ -156,10 +156,10 @@ fun SettingScreen(activity: BaseActivity) {
                 .padding(
                     start = dimensionResource(R.dimen.vs_40),
                     end = dimensionResource(R.dimen.vs_40),
-                    top = dimensionResource(R.dimen.vs_10),
-                    bottom = dimensionResource(R.dimen.vs_30)
+                    top = dimensionResource(R.dimen.vs_15),
+                    bottom = dimensionResource(R.dimen.vs_50)
                 ),
-            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_12))
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_15))
         ) {
         // ===== 配置与数据源 =====
         SettingGroupHeader("配置与数据源", collapsed["config"] == true) { toggleSection("config") }
@@ -396,15 +396,15 @@ private fun SettingPageHeader(siteName: String) {
     ) {
         Text(
             text = "设置",
-            color = Color.White,
-            fontSize = 30.sp,
+            color = TvColors.GroupTitle,
+            fontSize = TvSpec.Title,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = siteName,
-            color = TvColors.GroupTitle,
-            fontSize = 20.sp,
+            color = TvColors.ValueText,
+            fontSize = TvSpec.Body,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

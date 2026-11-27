@@ -49,8 +49,8 @@ fun RowScope.SettingRow(
     if (!visible) return
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(12.dp)
-    val rowHeight = dimensionResource(R.dimen.vs_60)
+    val shape = RoundedCornerShape(TvSpec.CornerCard)
+    val rowHeight = dimensionResource(R.dimen.vs_50)
     val bg = if (focused) {
         Modifier.background(
             brush = Brush.horizontalGradient(listOf(TvColors.FocusStart, TvColors.FocusEnd)),
@@ -78,7 +78,7 @@ fun RowScope.SettingRow(
         Text(
             text = label,
             color = TvColors.RowText,
-            fontSize = 23.sp,
+            fontSize = TvSpec.Section,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -88,7 +88,7 @@ fun RowScope.SettingRow(
             Text(
                 text = value,
                 color = TvColors.ValueText,
-                fontSize = 21.sp,
+                fontSize = TvSpec.Body,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 12.dp).widthIn(max = 200.dp)
@@ -156,7 +156,7 @@ fun SettingGroupHeader(
         Text(
             text = title,
             color = TvColors.GroupTitle,
-            fontSize = 22.sp,
+            fontSize = TvSpec.Section,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -165,7 +165,7 @@ fun SettingGroupHeader(
         Text(
             text = if (collapsed) "▸" else "▾",
             color = TvColors.GroupTitle,
-            fontSize = 20.sp,
+            fontSize = TvSpec.Body,
             fontWeight = FontWeight.Bold
         )
     }

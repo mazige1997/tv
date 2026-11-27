@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -116,20 +117,21 @@ fun DetailScreen(
             .padding(
                 start = dimensionResource(R.dimen.vs_40),
                 end = dimensionResource(R.dimen.vs_40),
-                bottom = dimensionResource(R.dimen.vs_10)
-            )
+                top = dimensionResource(R.dimen.vs_15),
+                bottom = dimensionResource(R.dimen.vs_20)
+            ),
+        verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
     ) {
         if (!state.hasPlayData) {
             EmptyPlaylist()
             return@Column
         }
 
-        // ===== 顶部信息区 =====
+        // ===== 顶部信息区:海报 + 文字 + 操作按钮 =====
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.vs_320))
-                .padding(top = dimensionResource(R.dimen.vs_10)),
+                .height(dimensionResource(R.dimen.vs_300)),
             verticalAlignment = Alignment.Top
         ) {
             // 海报 / 预览占位
@@ -166,21 +168,29 @@ fun DetailScreen(
                 Text(
                     text = state.title,
                     color = Color.White,
-                    fontSize = 28.sp,
+                    fontSize = TvSpec.Title,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))
+                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_8))
                 )
                 InfoLine(state.site, state.year, state.area, state.lang, state.type)
                 InfoText(state.actor)
                 InfoText(state.director)
                 Box(modifier = Modifier.clickable { onPlayUrlClick() }) {
-                    InfoText(state.playUrl)
+                    Text(
+                        text = state.playUrl,
+                        color = TvColors.ValueText,
+                        fontSize = TvSpec.Caption,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))
+                    )
                 }
                 Text(
                     text = state.des,
                     color = TvColors.HintText,
-                    fontSize = 20.sp,
+                    fontSize = TvSpec.Value,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 24.sp
@@ -213,8 +223,7 @@ fun DetailScreen(
                 state = flagListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45))
-                    .padding(top = dimensionResource(R.dimen.vs_0)),
+                    .height(dimensionResource(R.dimen.vs_45)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
                 repeat(state.flags.size) { index ->
@@ -237,8 +246,7 @@ fun DetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45))
-                    .padding(top = dimensionResource(R.dimen.vs_10)),
+                    .height(dimensionResource(R.dimen.vs_45)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FocusChip(
@@ -278,8 +286,7 @@ fun DetailScreen(
                 state = qualityListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.vs_45))
-                    .padding(top = dimensionResource(R.dimen.vs_10)),
+                    .height(dimensionResource(R.dimen.vs_45)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
                 repeat(state.qualities.size) { index ->
@@ -311,8 +318,8 @@ fun DetailScreen(
                 state = gridState,
                 columns = GridCells.Fixed(state.columns.coerceIn(2, 8)),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = dimensionResource(R.dimen.vs_10)),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10)),
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.vs_10))
             ) {
@@ -349,7 +356,7 @@ private fun InfoSegment(text: String) {
     Text(
         text = text,
         color = TvColors.HintText,
-        fontSize = 18.sp,
+        fontSize = TvSpec.Value,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(end = dimensionResource(R.dimen.vs_10))
@@ -362,7 +369,7 @@ private fun InfoText(text: String) {
     Text(
         text = text,
         color = TvColors.HintText,
-        fontSize = 18.sp,
+        fontSize = TvSpec.Value,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))
@@ -393,7 +400,7 @@ private fun ActionButtons(
 private fun ActionButton(text: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Box(
         modifier = Modifier
             .size(width = dimensionResource(R.dimen.vs_120), height = dimensionResource(R.dimen.vs_40))
@@ -408,7 +415,7 @@ private fun ActionButton(text: String, onClick: () -> Unit) {
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = text, color = if (focused) TvColors.Accent else Color.White, fontSize = 16.sp)
+        Text(text = text, color = if (focused) TvColors.Accent else Color.White, fontSize = TvSpec.Caption)
     }
 }
 
@@ -422,7 +429,7 @@ private fun FocusChip(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Box(
         modifier = modifier
             .height(dimensionResource(R.dimen.vs_45))
@@ -441,7 +448,7 @@ private fun FocusChip(
         Text(
             text = text,
             color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = 18.sp,
+            fontSize = TvSpec.Value,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -462,7 +469,7 @@ private fun FlagChip(
     LaunchedEffect(focused) {
         if (focused) onFocus()
     }
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Column(
         modifier = Modifier
             .height(dimensionResource(R.dimen.vs_45))
@@ -483,7 +490,7 @@ private fun FlagChip(
         Text(
             text = text,
             color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = 18.sp,
+            fontSize = TvSpec.Value,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center
@@ -509,7 +516,7 @@ private fun SeriesCell(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(6.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -529,7 +536,7 @@ private fun SeriesCell(
         Text(
             text = text,
             color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = 18.sp,
+            fontSize = TvSpec.Value,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center

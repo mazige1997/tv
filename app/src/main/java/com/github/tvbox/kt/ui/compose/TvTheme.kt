@@ -15,6 +15,20 @@ import androidx.compose.ui.unit.sp
  * Compose 主题:复用项目既有的科技风配色(colors.xml),保证与原生页面视觉一致。
  * 全部使用 Material2(与 compose-bom 2024.06.00 / compiler 1.5.14 匹配)。
  */
+/**
+ * 全局 UI 规范:三页(首页/详情/设置)共用的字号阶梯与圆角,保证视觉协调统一。
+ * 与 TvColors 同包,各页面无需 import 即可引用。
+ */
+object TvSpec {
+    val Title = 28.sp       // 页面/条目标题
+    val Section = 22.sp     // 分区标题、chip、功能入口
+    val Body = 20.sp        // 正文
+    val Value = 18.sp       // 值/次要信息
+    val Caption = 16.sp     // 角标/辅助文字
+    val CornerCard = 12.dp  // 卡片/行/入口底板圆角
+    val CornerChip = 12.dp  // chip/按钮圆角
+}
+
 object TvColors {
     val Accent = Color(0xFF02F8E1)          // tech_accent
     val GroupTitle = Color(0xFF67E8F9)      // tech_group_title

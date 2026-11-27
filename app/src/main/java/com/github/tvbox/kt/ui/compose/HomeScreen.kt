@@ -145,8 +145,8 @@ private fun TopBar(
     ) {
         Text(
             text = siteName,
-            color = Color.White,
-            fontSize = 30.sp,
+            color = TvColors.GroupTitle,
+            fontSize = TvSpec.Title,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -161,7 +161,7 @@ private fun TopBar(
         Text(
             text = dateTime,
             color = TvColors.HintText,
-            fontSize = 26.sp,
+            fontSize = TvSpec.Section,
             maxLines = 1,
             modifier = Modifier
                 .weight(1f)
@@ -233,12 +233,12 @@ private fun TabChip(
             } else {
                 Brush.horizontalGradient(listOf(TvColors.PanelIdle, TvColors.PanelIdle))
             },
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(TvSpec.CornerChip)
         )
         .border(
             width = if (focused || isSelected) 2.dp else 1.dp,
             color = if (focused || isSelected) TvColors.Accent else TvColors.StrokeIdle,
-            shape = RoundedCornerShape(10.dp)
+            shape = RoundedCornerShape(TvSpec.CornerChip)
         )
         .then(if (focused) Modifier.scale(1.1f) else Modifier)
         .focusable(interactionSource = interactionSource)
@@ -249,7 +249,7 @@ private fun TabChip(
         Text(
             text = text,
             color = if (focused || isSelected) TvColors.Accent else TvColors.HintText,
-            fontSize = 30.sp,
+            fontSize = TvSpec.Section,
             fontWeight = if (focused || isSelected) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -410,11 +410,11 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
 private fun RowScope.EntryChip(text: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerChip)
     Text(
         text = text,
         color = Color.White,
-        fontSize = 26.sp,
+        fontSize = TvSpec.Section,
         fontWeight = if (focused) FontWeight.Bold else FontWeight.Normal,
         textAlign = TextAlign.Center,
         maxLines = 1,
@@ -449,7 +449,7 @@ private fun MediaPosterCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerCard)
     LaunchedEffect(focused) { if (focused) onFocus() }
     val radiusPx = AutoSizeUtils.mm2px(context, 10f)
     val targetW = AutoSizeUtils.mm2px(context, ImgUtil.defaultWidth.toFloat())
@@ -467,7 +467,7 @@ private fun MediaPosterCard(
         PosterImage(name, pic, context, radiusPx, targetW, targetH, Modifier.fillMaxSize())
         if (badge.isNotEmpty()) {
             Text(
-                text = badge, color = Color.White, fontSize = 20.sp, maxLines = 1,
+                text = badge, color = Color.White, fontSize = TvSpec.Body, maxLines = 1,
                 modifier = Modifier.align(Alignment.TopStart).padding(dimensionResource(R.dimen.vs_5))
                     .background(TvColors.BadgeBg, RoundedCornerShape(4.dp)).padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
@@ -489,7 +489,7 @@ private fun HotCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(8.dp)
+    val shape = RoundedCornerShape(TvSpec.CornerCard)
     val radiusPx = AutoSizeUtils.mm2px(context, 10f)
     val targetW = AutoSizeUtils.mm2px(context, ImgUtil.defaultWidth.toFloat())
     val targetH = AutoSizeUtils.mm2px(context, ImgUtil.defaultHeight.toFloat())
@@ -506,7 +506,7 @@ private fun HotCard(
         PosterImage(video.name ?: "", video.pic, context, radiusPx, targetW, targetH, Modifier.fillMaxSize())
         if (tvRate.isNotEmpty()) {
             Text(
-                text = tvRate, color = Color.White, fontSize = 20.sp, maxLines = 1,
+                text = tvRate, color = Color.White, fontSize = TvSpec.Body, maxLines = 1,
                 modifier = Modifier.align(Alignment.TopStart).padding(dimensionResource(R.dimen.vs_5))
                     .background(TvColors.BadgeBg, RoundedCornerShape(4.dp)).padding(horizontal = dimensionResource(R.dimen.vs_5))
             )
@@ -565,8 +565,8 @@ private fun BoxScope.BottomTitle(name: String, note: String?) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (!note.isNullOrEmpty()) {
-            Text(text = note, color = TvColors.ValueText, fontSize = 18.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(text = note, color = TvColors.ValueText, fontSize = TvSpec.Value, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Text(text = name, color = Color.White, fontSize = 22.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+        Text(text = name, color = Color.White, fontSize = TvSpec.Section, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
     }
 }
