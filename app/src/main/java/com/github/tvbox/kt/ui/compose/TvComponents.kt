@@ -4,6 +4,7 @@ import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -26,6 +29,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -53,6 +57,22 @@ import com.github.tvbox.kt.util.ImgUtil
 
 private val PosterShape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
 
+// TV Material Surface 1.0.1 只处理按键，补上触摸与鼠标点击。
+@Composable
+internal fun Modifier.tvPointerClickable(
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
+): Modifier {
+    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnLongClick by rememberUpdatedState(onLongClick)
+    return pointerInput(Unit) {
+        detectTapGestures(
+            onTap = { currentOnClick() },
+            onLongPress = { currentOnLongClick?.invoke() }
+        )
+    }
+}
+
 @Composable
 fun TvPosterCard(
     video: Movie.Video,
@@ -78,7 +98,8 @@ fun TvPosterCard(
             .semantics {
                 contentDescription = description
                 role = Role.Button
-            },
+            }
+            .tvPointerClickable(onClick = onClick, onLongClick = onLongClick),
         shape = CardDefaults.shape(PosterShape),
         colors = CardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -194,7 +215,8 @@ fun TvFeaturedContent(
             .semantics {
                 contentDescription = name
                 role = Role.Button
-            },
+            }
+            .tvPointerClickable(onClick = onClick, onLongClick = onLongClick),
         shape = CardDefaults.shape(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)),
         colors = CardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -342,7 +364,8 @@ fun TvQuickAction(
                     }
                     true
                 }
-            },
+            }
+            .tvPointerClickable(onClick = onClick),
         shape = CardDefaults.shape(PosterShape),
         colors = CardDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
@@ -478,7 +501,9 @@ fun TvEmptyState(
             if (actionText != null && onAction != null) {
                 Button(
                     onClick = onAction,
-                    modifier = Modifier.padding(top = 8.dp),
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .tvPointerClickable(onClick = onAction),
                     colors = ButtonDefaults.colors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer

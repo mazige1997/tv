@@ -75,7 +75,9 @@ fun TvHomeStatusBar(
         Button(
             onClick = onSiteClick,
             onLongClick = onSiteLongClick,
-            modifier = Modifier.widthIn(max = 360.dp),
+            modifier = Modifier
+                .widthIn(max = 360.dp)
+                .tvPointerClickable(onClick = onSiteClick, onLongClick = onSiteLongClick),
             shape = ButtonDefaults.shape(RoundedCornerShape(10.dp)),
             colors = ButtonDefaults.colors(
                 containerColor = Color.Transparent,
@@ -199,6 +201,7 @@ fun TvCategoryBar(
                             modifier = Modifier
                                 .height(48.dp)
                                 .widthIn(min = 96.dp)
+                                .tvPointerClickable(onClick = { onTabClick(index) })
                                 .then(
                                     if (index == 0) {
                                         Modifier.focusRequester(firstFocus)
