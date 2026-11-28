@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color_6200EE">#6200EE</color>
-    <color name="color_3700B3">#3700B3</color>
-    <color name="color_03DAC5">#03DAC5</color>
+    <color name="color_6200EE">#FF02F8E1</color>
+    <color name="color_3700B3">#FF00594F</color>
+    <color name="color_03DAC5">#FF67E8F9</color>
     <color name="title_fouse_n">#ffce7900</color>
-    <color name="color_1890FF">#1890FF</color>
+    <color name="color_1890FF">#FF02F8E1</color>
     <color name="color_FFB800">#FF6600</color>
     <color name="color_00FF0A">#00FF0A</color>
     <color name="color_CBF46A">#CBF46A</color>
@@ -26,8 +26,8 @@
     <color name="color_CC000000">#CC000000</color>
     <color name="color_000000_30">#48000000</color>
     <color name="color_02F8E1">#02F8E1</color>
-    <color name="color_353744">#353744</color>
-    <color name="color_CC353744">#CC353744</color>
+    <color name="color_353744">#FF1B2732</color>
+    <color name="color_CC353744">#FF34434F</color>
     <color name="color_6C3D3D3D">#6c3d3d3d</color>
     <color name="color_BBFFFFFF">#bbffffff</color>
     <color name="color_FFFFFF">#ffffffff</color>
@@ -40,22 +40,22 @@
     <color name="color_scrollview_bg">#44000000</color>
     <color name="color_text_primary">#FFFFFAE0</color>
 
-    <!-- Unified dialog palette. Change these to update dialog surfaces globally. -->
-    <color name="dialog_panel_bg">#D91D202A</color>
-    <color name="dialog_panel_stroke">#33FFFFFF</color>
-    <color name="dialog_control_bg">#80353744</color>
-    <color name="dialog_control_bg_focused">#CC1890FF</color>
-    <color name="dialog_control_stroke">#22FFFFFF</color>
-    <color name="dialog_control_stroke_focused">#CC02F8E1</color>
-    <color name="dialog_input_bg">#66353744</color>
-    <color name="dialog_text_primary">#FFFFFFFF</color>
-    <color name="dialog_text_hint">#80FFFFFF</color>
+    <!-- Unified dialog palette aligned with the TV Material 3 theme. -->
+    <color name="dialog_panel_bg">#FF1B2732</color>
+    <color name="dialog_panel_stroke">#FF34434F</color>
+    <color name="dialog_control_bg">#FF1B2732</color>
+    <color name="dialog_control_bg_focused">#FF00594F</color>
+    <color name="dialog_control_stroke">#FF34434F</color>
+    <color name="dialog_control_stroke_focused">#FF02F8E1</color>
+    <color name="dialog_input_bg">#FF1B2732</color>
+    <color name="dialog_text_primary">#FFF5F7FA</color>
+    <color name="dialog_text_hint">#FFB8C4CF</color>
 
-    <!-- Tech-style focus palette: shared by settings rows, cards and list focus states. -->
+    <!-- Tech-style focus palette shared by native rows, cards and lists. -->
     <color name="tech_focus_start">#FF123A4E</color>
     <color name="tech_focus_end">#FF0C1C28</color>
-    <color name="tech_panel_idle">#991D202A</color>
-    <color name="tech_stroke_idle">#26FFFFFF</color>
+    <color name="tech_panel_idle">#FF1B2732</color>
+    <color name="tech_stroke_idle">#FF34434F</color>
     <color name="tech_accent">#FF02F8E1</color>
     <color name="tech_group_title">#FF67E8F9</color>
     <color name="tech_value_text">#FF9FE8FF</color>

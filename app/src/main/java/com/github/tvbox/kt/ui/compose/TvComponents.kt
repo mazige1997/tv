@@ -17,7 +17,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -32,6 +37,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -47,6 +55,9 @@ import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.Card
 import androidx.tv.material3.CardDefaults
+import androidx.tv.material3.ExperimentalTvMaterial3Api
+import androidx.tv.material3.FilterChip
+import androidx.tv.material3.FilterChipDefaults
 import androidx.tv.material3.Glow
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -61,16 +72,310 @@ private val PosterShape = androidx.compose.foundation.shape.RoundedCornerShape(1
 @Composable
 internal fun Modifier.tvPointerClickable(
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
+    enabled: Boolean = true
 ): Modifier {
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongClick by rememberUpdatedState(onLongClick)
+    val currentEnabled by rememberUpdatedState(enabled)
     return pointerInput(Unit) {
         detectTapGestures(
-            onTap = { currentOnClick() },
-            onLongPress = { currentOnLongClick?.invoke() }
+            onTap = { if (currentEnabled) currentOnClick() },
+            onLongPress = { if (currentEnabled) currentOnLongClick?.invoke() }
         )
     }
+}
+
+@Composable
+fun TvActionButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier
+            .height(TvSpec.ActionHeight)
+            .tvPointerClickable(onClick = onClick, enabled = enabled),
+        shape = ButtonDefaults.shape(RoundedCornerShape(TvSpec.CornerChip)),
+        colors = ButtonDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        scale = ButtonDefaults.scale(focusedScale = 1.04f),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+fun TvIconButton(
+    painter: Painter,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .size(48.dp)
+            .tvPointerClickable(onClick = onClick),
+        shape = ButtonDefaults.shape(RoundedCornerShape(TvSpec.CornerChip)),
+        colors = ButtonDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        scale = ButtonDefaults.scale(focusedScale = 1.05f),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Icon(painter = painter, contentDescription = contentDescription)
+    }
+}
+
+@Composable
+fun TvListItem(
+    title: String,
+    value: String? = null,
+    showArrow: Boolean = false,
+    modifier: Modifier = Modifier,
+    onFocus: () -> Unit = {},
+    focusRequester: FocusRequester? = null,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .onFocusChanged { if (it.isFocused) onFocus() }
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .tvPointerClickable(onClick = onClick),
+        shape = CardDefaults.shape(RoundedCornerShape(TvSpec.CornerCard)),
+        colors = CardDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        scale = CardDefaults.scale(focusedScale = 1.03f),
+        border = CardDefaults.border(
+            focusedBorder = Border(
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(TvSpec.CornerCard)
+            )
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            if (!value.isNullOrBlank()) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .widthIn(max = 240.dp)
+                )
+            }
+            if (showArrow) {
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun TvFilterChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onFocus: () -> Unit = {},
+    focusRequester: FocusRequester? = null
+) {
+    val compactHeight = LocalTvLayoutMetrics.current.compactHeight
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        modifier = modifier
+            .height(if (compactHeight) 40.dp else TvSpec.ChipHeight)
+            .onFocusChanged { if (it.isFocused) onFocus() }
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .tvPointerClickable(onClick = onClick),
+        colors = FilterChipDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            focusedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            focusedSelectedContainerColor = MaterialTheme.colorScheme.primary,
+            focusedSelectedContentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        scale = FilterChipDefaults.scale(focusedScale = 1.04f)
+    ) {
+        Text(text = text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+fun TvMediaCard(
+    name: String,
+    pic: String?,
+    badge: String = "",
+    note: String? = null,
+    cardWidth: Dp = LocalTvLayoutMetrics.current.cardWidth,
+    cardHeight: Dp = cardWidth * 1.5f,
+    deleteMode: Boolean = false,
+    onFocus: () -> Unit = {},
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
+    focusRequester: FocusRequester? = null
+) {
+    val description = listOf(name, note).filter { !it.isNullOrBlank() }.joinToString("，")
+    Card(
+        onClick = onClick,
+        onLongClick = onLongClick,
+        modifier = Modifier
+            .width(cardWidth)
+            .height(cardHeight)
+            .onFocusChanged { if (it.isFocused) onFocus() }
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+            .semantics {
+                contentDescription = description
+                role = Role.Button
+            }
+            .tvPointerClickable(onClick = onClick, onLongClick = onLongClick),
+        shape = CardDefaults.shape(PosterShape),
+        colors = CardDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = Color.White,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedContentColor = Color.White
+        ),
+        scale = CardDefaults.scale(focusedScale = 1.05f),
+        border = CardDefaults.border(
+            focusedBorder = Border(
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                shape = PosterShape
+            )
+        ),
+        glow = CardDefaults.glow(
+            focusedGlow = Glow(
+                elevationColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                elevation = 8.dp
+            )
+        )
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            TvPosterImage(
+                name = name,
+                pic = pic,
+                targetSize = DpSize(cardWidth, cardHeight),
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(cardHeight * 0.42f)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.92f))
+                        )
+                    )
+            )
+            if (badge.isNotBlank()) {
+                TvBadge(text = badge, modifier = Modifier.align(Alignment.TopStart).padding(8.dp))
+            }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                if (!note.isNullOrBlank()) {
+                    Text(
+                        text = note,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TvColors.ValueText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Text(
+                    text = name.ifBlank { "未命名" },
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (deleteMode) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(TvColors.DeleteMask),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "删除",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = TvColors.Accent
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TvProgressIndicator(
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary,
+    strokeWidth: Dp = 3.dp
+) {
+    CircularProgressIndicator(
+        color = color,
+        strokeWidth = strokeWidth,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun TvLinearProgressIndicator(progress: Int, modifier: Modifier = Modifier) {
+    LinearProgressIndicator(
+        progress = (progress.coerceIn(0, 100) / 100f),
+        color = MaterialTheme.colorScheme.primary,
+        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+    )
 }
 
 @Composable

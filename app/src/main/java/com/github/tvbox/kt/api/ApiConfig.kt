@@ -111,7 +111,6 @@ class ApiConfig private constructor() {
         private const val LOAD_JAR_MAX_RETRY = 1
         private const val CONFIG_SITE_COUNT_PREFIX = "config_site_count_"
         private const val CONFIG_CACHE_VALIDATED_PREFIX = "config_cache_validated_"
-        private const val CONFIG_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000L
         private var jarCache = "true"
 
         @JvmStatic
@@ -222,8 +221,16 @@ class ApiConfig private constructor() {
         CONFIG_CACHE_VALIDATED_PREFIX + MD5.encode(apiUrl)
 
     private fun isConfigCacheFresh(apiUrl: String): Boolean {
+        val mode = Hawk.get(HawkConfig.CONFIG_REFRESH_MODE, HawkConfig.DEFAULT_CONFIG_REFRESH_MODE)
+        if (mode == 0) return true
+        if (mode == 1) return false
+        val hours = Hawk.get(
+            HawkConfig.CONFIG_REFRESH_INTERVAL_HOURS,
+            HawkConfig.DEFAULT_CONFIG_REFRESH_INTERVAL_HOURS
+        ).coerceIn(1, 168)
         val validatedAt = Hawk.get(configCacheValidatedKey(apiUrl), 0L)
-        return validatedAt > 0L && System.currentTimeMillis() - validatedAt < CONFIG_CACHE_MAX_AGE_MS
+        val maxAgeMs = hours * 60 * 60 * 1000L
+        return validatedAt > 0L && System.currentTimeMillis() - validatedAt < maxAgeMs
     }
 
     private fun markConfigCacheValidated(apiUrl: String) {
@@ -974,7 +981,7 @@ class ApiConfig private constructor() {
         }
         if (parsedSources.isEmpty()) throw IllegalArgumentException("配置未包含有效站点")
         LOG.i(
-            "echo-config-sites raw=${sites.size} accepted=${parsedSources.size} " +
+            "echo-config-sites raw=${sites.size()} accepted=${parsedSources.size} " +
                 "skipped=$skipped duplicates=$duplicates"
         )
         val selectedSource = parsedSources[Hawk.get(HawkConfig.HOME_API, "")] ?: firstSite!!

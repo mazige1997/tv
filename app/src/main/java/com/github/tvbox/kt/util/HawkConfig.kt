@@ -5,6 +5,10 @@ package com.github.tvbox.kt.util
  */
 object HawkConfig {
     const val API_URL = "api_url"
+    const val CONFIG_REFRESH_MODE = "config_refresh_mode" // 0 仅手动 1 每次打开 2 定时
+    const val CONFIG_REFRESH_INTERVAL_HOURS = "config_refresh_interval_hours"
+    const val DEFAULT_CONFIG_REFRESH_MODE = 2
+    const val DEFAULT_CONFIG_REFRESH_INTERVAL_HOURS = 12
     const val EPG_URL = "epg_url"
     const val SHOW_PREVIEW = "show_preview"
     const val API_HISTORY = "api_history"

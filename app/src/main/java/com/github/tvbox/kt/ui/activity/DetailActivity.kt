@@ -31,6 +31,7 @@ import com.github.tvbox.kt.ui.compose.DetailFlagUi
 import com.github.tvbox.kt.ui.compose.DetailUiSnapshot
 import com.github.tvbox.kt.ui.compose.DetailScreen
 import com.github.tvbox.kt.ui.compose.TvTheme
+import com.github.tvbox.kt.ui.compose.TvAdaptiveLayout
 import com.github.tvbox.kt.KtApp
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
@@ -225,26 +226,29 @@ class DetailActivity : BaseActivity() {
         val composeView = findViewById<ComposeView>(R.id.detailComposeView)
         composeView.setContent {
             TvTheme {
-                val s = uiState.value
-                DetailScreen(
-                    state = s,
-                    seriesScroll = seriesScroll.value,
-                    flagScroll = flagScroll.value,
-                    flagFocusRequester = flagFocusRequester,
-                    seriesFocusRequester = seriesFocusRequester,
-                    bindPoster = ::bindPoster,
-                    onPlay = ::onPlayClick,
-                    onQuickSearch = ::onQuickSearchClick,
-                    onDesc = ::onDescClick,
-                    onCollect = ::onCollectClick,
-                    onChangeSource = ::onChangeSourceClick,
-                    onPlayUrlClick = ::onPlayUrlClick,
-                    onSort = ::onSortClick,
-                    onFlagSelected = ::onFlagSelected,
-                    onSeriesSelected = ::onSeriesSelected,
-                    onGroupSelected = ::onGroupSelected,
-                    onQualitySelected = ::onQualitySelected
-                )
+                TvAdaptiveLayout {
+                    val s = uiState.value
+                    DetailScreen(
+                        state = s,
+                        seriesScroll = seriesScroll.value,
+                        flagScroll = flagScroll.value,
+                        flagFocusRequester = flagFocusRequester,
+                        seriesFocusRequester = seriesFocusRequester,
+                        bindPoster = ::bindPoster,
+                        onPreviewBounds = ::updatePreviewBounds,
+                        onPlay = ::onPlayClick,
+                        onQuickSearch = ::onQuickSearchClick,
+                        onDesc = ::onDescClick,
+                        onCollect = ::onCollectClick,
+                        onChangeSource = ::onChangeSourceClick,
+                        onPlayUrlClick = ::onPlayUrlClick,
+                        onSort = ::onSortClick,
+                        onFlagSelected = ::onFlagSelected,
+                        onSeriesSelected = ::onSeriesSelected,
+                        onGroupSelected = ::onGroupSelected,
+                        onQualitySelected = ::onQualitySelected
+                    )
+                }
             }
         }
 
@@ -722,6 +726,30 @@ class DetailActivity : BaseActivity() {
         else
             Html.fromHtml(text).toString()
         return text.replace(Regex("\\s"), "")
+    }
+
+    private fun updatePreviewBounds(left: Int, top: Int, right: Int, bottom: Int) {
+        if (right <= left || bottom <= top) return
+        val width = right - left
+        val height = bottom - top
+        val playerParams = FrameLayout.LayoutParams(width, height).apply {
+            leftMargin = left
+            topMargin = top
+        }
+        val blockParams = FrameLayout.LayoutParams(width, height).apply {
+            leftMargin = left
+            topMargin = top
+        }
+        windowsPreview = playerParams
+        llPlayerFragmentContainerBlock?.layoutParams = blockParams
+        if (!fullWindows) llPlayerFragmentContainer?.layoutParams = playerParams
+        if (showPreview && !fullWindows) {
+            llPlayerFragmentContainerBlock?.post {
+                if (llPlayerFragmentContainerBlock?.visibility == View.VISIBLE) {
+                    llPlayerFragmentContainerBlock?.requestFocus()
+                }
+            }
+        }
     }
 
     private fun applyPreviewRoundCorners() {

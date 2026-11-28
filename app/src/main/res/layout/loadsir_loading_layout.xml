@@ -9,5 +9,6 @@
         android:layout_gravity="center"
         android:indeterminateBehavior="repeat"
         android:indeterminateDrawable="@drawable/anim_loading"
-        android:indeterminateOnly="true" />
+        android:indeterminateOnly="true"
+        android:indeterminateTint="@color/tech_accent" />
 </FrameLayout>

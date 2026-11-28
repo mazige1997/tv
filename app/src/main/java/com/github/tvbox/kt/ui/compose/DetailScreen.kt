@@ -3,11 +3,7 @@ package com.github.tvbox.kt.ui.compose
 import android.widget.ImageView
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,25 +23,23 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Text
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import com.github.tvbox.kt.R
 
 /** 剧集 UI 快照(从 VodInfo 的可变列表拷贝,保证 Compose 重组可靠)。 */
 data class DetailSeriesUi(val name: String, val selected: Boolean)
@@ -99,6 +93,7 @@ fun DetailScreen(
     flagFocusRequester: FocusRequester,
     seriesFocusRequester: FocusRequester,
     bindPoster: (ImageView, String, String) -> Unit,
+    onPreviewBounds: (Int, Int, Int, Int) -> Unit,
     onPlay: () -> Unit,
     onQuickSearch: () -> Unit,
     onDesc: () -> Unit,
@@ -111,17 +106,25 @@ fun DetailScreen(
     onGroupSelected: (Int) -> Unit,
     onQualitySelected: (Int) -> Unit
 ) {
+    val metrics = LocalTvLayoutMetrics.current
+    val infoHeight = if (metrics.compactHeight) {
+        200.dp
+    } else {
+        (metrics.height * 0.40f).coerceIn(220.dp, 320.dp)
+    }
+    val posterWidth = (metrics.width * 0.28f).coerceIn(200.dp, 400.dp)
+    val chipHeight = if (metrics.compactHeight) 40.dp else TvSpec.ChipHeight
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(TvColors.ScreenBg)
             .padding(
-                start = TvSpec.PageGutter,
-                end = TvSpec.ContentGutter,
-                top = TvSpec.PreviewInset,
-                bottom = TvSpec.PreviewInset
+                start = metrics.horizontalGutter,
+                end = metrics.horizontalGutter,
+                top = metrics.verticalGutter,
+                bottom = metrics.verticalGutter
             ),
-        verticalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
+        verticalArrangement = Arrangement.spacedBy(metrics.contentGap)
     ) {
         if (!state.hasPlayData) {
             EmptyPlaylist()
@@ -132,31 +135,38 @@ fun DetailScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TvSpec.PreviewHeight),
+                .height(infoHeight),
             verticalAlignment = Alignment.Top
         ) {
-            // 海报 / 预览占位:宽度必须与 activity_detail_compose.xml 中原生浮层一致,
-            // 否则文字和按钮会被盖在播放器下面(截图 02 的错位根因)。
+            // 海报始终铺满信息区,原生预览播放器覆盖在其上,避免空黑框和 mm 尺寸溢出。
             Box(
                 modifier = Modifier
-                    .width(TvSpec.PreviewWidth)
-                    .fillMaxHeight(),
-                contentAlignment = Alignment.TopStart
-            ) {
-                if (!state.showPreview) {
-                    AndroidView(
-                        factory = { ctx ->
-                            ImageView(ctx).apply {
-                                scaleType = ImageView.ScaleType.CENTER_CROP
-                            }
-                        },
-                        update = { iv -> bindPoster(iv, state.posterUrl, state.posterName) },
-                        modifier = Modifier.size(
-                            width = dimensionResource(R.dimen.vs_230),
-                            height = dimensionResource(R.dimen.vs_300)
+                    .width(posterWidth)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(TvSpec.CornerCard))
+                    .background(TvColors.PanelIdle, RoundedCornerShape(TvSpec.CornerCard))
+                    .onGloballyPositioned { coordinates ->
+                        val position = coordinates.positionInRoot()
+                        val left = position.x.roundToInt()
+                        val top = position.y.roundToInt()
+                        onPreviewBounds(
+                            left,
+                            top,
+                            left + coordinates.size.width,
+                            top + coordinates.size.height
                         )
-                    )
-                }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                AndroidView(
+                    factory = { ctx ->
+                        ImageView(ctx).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                        }
+                    },
+                    update = { iv -> bindPoster(iv, state.posterUrl, state.posterName) },
+                    modifier = Modifier.fillMaxSize()
+                )
             }
 
             // 文字信息 + 按钮
@@ -164,7 +174,7 @@ fun DetailScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(start = TvSpec.SpaceXl),
+                    .padding(start = metrics.contentGap + 8.dp),
                 verticalArrangement = Arrangement.Top
             ) {
                 Text(
@@ -174,11 +184,13 @@ fun DetailScreen(
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_8))
+                    modifier = Modifier.padding(bottom = 6.dp)
                 )
                 InfoLine(state.site, state.year, state.area, state.lang, state.type)
-                InfoText(state.actor)
-                InfoText(state.director)
+                if (!metrics.compactHeight && metrics.height >= 600.dp) {
+                    InfoText(state.actor)
+                    InfoText(state.director)
+                }
                 Box(modifier = Modifier.clickable { onPlayUrlClick() }) {
                     Text(
                         text = state.playUrl,
@@ -186,18 +198,17 @@ fun DetailScreen(
                         fontSize = TvSpec.Caption,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
                 Text(
                     text = state.des,
                     color = TvColors.HintText,
                     fontSize = TvSpec.Value,
-                    maxLines = 3,
+                    maxLines = if (metrics.compactHeight) 1 else 3,
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 24.sp
+                    lineHeight = if (metrics.compactHeight) 20.sp else 24.sp
                 )
-                Spacer(modifier = Modifier.weight(1f))
                 ActionButtons(
                     playText = state.playText,
                     collectText = state.collectText,
@@ -205,7 +216,8 @@ fun DetailScreen(
                     onQuickSearch = onQuickSearch,
                     onDesc = onDesc,
                     onCollect = onCollect,
-                    onChangeSource = onChangeSource
+                    onChangeSource = onChangeSource,
+                    modifier = Modifier.padding(top = 10.dp)
                 )
             }
         }
@@ -225,7 +237,7 @@ fun DetailScreen(
                 state = flagListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TvSpec.ChipHeight),
+                    .height(chipHeight),
                 horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
             ) {
                 repeat(state.flags.size) { index ->
@@ -248,7 +260,7 @@ fun DetailScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TvSpec.ChipHeight),
+                    .height(chipHeight),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FocusChip(
@@ -257,7 +269,7 @@ fun DetailScreen(
                     onClick = onSort,
                     modifier = Modifier
                 )
-                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.vs_10)))
+                Spacer(modifier = Modifier.width(12.dp))
                 val groupListState = rememberLazyListState()
                 LazyRow(
                     state = groupListState,
@@ -288,7 +300,7 @@ fun DetailScreen(
                 state = qualityListState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TvSpec.ChipHeight),
+                    .height(chipHeight),
                 horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
             ) {
                 repeat(state.qualities.size) { index ->
@@ -343,7 +355,10 @@ fun DetailScreen(
 
 @Composable
 private fun InfoLine(site: String, year: String, area: String, lang: String, type: String) {
-    Row(modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))) {
+    Row(
+        modifier = Modifier.padding(bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         InfoSegment(site)
         InfoSegment(year)
         InfoSegment(area)
@@ -353,7 +368,7 @@ private fun InfoLine(site: String, year: String, area: String, lang: String, typ
 }
 
 @Composable
-private fun InfoSegment(text: String) {
+private fun RowScope.InfoSegment(text: String) {
     if (text.isBlank()) return
     Text(
         text = text,
@@ -361,7 +376,7 @@ private fun InfoSegment(text: String) {
         fontSize = TvSpec.Value,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.padding(end = dimensionResource(R.dimen.vs_10))
+        modifier = Modifier.weight(1f, fill = false)
     )
 }
 
@@ -374,7 +389,7 @@ private fun InfoText(text: String) {
         fontSize = TvSpec.Value,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.padding(bottom = dimensionResource(R.dimen.vs_5))
+        modifier = Modifier.padding(bottom = 4.dp)
     )
 }
 
@@ -386,46 +401,21 @@ private fun ActionButtons(
     onQuickSearch: () -> Unit,
     onDesc: () -> Unit,
     onCollect: () -> Unit,
-    onChangeSource: () -> Unit
+    onChangeSource: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        ActionButton(playText, onPlay)
-        ActionButton("快速搜索", onQuickSearch)
-        ActionButton("简介", onDesc)
-        ActionButton(collectText, onCollect)
-        ActionButton("切源", onChangeSource)
+        TvActionButton(playText, onPlay, modifier = Modifier.weight(1f))
+        TvActionButton("快速搜索", onQuickSearch, modifier = Modifier.weight(1f))
+        TvActionButton("简介", onDesc, modifier = Modifier.weight(1f))
+        TvActionButton(collectText, onCollect, modifier = Modifier.weight(1f))
+        TvActionButton("切源", onChangeSource, modifier = Modifier.weight(1f))
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun RowScope.ActionButton(text: String, onClick: () -> Unit) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(TvSpec.CornerChip)
-    Box(
-        modifier = Modifier
-            .weight(1f)
-            .height(TvSpec.ActionHeight)
-            .then(if (focused) Modifier.scale(1.04f) else Modifier)
-            .background(color = TvColors.PanelIdle, shape = shape)
-            .border(
-                width = if (focused) 2.dp else 1.dp,
-                color = if (focused) TvColors.Accent else TvColors.StrokeIdle,
-                shape = shape
-            )
-            .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = text, color = if (focused) TvColors.Accent else Color.White, fontSize = TvSpec.Value)
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FocusChip(
     text: String,
@@ -433,35 +423,14 @@ private fun FocusChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(TvSpec.CornerChip)
-    Box(
+    TvFilterChip(
+        text = text,
+        selected = selected,
+        onClick = onClick,
         modifier = modifier
-            .height(TvSpec.ChipHeight)
-            .then(if (focused) Modifier.scale(1.04f) else Modifier)
-            .background(color = TvColors.PanelIdle, shape = shape)
-            .border(
-                width = if (focused) 2.dp else 1.dp,
-                color = if (focused || selected) TvColors.Accent else TvColors.StrokeIdle,
-                shape = shape
-            )
-            .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = dimensionResource(R.dimen.vs_10)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = TvSpec.Value,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
+    )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FlagChip(
     text: String,
@@ -470,49 +439,15 @@ private fun FlagChip(
     onClick: () -> Unit,
     focusRequester: FocusRequester?
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    LaunchedEffect(focused) {
-        if (focused) onFocus()
-    }
-    val shape = RoundedCornerShape(TvSpec.CornerChip)
-    Column(
-        modifier = Modifier
-            .height(TvSpec.ChipHeight)
-            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-            .then(if (focused) Modifier.scale(1.04f) else Modifier)
-            .background(color = TvColors.PanelIdle, shape = shape)
-            .border(
-                width = if (focused) 2.dp else 1.dp,
-                color = if (focused || selected) TvColors.Accent else TvColors.StrokeIdle,
-                shape = shape
-            )
-            .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(horizontal = dimensionResource(R.dimen.vs_10)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = text,
-            color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = TvSpec.Value,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-        if (selected) {
-            Box(
-                modifier = Modifier
-                    .width(dimensionResource(R.dimen.vs_30))
-                    .height(dimensionResource(R.dimen.vs_4))
-                    .background(TvColors.Accent)
-            )
-        }
-    }
+    TvFilterChip(
+        text = text,
+        selected = selected,
+        onFocus = onFocus,
+        focusRequester = focusRequester,
+        onClick = onClick
+    )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SeriesCell(
     text: String,
@@ -520,46 +455,20 @@ private fun SeriesCell(
     onClick: () -> Unit,
     focusRequester: FocusRequester?
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val focused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(TvSpec.CornerChip)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(dimensionResource(R.dimen.vs_50))
-            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-            .then(if (focused) Modifier.scale(1.05f) else Modifier)
-            .background(color = TvColors.PanelIdle, shape = shape)
-            .border(
-                width = if (focused) 2.dp else 1.dp,
-                color = if (focused) TvColors.Accent else if (selected) TvColors.GroupTitle else TvColors.StrokeIdle,
-                shape = shape
-            )
-            .focusable(interactionSource = interactionSource)
-            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = if (selected || focused) TvColors.Accent else Color.White,
-            fontSize = TvSpec.Value,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-    }
+    TvFilterChip(
+        text = text,
+        selected = selected,
+        focusRequester = focusRequester,
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
 private fun EmptyPlaylist() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "暂无播放数据",
-            color = Color.White,
-            fontSize = TvSpec.Heading
-        )
-    }
+    TvEmptyState(
+        title = "暂无播放数据",
+        message = "请切换线路或返回重试",
+        modifier = Modifier.fillMaxSize()
+    )
 }

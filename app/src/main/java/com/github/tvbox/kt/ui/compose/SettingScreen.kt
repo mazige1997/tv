@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Text
+import androidx.tv.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.mutableStateMapOf
@@ -70,6 +70,17 @@ fun SettingScreen(activity: BaseActivity) {
     val debugOpen = remember { mutableStateOf(if (Hawk.get(HawkConfig.DEBUG_OPEN, false)) "已打开" else "已关闭") }
     val debugVisible = remember { mutableStateOf(false) }
     val api = remember { mutableStateOf(Hawk.get(HawkConfig.API_URL, "")) }
+    val configRefreshMode = remember {
+        mutableStateOf(Hawk.get(HawkConfig.CONFIG_REFRESH_MODE, HawkConfig.DEFAULT_CONFIG_REFRESH_MODE))
+    }
+    val configRefreshHours = remember {
+        mutableStateOf(
+            Hawk.get(
+                HawkConfig.CONFIG_REFRESH_INTERVAL_HOURS,
+                HawkConfig.DEFAULT_CONFIG_REFRESH_INTERVAL_HOURS
+            )
+        )
+    }
     val apiLine = remember { mutableStateOf("") }
     val homeApi = remember { mutableStateOf("") }
     val homeLive = remember { mutableStateOf(if (Hawk.get(HawkConfig.DEFAULT_LOAD_LIVE, false)) "直播" else "点播") }
@@ -175,6 +186,22 @@ fun SettingScreen(activity: BaseActivity) {
                 SettingRow("配置历史") { showApiHistory(context, api, apiLine, showLine, ::restartAfterConfig) }
                 SettingRow("线路选择", apiLine.value, visible = showLine.value) {
                     showApiLine(context, api, apiLine, showLine, ::restartAfterConfig)
+                }
+                SettingRow("配置刷新", configRefreshModeName(configRefreshMode.value)) {
+                    showSingleChoice(context, "配置刷新策略", listOf(0, 1, 2),
+                        configRefreshMode.value, SettingDiff.int,
+                        { configRefreshModeName(it) }) { mode ->
+                        Hawk.put(HawkConfig.CONFIG_REFRESH_MODE, mode)
+                        configRefreshMode.value = mode
+                    }
+                }
+                SettingRow("刷新间隔", "${configRefreshHours.value} 小时", visible = configRefreshMode.value == 2) {
+                    showSingleChoice(context, "配置定时刷新间隔", listOf(6, 12, 24),
+                        configRefreshHours.value, SettingDiff.int,
+                        { "$it 小时" }) { hours ->
+                        Hawk.put(HawkConfig.CONFIG_REFRESH_INTERVAL_HOURS, hours)
+                        configRefreshHours.value = hours
+                    }
                 }
             }
             SettingRowGroup {
@@ -418,6 +445,12 @@ private fun homeRecName(type: Int) = when (type) {
     else -> "豆瓣热播"
 }
 
+private fun configRefreshModeName(mode: Int) = when (mode) {
+    0 -> "仅手动"
+    1 -> "每次打开"
+    else -> "定时更新"
+}
+
 private fun searchViewName(type: Int) = if (type == 0) "文字列表" else "缩略图"
 
 private fun currentDns(): String {
@@ -453,7 +486,9 @@ private fun <T> showSingleChoice(
     display: (T) -> String,
     onPicked: (T) -> Unit
 ) {
-    showSelect(context, tip, data, select.coerceAtLeast(0), diff, display) { value, _ ->
+    if (data.isEmpty()) return
+    val safeSelect = select.coerceIn(0, data.lastIndex)
+    showSelect(context, tip, data, safeSelect, diff, display) { value, _ ->
         onPicked(value)
     }
 }
@@ -543,14 +578,19 @@ private fun showApiDialog(context: Context, activity: BaseActivity, api: android
 
 private fun showDns(context: Context, dns: androidx.compose.runtime.MutableState<String>) {
     val list = OkGoHelper.dnsHttpsList
-    val cur = Hawk.get(HawkConfig.DOH_URL, 0)
+    if (list.isEmpty()) {
+        Toast.makeText(context, "暂无可用 DNS", Toast.LENGTH_SHORT).show()
+        return
+    }
+    val cur = Hawk.get(HawkConfig.DOH_URL, 0).coerceIn(0, list.lastIndex)
     showSelect(context, "请选择安全DNS", list, cur, SettingDiff.string,
         { it }) { _, pos ->
-        dns.value = OkGoHelper.dnsHttpsList[pos]
-        Hawk.put(HawkConfig.DOH_URL, pos)
-        OkGoHelper.reloadDns()
-        IjkMediaPlayer.toggleDotPort(pos > 0)
-    }
+            val safePos = pos.coerceIn(0, list.lastIndex)
+            dns.value = list[safePos]
+            Hawk.put(HawkConfig.DOH_URL, safePos)
+            OkGoHelper.reloadDns()
+            IjkMediaPlayer.toggleDotPort(safePos > 0)
+        }
 }
 
 private fun checkUpdate(context: Context, activity: BaseActivity) {

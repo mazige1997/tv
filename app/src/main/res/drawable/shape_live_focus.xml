@@ -2,13 +2,14 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true">
         <shape>
-            <solid android:color="@color/color_1890FF" />
+            <solid android:color="@color/dialog_control_bg_focused" />
+            <stroke android:width="2dp" android:color="@color/tech_accent" />
             <corners android:radius="6dp" />
         </shape>
     </item>
     <item android:state_selected="true">
         <shape>
-            <solid android:color="#331890FF" />
+            <solid android:color="#3302F8E1" />
             <stroke android:width="1dp" android:color="@color/color_1890FF" />
             <corners android:radius="6dp" />
         </shape>
