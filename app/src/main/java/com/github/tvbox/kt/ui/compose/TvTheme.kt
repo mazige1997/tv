@@ -49,6 +49,7 @@ object TvSpec {
     val SpaceLg = 16.dp
     val SpaceXl = 24.dp
     val SpaceXxl = 32.dp
+    val ChipGap = 12.dp       // 分类 chip 与功能入口 chip 共用,保证两行节奏一致
     val PageGutter = 50.dp
     val ContentGutter = 40.dp
 
@@ -56,8 +57,9 @@ object TvSpec {
     val PreviewWidth = 470.dp
     val PreviewHeight = 300.dp
     val PreviewInset = 20.dp
-    val PosterWidth = 214.dp
-    val PosterHeight = 280.dp
+    // 与 ImgUtil.defaultWidth/defaultHeight(244/320) 完全一致,避免图片被二次裁剪
+    val PosterWidth = 244.dp
+    val PosterHeight = 320.dp
     val ChipHeight = 45.dp
     val ActionHeight = 45.dp
 }

@@ -213,8 +213,9 @@ class HomeActivity : BaseActivity() {
             loadingSourceKey = null
             previousHomeName = null
             previousHomeSource = null
-            pushUiState()
-            tabFocusToken++
+            // 数据加载完成后只刷新快照,不再 tabFocusToken++ 抢焦点。
+            // 之前每次“重新加载分类”都会把焦点硬拉回第一个 chip,
+            // 用户刚移动/点中的分类立刻失焦,表现为“影视分类无法点击”。
             pushUiState()
         }
         // 列表结果:分发给当前请求页(原各 Fragment 各自 observe,这里统一分发)
@@ -593,12 +594,25 @@ class HomeActivity : BaseActivity() {
 
     private fun onTabClicked(index: Int) {
         if (index !in sortList.indices) return
-        if (index == currentSelected) {
-            if (isUserPage(index)) {
-                showSiteSwitch()
-            } else {
-                showFilter()
+        if (index != currentSelected) {
+            // 点击未聚焦的分类直接切换,不再只依赖 200ms 的焦点延迟任务。
+            // 取消排队中的焦点任务,避免点击后又把选中项改回去。
+            mHandler.removeCallbacks(mDataRunnable)
+            sortChange = false
+            sortFocused = index
+            currentSelected = index
+            topHide = if (isUserPage(index)) 0 else 1
+            pushUiState()
+            if (!isUserPage(index)) {
+                val state = pageStates.getOrNull(index)
+                if (state != null && state.shouldReloadOnSelect()) loadGridPage(state, reset = true)
             }
+            return
+        }
+        if (isUserPage(index)) {
+            showSiteSwitch()
+        } else {
+            showFilter()
         }
     }
 

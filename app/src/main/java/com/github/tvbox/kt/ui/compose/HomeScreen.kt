@@ -194,7 +194,7 @@ private fun CategoryBar(
             .fillMaxWidth()
             .height(TvSpec.ChipHeight)
             .padding(horizontal = TvSpec.PageGutter),
-        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceLg)
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.ChipGap)
     ) {
         repeat(tabs.size) { index ->
             item {
@@ -242,7 +242,8 @@ private fun TabChip(
             shape = RoundedCornerShape(TvSpec.CornerChip)
         )
         .then(if (focused) Modifier.scale(1.1f) else Modifier)
-        .focusable(interactionSource = interactionSource)
+        // clickable 已自带 focusable 且共用 interactionSource,不要再叠加 focusable,
+        // 否则两个焦点节点争抢同一次按键,表现为“分类点不动”。
         .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
         .padding(horizontal = dimensionResource(R.dimen.vs_20))
     if (focusRequester != null) mod = mod.focusRequester(focusRequester)
@@ -331,7 +332,7 @@ private fun UserHomePage(
         verticalArrangement = Arrangement.Center
     ) {
         EntryRow(onEntryClick = onEntryClick)
-        Spacer(modifier = Modifier.height(TvSpec.SpaceXxl))
+        Spacer(modifier = Modifier.height(TvSpec.SpaceXl))
         if (page.useGridStyle) {
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 LazyVerticalGrid(
@@ -406,7 +407,7 @@ private fun EntryRow(onEntryClick: (String) -> Unit) {
                 horizontal = TvSpec.SpaceMd,
                 vertical = TvSpec.SpaceSm
             ),
-        horizontalArrangement = Arrangement.spacedBy(TvSpec.SpaceMd)
+        horizontalArrangement = Arrangement.spacedBy(TvSpec.ChipGap)
     ) {
         repeat(entries.size) { index ->
             EntryChip(text = entries[index].second, onClick = { onEntryClick(entries[index].first) })
@@ -437,7 +438,6 @@ private fun RowScope.EntryChip(text: String, onClick: () -> Unit) {
             )
             .border(width = if (focused) 2.dp else 1.dp, color = if (focused) TvColors.Accent else TvColors.StrokeIdle, shape = shape)
             .then(if (focused) Modifier.scale(1.05f) else Modifier)
-            .focusable(interactionSource = interactionSource)
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .padding(vertical = dimensionResource(R.dimen.vs_5))
     )

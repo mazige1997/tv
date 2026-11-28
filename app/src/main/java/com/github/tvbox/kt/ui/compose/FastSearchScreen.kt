@@ -391,8 +391,9 @@ private fun SearchPosterCard(
     val focused by interactionSource.collectIsFocusedAsState()
     val shape = RoundedCornerShape(TvSpec.CornerCard)
     val radiusPx = AutoSizeUtils.mm2px(context, 10f)
-    val targetW = AutoSizeUtils.mm2px(context, 214f)
-    val targetH = AutoSizeUtils.mm2px(context, 280f)
+    // 与 TvSpec.PosterWidth/Height 保持一致,避免图片被二次裁剪
+    val targetW = AutoSizeUtils.mm2px(context, 244f)
+    val targetH = AutoSizeUtils.mm2px(context, 320f)
 
     Box(
         modifier = Modifier
