@@ -109,6 +109,9 @@ class ApiConfig private constructor() {
         @Volatile
         private var instance: ApiConfig? = null
         private const val LOAD_JAR_MAX_RETRY = 1
+        private const val CONFIG_SITE_COUNT_PREFIX = "config_site_count_"
+        private const val CONFIG_CACHE_VALIDATED_PREFIX = "config_cache_validated_"
+        private const val CONFIG_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000L
         private var jarCache = "true"
 
         @JvmStatic
@@ -212,6 +215,136 @@ class ApiConfig private constructor() {
         }
     }
 
+    private fun configSiteCountKey(apiUrl: String): String =
+        CONFIG_SITE_COUNT_PREFIX + MD5.encode(apiUrl)
+
+    private fun configCacheValidatedKey(apiUrl: String): String =
+        CONFIG_CACHE_VALIDATED_PREFIX + MD5.encode(apiUrl)
+
+    private fun isConfigCacheFresh(apiUrl: String): Boolean {
+        val validatedAt = Hawk.get(configCacheValidatedKey(apiUrl), 0L)
+        return validatedAt > 0L && System.currentTimeMillis() - validatedAt < CONFIG_CACHE_MAX_AGE_MS
+    }
+
+    private fun markConfigCacheValidated(apiUrl: String) {
+        Hawk.put(configCacheValidatedKey(apiUrl), System.currentTimeMillis())
+    }
+
+    private fun isValidSite(obj: JsonObject): Boolean =
+        DefaultConfig.safeJsonString(obj, "key", "").isNotBlank() &&
+            DefaultConfig.safeJsonString(obj, "api", "").isNotBlank() &&
+            DefaultConfig.safeJsonInt(obj, "type", -1) >= 0
+
+    private fun countValidSites(jsonStr: String): Int {
+        return try {
+            val infoJson = gson.fromJson(jsonStr, JsonObject::class.java) ?: return 0
+            val sites = infoJson.getAsJsonArray("sites") ?: return 0
+            val keys = HashSet<String>()
+            for (opt in sites) {
+                if (!opt.isJsonObject) continue
+                val obj = opt.asJsonObject
+                if (isValidSite(obj)) {
+                    keys.add(DefaultConfig.safeJsonString(obj, "key", "").trim())
+                }
+            }
+            keys.size
+        } catch (_: Throwable) {
+            0
+        }
+    }
+
+    private fun cachedSiteCount(cache: File): Int {
+        if (!cache.exists()) return 0
+        return try {
+            countValidSites(readConfigFile(cache))
+        } catch (_: Throwable) {
+            0
+        }
+    }
+
+    private fun knownGoodSiteCount(apiUrl: String, cache: File): Int =
+        maxOf(Hawk.get(configSiteCountKey(apiUrl), 0), cachedSiteCount(cache))
+
+    private fun rememberSiteCount(apiUrl: String, count: Int) {
+        if (count <= 0) return
+        val key = configSiteCountKey(apiUrl)
+        if (count > Hawk.get(key, 0)) Hawk.put(key, count)
+    }
+
+    private fun fetchBestConfigAsync(
+        apiUrl: String,
+        requestUrl: String,
+        configKey: String?,
+        cache: File,
+        knownGoodCount: Int,
+        callback: ConfigFetchCallback
+    ) {
+        fetchConfigAsync(apiUrl, requestUrl, configKey, object : ConfigFetchCallback {
+            override fun success(json: String) {
+                configLoadExecutor.execute {
+                    if (parseApiCollection(json).isNotEmpty()) {
+                        mainHandler.post { callback.success(json) }
+                        return@execute
+                    }
+                    val firstCount = countValidSites(json)
+                    if (knownGoodCount > 0 && firstCount >= knownGoodCount) {
+                        mainHandler.post { callback.success(json) }
+                        return@execute
+                    }
+                    fetchConfigAsync(apiUrl, requestUrl, configKey, object : ConfigFetchCallback {
+                        override fun success(retryJson: String) {
+                            configLoadExecutor.execute {
+                                if (parseApiCollection(retryJson).isNotEmpty()) {
+                                    mainHandler.post { callback.success(retryJson) }
+                                    return@execute
+                                }
+                                val retryCount = countValidSites(retryJson)
+                                val bestJson = if (retryCount > firstCount) retryJson else json
+                                val bestCount = countValidSites(bestJson)
+                                if (bestCount <= 0) {
+                                    mainHandler.post { callback.error("配置未包含有效站点") }
+                                    return@execute
+                                }
+                                if (bestCount < knownGoodCount) {
+                                    val cachedCount = cachedSiteCount(cache)
+                                    if (cachedCount >= knownGoodCount) {
+                                        val cachedJson = readConfigFile(cache)
+                                        mainHandler.post { callback.success(cachedJson) }
+                                    } else {
+                                        mainHandler.post {
+                                            callback.error("订阅返回站点数减少（$bestCount/$knownGoodCount），已取消本次覆盖")
+                                        }
+                                    }
+                                } else {
+                                    LOG.i("echo-config-sites retry=$retryCount selected=$bestCount known=$knownGoodCount")
+                                    mainHandler.post { callback.success(bestJson) }
+                                }
+                            }
+                        }
+
+                        override fun error(error: String) {
+                            configLoadExecutor.execute {
+                                when {
+                                    firstCount > 0 -> mainHandler.post { callback.success(json) }
+                                    knownGoodCount > 0 && cachedSiteCount(cache) >= knownGoodCount -> {
+                                        val cachedJson = readConfigFile(cache)
+                                        mainHandler.post { callback.success(cachedJson) }
+                                    }
+
+                                    else -> mainHandler.post { callback.error(error) }
+                                }
+                            }
+                        }
+                    })
+                }
+            }
+
+            override fun error(error: String) {
+                mainHandler.post { callback.error(error) }
+            }
+        })
+    }
+
     fun loadConfig(useCache: Boolean, callback: LoadConfigCallback, activity: Activity?) {
         val apiUrl = Hawk.get(HawkConfig.API_URL, "")
         if (apiUrl.isEmpty()) {
@@ -219,72 +352,133 @@ class ApiConfig private constructor() {
             return
         }
         val cache = File(KtApp.instance().filesDir.absolutePath + "/" + MD5.encode(apiUrl))
-        if (useCache && cache.exists()) {
-            // 缓存命中:文件读取 + 全量 Gson 解析移入后台单线程 executor(与网络解析路径互斥,序列化同原主线程),回调回主线程
-            configLoadExecutor.execute {
+        configLoadExecutor.execute {
+            val cachedJson = try {
+                if (cache.exists()) readConfigFile(cache) else null
+            } catch (th: Throwable) {
+                th.printStackTrace()
+                null
+            }
+            val cachedCount = cachedJson?.let(::countValidSites) ?: 0
+            val cachedCollection = cachedJson?.let(::parseApiCollection).orEmpty()
+            val cacheFresh = isConfigCacheFresh(apiUrl)
+            val persistedCount = Hawk.get(configSiteCountKey(apiUrl), 0)
+            val baselineCount = if (cacheFresh) maxOf(persistedCount, cachedCount) else persistedCount
+            val canUseCache = useCache && cacheFresh && cachedJson != null &&
+                (cachedCollection.isNotEmpty() || (cachedCount > 0 && cachedCount >= baselineCount))
+            if (canUseCache) {
                 try {
-                    val json = readConfigFile(cache)
+                    val json = cachedJson!!
                     if (switchApiCollectionIfNeeded(apiUrl, json)) {
                         mainHandler.post { loadConfig(false, callback, activity) }
                         return@execute
                     }
                     clearApiLinesIfUnmatched(apiUrl)
-                    parseJson(apiUrl, json)
+                    val count = parseJson(apiUrl, json)
+                    rememberSiteCount(apiUrl, count)
                     mainHandler.post { callback.success() }
                 } catch (th: Throwable) {
                     th.printStackTrace()
                     // 缓存损坏/解析失败:与原逻辑一致,回退网络路径
                     mainHandler.post { loadConfig(false, callback, activity) }
                 }
+                return@execute
             }
-            return
-        }
-        val configUrl = configUrl(apiUrl)
-        val configKey = tempKey
+            val configUrl = configUrl(apiUrl)
+            val configKey = tempKey
 
-        fetchConfigAsync(apiUrl, configUrl, configKey, object : ConfigFetchCallback {
-            override fun success(json: String) {
-                // 大配置的全量解析放后台,完成后回主线程
-                configLoadExecutor.execute {
-                    try {
-                        if (switchApiCollectionIfNeeded(apiUrl, json)) {
-                            FileUtils.saveCache(cache, json)
-                            mainHandler.post { loadConfig(false, callback, activity) }
-                            return@execute
-                        }
-                        clearApiLinesIfUnmatched(apiUrl)
-                        parseJson(apiUrl, json)
-                        FileUtils.saveCache(cache, json)
-                        mainHandler.post { callback.success() }
-                    } catch (th: Throwable) {
-                        th.printStackTrace()
-                        mainHandler.post { callback.error("配置解析失败") }
-                    }
-                }
-            }
-
-            override fun error(error: String) {
-                if (cache.exists()) {
+            fetchBestConfigAsync(apiUrl, configUrl, configKey, cache, baselineCount, object : ConfigFetchCallback {
+                override fun success(json: String) {
+                    // 大配置的全量解析放后台,完成后回主线程
                     configLoadExecutor.execute {
                         try {
-                            val json = readConfigFile(cache)
                             if (switchApiCollectionIfNeeded(apiUrl, json)) {
+                                FileUtils.saveCache(cache, json)
+                                markConfigCacheValidated(apiUrl)
                                 mainHandler.post { loadConfig(false, callback, activity) }
                                 return@execute
                             }
                             clearApiLinesIfUnmatched(apiUrl)
-                            parseJson(apiUrl, json)
+                            val count = parseJson(apiUrl, json)
+                            val knownGoodCount = knownGoodSiteCount(apiUrl, cache)
+                            if (count < knownGoodCount) {
+                                val fallbackCount = cachedSiteCount(cache)
+                                if (fallbackCount >= knownGoodCount) {
+                                    val fallbackJson = readConfigFile(cache)
+                                    val fallbackParsed = parseJson(apiUrl, fallbackJson)
+                                    rememberSiteCount(apiUrl, fallbackParsed)
+                                    markConfigCacheValidated(apiUrl)
+                                    mainHandler.post { callback.success() }
+                                    return@execute
+                                }
+                                throw IllegalStateException("订阅站点数减少（$count/$knownGoodCount）")
+                            }
+                            FileUtils.saveCache(cache, json)
+                            rememberSiteCount(apiUrl, count)
+                            markConfigCacheValidated(apiUrl)
+                            LOG.i("echo-config-sites accepted=$count known=$knownGoodCount")
                             mainHandler.post { callback.success() }
                         } catch (th: Throwable) {
                             th.printStackTrace()
+                            mainHandler.post { callback.error("配置解析失败") }
+                        }
+                    }
+                }
+
+                override fun error(error: String) {
+                    configLoadExecutor.execute {
+                        val json = try {
+                            if (cache.exists()) readConfigFile(cache) else null
+                        } catch (th: Throwable) {
+                            th.printStackTrace()
+                            null
+                        }
+                        val count = json?.let(::countValidSites) ?: 0
+                        val collection = json?.let(::parseApiCollection).orEmpty()
+                        if (json != null && (collection.isNotEmpty() || count > 0)) {
+                            try {
+                                if (switchApiCollectionIfNeeded(apiUrl, json)) {
+                                    mainHandler.post { loadConfig(false, callback, activity) }
+                                    return@execute
+                                }
+                                clearApiLinesIfUnmatched(apiUrl)
+                                val parsedCount = parseJson(apiUrl, json)
+                                rememberSiteCount(apiUrl, parsedCount)
+                                mainHandler.post { callback.success() }
+                            } catch (th: Throwable) {
+                                th.printStackTrace()
+                                mainHandler.post { callback.error("拉取配置失败\n$error") }
+                            }
+                        } else {
                             mainHandler.post { callback.error("拉取配置失败\n$error") }
                         }
                     }
-                    return
                 }
-                callback.error("拉取配置失败\n$error")
-            }
-        })
+            })
+        }
+    }
+
+    fun invalidateConfigCacheValidation() {
+        val urls = listOf(
+            Hawk.get(HawkConfig.API_URL, ""),
+            Hawk.get(HawkConfig.LIVE_API_URL, "")
+        ).distinct()
+        urls.forEach { url ->
+            if (url.isNotEmpty()) Hawk.delete(configCacheValidatedKey(url))
+        }
+    }
+
+    fun clearConfigCache() {
+        invalidateConfigCacheValidation()
+        val urls = listOf(
+            Hawk.get(HawkConfig.API_URL, ""),
+            Hawk.get(HawkConfig.LIVE_API_URL, "")
+        ).distinct()
+        urls.forEach { url ->
+            if (url.isEmpty()) return@forEach
+            File(KtApp.instance().filesDir.absolutePath + "/" + MD5.encode(url)).delete()
+            Hawk.delete(configSiteCountKey(url))
+        }
     }
 
     fun loadLiveConfig(useCache: Boolean, callback: LoadConfigCallback) {
@@ -389,6 +583,8 @@ class ApiConfig private constructor() {
                 val request = okhttp3.Request.Builder()
                     .url(requestUrl)
                     .header("User-Agent", userAgent)
+                    .header("Cache-Control", "no-cache")
+                    .header("Pragma", "no-cache")
                     .build()
                 var client = OkGoHelper.getDefaultClient()
                 if (client == null) client = OkHttp.client()
@@ -617,8 +813,8 @@ class ApiConfig private constructor() {
     }
 
     @Throws(Throwable::class)
-    private fun parseJson(apiUrl: String, f: File) {
-        parseJson(apiUrl, readConfigFile(f))
+    private fun parseJson(apiUrl: String, f: File): Int {
+        return parseJson(apiUrl, readConfigFile(f))
     }
 
     @Throws(Throwable::class)
@@ -704,7 +900,6 @@ class ApiConfig private constructor() {
     private fun resetConfigData() {
         clearSpiderCache()
         currentPlaySourceKey = ""
-        sourceBeanList.clear()
         liveChannelGroupList.clear()
         parseBeanList.clear()
         searchSourceBeanList = ArrayList()
@@ -724,29 +919,40 @@ class ApiConfig private constructor() {
         HistoryHelper.clearApiLineList()
     }
 
-    private fun parseJson(apiUrl: String, jsonStr: String) {
+    private fun parseJson(apiUrl: String, jsonStr: String): Int {
         resetConfigData()
         val infoJson = gson.fromJson(jsonStr, JsonObject::class.java)
+            ?: throw IllegalArgumentException("配置不是有效 JSON")
         // spider
         spider = DefaultConfig.safeJsonString(infoJson, "spider", "")
         jarCache = DefaultConfig.safeJsonString(infoJson, "jarCache", "true")
         danmaku = DefaultConfig.safeJsonString(infoJson, "danmaku", "")
         // wallpaper
         wallpaper = DefaultConfig.safeJsonString(infoJson, "wallpaper", "")
-        // 远端站点源
+        // 远端站点源:先完整解析到临时 map,成功后再整体替换,避免异常留下半截列表。
+        val sites = infoJson.getAsJsonArray("sites")
+            ?: throw IllegalArgumentException("配置缺少 sites")
+        val parsedSources = LinkedHashMap<String, SourceBean>()
         var firstSite: SourceBean? = null
-        for (opt in infoJson.get("sites").asJsonArray) {
+        var skipped = 0
+        var duplicates = 0
+        for (opt in sites) {
+            if (!opt.isJsonObject) {
+                skipped++
+                continue
+            }
             val obj = opt.asJsonObject
-            if (!obj.has("key") || !obj.has("type") || !obj.has("api")) {
+            if (!isValidSite(obj)) {
+                skipped++
                 LOG.i("echo-skip incomplete site config: $obj")
                 continue
             }
             val sb = SourceBean()
-            val siteKey = obj.get("key").asString.trim()
+            val siteKey = DefaultConfig.safeJsonString(obj, "key", "").trim()
             sb.key = siteKey
-            sb.name = if (obj.has("name")) obj.get("name").asString.trim() else siteKey
-            sb.type = obj.get("type").asInt
-            sb.api = obj.get("api").asString.trim()
+            sb.name = if (obj.has("name")) DefaultConfig.safeJsonString(obj, "name", siteKey) else siteKey
+            sb.type = DefaultConfig.safeJsonInt(obj, "type", -1)
+            sb.api = DefaultConfig.safeJsonString(obj, "api", "").trim()
             sb.searchable = DefaultConfig.safeJsonInt(obj, "searchable", 1)
             sb.quickSearch = DefaultConfig.safeJsonInt(obj, "quickSearch", 1)
             sb.changeable = DefaultConfig.safeJsonInt(obj, "changeable", 1)
@@ -764,17 +970,14 @@ class ApiConfig private constructor() {
             sb.clickSelector = DefaultConfig.safeJsonString(obj, "click", "")
             sb.style = DefaultConfig.safeJsonString(obj, "style", "")
             if (firstSite == null) firstSite = sb
-            sourceBeanList[siteKey] = sb
+            if (parsedSources.put(siteKey, sb) != null) duplicates++
         }
-        if (sourceBeanList.isNotEmpty()) {
-            val home = Hawk.get(HawkConfig.HOME_API, "")
-            val sh = getSource(home)
-            if (sh == null) {
-                setSourceBean(firstSite!!)
-            } else {
-                setSourceBean(sh)
-            }
-        }
+        if (parsedSources.isEmpty()) throw IllegalArgumentException("配置未包含有效站点")
+        LOG.i(
+            "echo-config-sites raw=${sites.size} accepted=${parsedSources.size} " +
+                "skipped=$skipped duplicates=$duplicates"
+        )
+        val selectedSource = parsedSources[Hawk.get(HawkConfig.HOME_API, "")] ?: firstSite!!
         // 需要使用 vip 解析的 flag
         vipParseFlags = DefaultConfig.safeJsonStringList(infoJson, "flags")
         // 解析地址
@@ -930,6 +1133,10 @@ class ApiConfig private constructor() {
                 }
             }
         }
+        sourceBeanList.clear()
+        sourceBeanList.putAll(parsedSources)
+        setSourceBean(selectedSource)
+        return sourceBeanList.size
     }
 
     private fun loadDefaultConfig() {

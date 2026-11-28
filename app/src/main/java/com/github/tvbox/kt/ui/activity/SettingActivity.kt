@@ -23,8 +23,12 @@ class SettingActivity : BaseActivity() {
     private var homeRec = 0
     private var currentLiveApi = ""
     private var devMode = ""
+    private var restartRequested = false
 
     private val mDevModeRun = Runnable { devMode = "" }
+    private val restartRunnable = Runnable {
+        if (!isFinishing) onBackPressed()
+    }
 
     interface DevModeCallback {
         fun onChange()
@@ -32,6 +36,12 @@ class SettingActivity : BaseActivity() {
 
     override val layoutResID: Int
         get() = R.layout.activity_setting_compose
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        restartRequested = savedInstanceState?.getBoolean("restartRequested", false) ?: false
+        super.onCreate(savedInstanceState)
+        if (restartRequested) scheduleConfigRestart()
+    }
 
     override fun shouldRefreshAutoSize(): Boolean {
         return true
@@ -60,18 +70,37 @@ class SettingActivity : BaseActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    fun requestConfigRestart() {
+        restartRequested = true
+        scheduleConfigRestart()
+    }
+
+    private fun scheduleConfigRestart() {
+        mHandler.removeCallbacks(restartRunnable)
+        mHandler.postDelayed(restartRunnable, 2500)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean("restartRequested", restartRequested)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        mHandler.removeCallbacks(restartRunnable)
+        super.onDestroy()
+    }
+
     override fun onBackPressed() {
-        if (currentApi == Hawk.get(HawkConfig.API_URL, "")) {
-            if (homeRec != Hawk.get(HawkConfig.HOME_REC, HawkConfig.DEFAULT_HOME_REC)) {
-                jumpActivity(HomeActivity::class.java, createBundle())
-            } else if (currentLiveApi != Hawk.get(HawkConfig.LIVE_API_URL, "")) {
-                jumpActivity(HomeActivity::class.java, createBundle())
-            }
-        } else {
+        if (restartRequested || currentApi != Hawk.get(HawkConfig.API_URL, "")) {
             AppManager.instance.finishActivity(HomeActivity::class.java)
             jumpActivity(HomeActivity::class.java)
             finish()
             return
+        }
+        if (homeRec != Hawk.get(HawkConfig.HOME_REC, HawkConfig.DEFAULT_HOME_REC) ||
+            currentLiveApi != Hawk.get(HawkConfig.LIVE_API_URL, "")
+        ) {
+            jumpActivity(HomeActivity::class.java, createBundle())
         }
         super.onBackPressed()
     }

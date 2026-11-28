@@ -297,16 +297,29 @@ object FileUtils {
     }
 
     fun saveCache(cache: File, json: String) {
+        val cacheDir = cache.parentFile
+        if (cacheDir != null && !cacheDir.exists()) cacheDir.mkdirs()
+        val nonce = System.nanoTime()
+        val temp = File(cacheDir, "${cache.name}.$nonce.tmp")
         try {
-            val cacheDir = cache.parentFile
-            if (cacheDir != null && !cacheDir.exists()) cacheDir.mkdirs()
-            if (cache.exists()) cache.delete()
-            val fos = FileOutputStream(cache)
-            fos.write(json.toByteArray(Charsets.UTF_8))
-            fos.flush()
-            fos.close()
-        } catch (th: Throwable) {
-            th.printStackTrace()
+            FileOutputStream(temp).use { fos ->
+                fos.write(json.toByteArray(Charsets.UTF_8))
+                fos.flush()
+            }
+            if (temp.renameTo(cache)) return
+            val backup = File(cacheDir, "${cache.name}.$nonce.bak")
+            val hadCache = cache.exists()
+            if (hadCache && !cache.renameTo(backup)) {
+                throw IOException("无法备份缓存: ${cache.name}")
+            }
+            if (temp.renameTo(cache)) {
+                backup.delete()
+                return
+            }
+            if (hadCache) backup.renameTo(cache)
+            throw IOException("无法替换缓存: ${cache.name}")
+        } finally {
+            temp.delete()
         }
     }
 

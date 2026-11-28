@@ -30,7 +30,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
-import com.github.tvbox.kt.KtApp
 import com.github.tvbox.kt.R
 import com.github.tvbox.kt.api.ApiConfig
 import com.github.tvbox.kt.api.DanmakuApi
@@ -127,17 +126,15 @@ fun SettingScreen(activity: BaseActivity) {
         Hawk.put(HawkConfig.SETTING_GROUP_COLLAPSED_PREFIX + key, next)
     }
 
-    val handler = remember { Handler() }
     fun restartAfterConfig() {
+        ApiConfig.get().invalidateConfigCacheValidation()
+        (activity as? SettingActivity)?.requestConfigRestart()
         Toast.makeText(context, "配置已切换,即将重新加载!", Toast.LENGTH_SHORT).show()
         try {
             com.github.tvbox.kt.viewmodel.SourceViewModel.clearRuntimeCache()
         } catch (e: Exception) {
             LOG.i("echo-clear-config-switch-cache-error:" + e.message)
         }
-        handler.postDelayed({
-            if (!activity.isFinishing) activity.onBackPressed()
-        }, 2500)
     }
 
     val scroll = rememberScrollState()
@@ -486,14 +483,13 @@ private fun showApiLine(context: Context, api: androidx.compose.runtime.MutableS
     showSelect(context, "线路选择", lines, idx, SettingDiff.string,
         { HistoryHelper.getApiLineName(it) }) { value, _ ->
         val newApi = HistoryHelper.getApiLineUrl(value)
-        val oldApi = Hawk.get(HawkConfig.API_URL, "")
         if (newApi.isEmpty()) return@showSelect
         Hawk.put(HawkConfig.API_URL, newApi)
         Hawk.put(HawkConfig.LIVE_API_URL, newApi)
         HistoryHelper.setLiveApiHistory(newApi)
         api.value = newApi
         refreshApiLine(apiLine, showLine)
-        if (oldApi != newApi) restart()
+        restart()
     }
 }
 
@@ -507,7 +503,6 @@ private fun showApiHistory(context: Context, api: androidx.compose.runtime.Mutab
     dialog.setTip("历史配置列表")
     dialog.setAdapter(object : com.github.tvbox.kt.ui.adapter.ApiHistoryDialogAdapter.SelectDialogInterface {
         override fun click(value: String) {
-            val oldApi = Hawk.get(HawkConfig.API_URL, "")
             if (!HistoryHelper.isApiLineHistory(value)) HistoryHelper.clearApiLineList()
             Hawk.put(HawkConfig.API_URL, value)
             Hawk.put(HawkConfig.LIVE_API_URL, value)
@@ -515,7 +510,7 @@ private fun showApiHistory(context: Context, api: androidx.compose.runtime.Mutab
             api.value = value
             refreshApiLine(apiLine, showLine)
             dialog.dismiss()
-            if (oldApi != value) restart()
+            restart()
         }
         override fun del(value: String, data: ArrayList<String>) {
             Hawk.put(HawkConfig.API_HISTORY, data)
@@ -529,12 +524,11 @@ private fun showApiDialog(context: Context, activity: BaseActivity, api: android
     EventBus.getDefault().register(dialog)
     dialog.setOnListener(object : ApiDialog.OnListener {
         override fun onchange(newApi: String) {
-            val oldApi = Hawk.get(HawkConfig.API_URL, "")
             Hawk.put(HawkConfig.API_URL, newApi)
             if (!HistoryHelper.isApiLineHistory(newApi)) HistoryHelper.clearApiLineList()
             api.value = newApi
             refreshApiLine(apiLine, showLine)
-            if (oldApi != newApi) restart()
+            restart()
         }
         override fun onLocalConfig(live: Boolean) {
             Toast.makeText(context, "请在原版设置中使用本地配置导入", Toast.LENGTH_SHORT).show()
@@ -594,13 +588,7 @@ private fun clearCache(activity: BaseActivity) {
             ApiConfig.get().clearSpiderCache()
             if (cacheDir.exists()) FileUtils.cleanDirectory(cacheDir)
             FileUtils.clearSpiderCacheFiles()
-            for (url in listOf(Hawk.get(HawkConfig.API_URL, ""), Hawk.get(HawkConfig.LIVE_API_URL, ""))) {
-                if (url.isEmpty()) continue
-                try {
-                    File(KtApp.instance().filesDir.absolutePath + "/" + com.github.tvbox.kt.util.MD5.encode(url)).delete()
-                } catch (_: Throwable) {
-                }
-            }
+            ApiConfig.get().clearConfigCache()
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
