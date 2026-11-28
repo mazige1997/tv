@@ -4,87 +4,70 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Shapes
 import androidx.compose.material.Typography
-import androidx.compose.material.lightColors
+import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.Density
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-/**
- * Compose 主题:复用项目既有的科技风配色(colors.xml),保证与原生页面视觉一致。
- * 全部使用 Material2(与 compose-bom 2024.06.00 / compiler 1.5.14 匹配)。
- */
-/**
- * 全局 UI 规范:三页(首页/详情/设置)共用的字号阶梯与圆角,保证视觉协调统一。
- * 与 TvColors 同包,各页面无需 import 即可引用。
- */
 object TvSpec {
-    // ===== 字号阶梯:8 档覆盖全 App,远距离观看整体偏大 =====
-    val Hero = 34.sp        // 一级大标题(收藏/历史页标题)
-    val Title = 28.sp       // 页面标题
-    val Heading = 24.sp     // 二级标题/按钮/空态主文案
-    val Section = 22.sp     // 分区标题、chip、海报名
-    val Body = 20.sp        // 正文、角标
-    val Value = 18.sp       // 值/次要信息
-    val Caption = 16.sp     // 辅助文字
-    val Micro = 13.sp       // 极小状态副行
+    val Hero = 34.sp
+    val Title = 24.sp
+    val Heading = 20.sp
+    val Section = 18.sp
+    val Body = 16.sp
+    val Value = 14.sp
+    val Caption = 13.sp
+    val Micro = 11.sp
 
-    // ===== 圆角阶梯:语义化,替代散落的 2/4/6/8/10/12/14dp =====
-    val CornerXs = 4.dp     // 文字角标
-    val CornerSm = 8.dp     // 小按钮/文件行
-    val CornerMd = 10.dp    // 中等组件
-    val CornerCard = 12.dp  // 卡片/行/入口底板圆角
-    val CornerChip = 12.dp  // chip/按钮圆角
-    val CornerLg = 14.dp    // 大面板
+    val CornerXs = 4.dp
+    val CornerSm = 8.dp
+    val CornerMd = 10.dp
+    val CornerCard = 12.dp
+    val CornerChip = 12.dp
+    val CornerLg = 14.dp
 
-    // ===== 间距阶梯(单位与设计稿 mm 对齐,TvTheme density 已做映射) =====
     val SpaceXs = 4.dp
     val SpaceSm = 8.dp
     val SpaceMd = 12.dp
     val SpaceLg = 16.dp
     val SpaceXl = 24.dp
     val SpaceXxl = 32.dp
-    val ChipGap = 12.dp       // 分类 chip 与功能入口 chip 共用,保证两行节奏一致
-    // 分类 chip 自适应区间:数量少时限宽并整体居中,数量多时收缩至最小宽后再滚动。
-    // 依据 Android TV 布局指南:用 dp 保证跨分辨率比例一致,并为焦点放大预留间距。
-    val TabMinWidth = 110.dp
-    val TabMaxWidth = 180.dp
-    val PageGutter = 50.dp
-    val ContentGutter = 40.dp
+    val ChipGap = 12.dp
 
-    // ===== 关键组件几何:Compose 与原生浮层必须共用同一组数字 =====
-    val PreviewWidth = 470.dp
-    val PreviewHeight = 300.dp
+    val TabMinWidth = 96.dp
+    val TabMaxWidth = 160.dp
+    val PageGutter = 48.dp
+    val ContentGutter = 32.dp
+
+    val PreviewWidth = 420.dp
+    val PreviewHeight = 270.dp
     val PreviewInset = 20.dp
-    // 与 ImgUtil.defaultWidth/defaultHeight(244/320) 完全一致,避免图片被二次裁剪
-    val PosterWidth = 244.dp
-    val PosterHeight = 320.dp
-    val ChipHeight = 45.dp
-    val ActionHeight = 45.dp
+    val PosterWidth = 144.dp
+    val PosterHeight = 216.dp
+    val ChipHeight = 48.dp
+    val ActionHeight = 48.dp
 }
 
 object TvDivider {
-    val Line = Color(0x33FFFFFF)  // 半透明分隔线
+    val Line = Color(0x33FFFFFF)
 }
 
 object TvColors {
-    val Accent = Color(0xFF02F8E1)          // tech_accent
-    val GroupTitle = Color(0xFF67E8F9)      // tech_group_title
-    val ValueText = Color(0xFF9FE8FF)       // tech_value_text
-    val RowText = Color(0xFFFFFFFF)
-    val FocusStart = Color(0xFF123A4E)      // tech_focus_start
-    val FocusEnd = Color(0xFF0C1C28)        // tech_focus_end
-    val PanelIdle = Color(0x991D202A)       // tech_panel_idle
-    val StrokeIdle = Color(0x26FFFFFF)      // tech_stroke_idle
-    val ScreenBg = Color(0xFF12151C)        // 页面背景
-    val BadgeBg = Color(0xCC0C1C28)         // 角标/标题底条半透明背景
-    val DeleteMask = Color(0xAA000000)      // 删除模式遮罩
-    val HintText = Color(0xBBFFFFFF)        // 次要/提示文字(color_CCFFFFFF)
+    val Accent = Color(0xFF02F8E1)
+    val GroupTitle = Color(0xFF67E8F9)
+    val ValueText = Color(0xFF9FE8FF)
+    val RowText = Color(0xFFF5F7FA)
+    val FocusStart = Color(0xFF123A4E)
+    val FocusEnd = Color(0xFF0C1C28)
+    val PanelIdle = Color(0xFF1B2732)
+    val StrokeIdle = Color(0xFF34434F)
+    val ScreenBg = Color(0xFF0B0F14)
+    val BadgeBg = Color(0xCC0A1118)
+    val DeleteMask = Color(0xAA000000)
+    val HintText = Color(0xFFB8C4CF)
 }
 
 private val TvShapes = Shapes(
@@ -93,52 +76,94 @@ private val TvShapes = Shapes(
     large = RoundedCornerShape(TvSpec.CornerLg)
 )
 
-private val TvTypography = Typography(
-    body1 = TextStyle(fontSize = TvSpec.Heading, color = TvColors.RowText),
-    subtitle1 = TextStyle(fontSize = TvSpec.Heading, color = TvColors.RowText),
-    h6 = TextStyle(fontSize = TvSpec.Title, color = TvColors.GroupTitle)
+private val LegacyTypography = Typography(
+    h4 = TextStyle(fontSize = TvSpec.Hero, fontWeight = FontWeight.Bold),
+    h5 = TextStyle(fontSize = TvSpec.Title, fontWeight = FontWeight.SemiBold),
+    h6 = TextStyle(fontSize = TvSpec.Heading, fontWeight = FontWeight.SemiBold),
+    subtitle1 = TextStyle(fontSize = TvSpec.Section, fontWeight = FontWeight.Medium),
+    subtitle2 = TextStyle(fontSize = TvSpec.Value, fontWeight = FontWeight.Medium),
+    body1 = TextStyle(fontSize = TvSpec.Body),
+    body2 = TextStyle(fontSize = TvSpec.Value),
+    button = TextStyle(fontSize = TvSpec.Value, fontWeight = FontWeight.Medium),
+    caption = TextStyle(fontSize = TvSpec.Caption),
+    overline = TextStyle(fontSize = TvSpec.Micro, fontWeight = FontWeight.Medium)
 )
 
-private val TvColorsMaterial = lightColors(
+private val LegacyColors = darkColors(
     primary = TvColors.Accent,
-    primaryVariant = TvColors.Accent,
+    primaryVariant = TvColors.GroupTitle,
     secondary = TvColors.GroupTitle,
-    background = Color(0xFF12151C),
+    background = TvColors.ScreenBg,
     surface = TvColors.PanelIdle,
-    onPrimary = Color.Black,
+    onPrimary = Color(0xFF003C36),
+    onSecondary = Color(0xFF00363B),
     onBackground = TvColors.RowText,
-    onSurface = TvColors.RowText
+    onSurface = TvColors.RowText,
+    error = Color(0xFFFFB4AB)
 )
 
-/**
- * Compose 统一主题。
- *
- * 根因：原生页面用 AndroidAutoSize 的 mm 子单位（design_width=1280，vs_50 即设计稿 50px，
- * 在 2772px 屏上渲染为 108px），而 Compose 的 .sp/.dp 走的是设备原始 density，
- * 与 mm 的缩放比例不一致 —— 字号相对容器忽大忽小，在框里显示不全。
- *
- * 修复：把 Compose 的 LocalDensity 设为「屏幕宽度 / 设计宽度(1280)」，
- * 使 .dp/.sp 与 mm 走同一缩放比例（今日头条方案在 Compose 的标准落地，Google 官方推荐）。
- * dimensionResource(vs_xx) 不受影响：它取资源的 px 再除 density 转 Dp，渲染时再乘回，density 抵消。
- * 保留系统 fontScale，尊重用户的字体大小设置。
- */
+private val TvColorScheme = androidx.tv.material3.darkColorScheme(
+    primary = TvColors.Accent,
+    onPrimary = Color(0xFF003C36),
+    primaryContainer = Color(0xFF00594F),
+    onPrimaryContainer = Color(0xFF8CFCEA),
+    secondary = TvColors.GroupTitle,
+    onSecondary = Color(0xFF00363B),
+    secondaryContainer = Color(0xFF004F57),
+    onSecondaryContainer = Color(0xFFA6F3FF),
+    tertiary = Color(0xFFB8C7FF),
+    onTertiary = Color(0xFF1D2D61),
+    tertiaryContainer = Color(0xFF344578),
+    onTertiaryContainer = Color(0xFFDEE2FF),
+    background = TvColors.ScreenBg,
+    onBackground = TvColors.RowText,
+    surface = TvColors.ScreenBg,
+    onSurface = TvColors.RowText,
+    surfaceVariant = TvColors.PanelIdle,
+    onSurfaceVariant = TvColors.HintText,
+    surfaceTint = TvColors.Accent,
+    inverseSurface = Color(0xFFE3E8ED),
+    inverseOnSurface = Color(0xFF131C22),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    border = Color(0xFF5A6B78),
+    borderVariant = TvColors.StrokeIdle,
+    scrim = Color.Black
+)
+
+private val TvTypography = androidx.tv.material3.Typography().let { default ->
+    default.copy(
+        displayLarge = default.displayLarge.copy(fontSize = 44.sp, fontWeight = FontWeight.Bold),
+        displayMedium = default.displayMedium.copy(fontSize = 36.sp, fontWeight = FontWeight.Bold),
+        displaySmall = default.displaySmall.copy(fontSize = 32.sp, fontWeight = FontWeight.SemiBold),
+        headlineLarge = default.headlineLarge.copy(fontSize = 30.sp, fontWeight = FontWeight.SemiBold),
+        headlineMedium = default.headlineMedium.copy(fontSize = 26.sp, fontWeight = FontWeight.SemiBold),
+        headlineSmall = default.headlineSmall.copy(fontSize = 24.sp, fontWeight = FontWeight.SemiBold),
+        titleLarge = default.titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.SemiBold),
+        titleMedium = default.titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Medium),
+        titleSmall = default.titleSmall.copy(fontSize = 16.sp, fontWeight = FontWeight.Medium),
+        bodyLarge = default.bodyLarge.copy(fontSize = 16.sp),
+        bodyMedium = default.bodyMedium.copy(fontSize = 14.sp),
+        bodySmall = default.bodySmall.copy(fontSize = 12.sp),
+        labelLarge = default.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+        labelMedium = default.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+        labelSmall = default.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    )
+}
+
 @Composable
 fun TvTheme(content: @Composable () -> Unit) {
-    val context = LocalContext.current
-    val fontScale = LocalDensity.current.fontScale
-    val widthPixels = context.resources.displayMetrics.widthPixels
-    val designWidthPx = 1280f
-    val adaptedDensity = (widthPixels / designWidthPx).coerceAtLeast(0.1f)
     MaterialTheme(
-        colors = TvColorsMaterial,
-        typography = TvTypography,
-        shapes = TvShapes,
-        content = {
-            CompositionLocalProvider(
-                LocalDensity provides Density(density = adaptedDensity, fontScale = fontScale)
-            ) {
-                content()
-            }
-        }
-    )
+        colors = LegacyColors,
+        typography = LegacyTypography,
+        shapes = TvShapes
+    ) {
+        androidx.tv.material3.MaterialTheme(
+            colorScheme = TvColorScheme,
+            typography = TvTypography,
+            content = content
+        )
+    }
 }

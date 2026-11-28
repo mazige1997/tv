@@ -2,8 +2,10 @@ package com.github.tvbox.kt.ui.compose
 
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.github.tvbox.kt.bean.Movie
 import com.github.tvbox.kt.bean.MovieSort
 import com.github.tvbox.kt.util.ImgUtil
@@ -21,13 +23,12 @@ class HomeGridPageState(val sortData: MovieSort.SortData) {
     var page = 1
     var maxPage = 1
     var isLoad = false
-    var isRequesting = false
+    var isRequesting by mutableStateOf(false)
     var hasActionItems = false
-    var isFolderMode = false
-    var style: ImgUtil.Style? = null
-    var columns = 5
-    var showLoading = true
+    var isFolderMode by mutableStateOf(false)
+    var style by mutableStateOf<ImgUtil.Style?>(null)
     var focusIndex = 0
+    var pendingScrollIndex: Int? = null
     val gridState = LazyGridState()
 
     fun uiTag(): Char {
@@ -74,6 +75,7 @@ class HomeGridPageState(val sortData: MovieSort.SortData) {
         hasActionItems = snap.hasActionItems
         isFolderMode = snap.isFolderMode
         focusIndex = snap.focusIndex
+        pendingScrollIndex = snap.firstVisibleLine
         return true
     }
 }
@@ -94,23 +96,22 @@ data class HomeGridSnapshot(
 /** “主页”(my0)页状态:热播/推荐/历史列表 + 删除模式。 */
 class HomeUserPageState {
     val videos = mutableStateListOf<Movie.Video>()
-    var tvRate = ""
-    var deleteMode = HawkConfig.hotVodDelete
-    var useGridStyle = Hawk.get(HawkConfig.HOME_REC_STYLE, false)
-    var columns = 5
-    val listState = LazyListState()
+    var tvRate by mutableStateOf("")
+    var deleteMode by mutableStateOf(HawkConfig.hotVodDelete)
+    var useGridStyle by mutableStateOf(Hawk.get(HawkConfig.HOME_REC_STYLE, false))
+    val catalogState = LazyListState()
     val gridState = LazyGridState()
 }
 
 /** 首页 UI 快照:状态栏 + 分类条 + 页面加载态。 */
 data class HomeUiSnapshot(
     val siteName: String = "",
-    val dateTime: String = "",
     val tabs: List<HomeTabUi> = emptyList(),
     val selected: Int = 0,
     val topHidden: Boolean = false,
     val screenLoading: Boolean = false,
-    val tabFocusToken: Int = 0
+    val tabFocusToken: Int = 0,
+    val pageGeneration: Int = 0
 )
 
 data class HomeTabUi(

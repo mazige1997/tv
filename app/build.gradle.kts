@@ -217,14 +217,18 @@ dependencies {
     implementation("com.google.zxing:core:3.3.0")
     implementation("androidx.appcompat:appcompat:1.3.0")
 
-    // ---- Jetpack Compose(设置页试点) ----
+    // ---- Jetpack Compose UI ----
     // BOM 2024.06.00 统一各 compose 库版本,compiler 1.5.14 与之匹配。
+    // TV Material 1.0.1 兼容当前 Compose 1.6.8/Kotlin 1.9.24 工具链。
     val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation("androidx.tv:tv-material:1.0.1")
+    implementation("androidx.compose.material3:material3-window-size-class")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.media:media:1.2.1")

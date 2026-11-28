@@ -97,19 +97,21 @@ class HomeActivity : BaseActivity() {
 
     // ===== Compose 状态容器 =====
     private val uiState = mutableStateOf(HomeUiSnapshot())
+    private val clockState = mutableStateOf("")
+    private val timeFormat = SimpleDateFormat("yyyy/MM/dd  E  HH:mm", Locale.CHINA)
     private val sortList = ArrayList<MovieSort.SortData>()          // 分类数据(与 pageStates 一一对应)
     private val pageStates = ArrayList<HomeGridPageState>()         // 每个分类页的状态(含 my0 占位)
     private val userPage = HomeUserPageState()                      // 主页(my0)状态
     private var siteName = ""
-    private var dateTime = ""
     private var tabFocusToken = 0
+    private var pageGeneration = 0
     private var requestingPage: HomeGridPageState? = null           // 当前正在请求列表的页面(分发 listResult)
+    private var pendingGridPage: HomeGridPageState? = null
+    private var pendingLoadMore = false
 
     private val mRunnable: Runnable = object : Runnable {
         override fun run() {
-            val timeFormat = SimpleDateFormat("yyyy/MM/dd  E  HH:mm", Locale.CHINA)
-            dateTime = timeFormat.format(Date())
-            pushUiState()
+            clockState.value = timeFormat.format(Date())
             mHandler.postDelayed(this, 1000)
         }
     }
@@ -144,6 +146,7 @@ class HomeActivity : BaseActivity() {
                     gridPage = pageStates.getOrNull(currentSelected),
                     userPage = userPage,
                     showUserPage = isUserPage(currentSelected),
+                    clock = clockState,
                     onTabFocus = { onTabFocused(it) },
                     onTabClick = { onTabClicked(it) },
                     onTabUp = { onTabUp() },
@@ -176,12 +179,12 @@ class HomeActivity : BaseActivity() {
         }
         uiState.value = HomeUiSnapshot(
             siteName = siteName,
-            dateTime = dateTime,
             tabs = tabs,
             selected = currentSelected,
             topHidden = topHide != 0,
             screenLoading = isLoading(),
-            tabFocusToken = tabFocusToken
+            tabFocusToken = tabFocusToken,
+            pageGeneration = pageGeneration
         )
     }
 
@@ -246,6 +249,18 @@ class HomeActivity : BaseActivity() {
                 }
             }
             pushUiState()
+            val currentPage = pageStates.getOrNull(currentSelected)
+            val pendingPage = pendingGridPage
+            pendingGridPage = null
+            when {
+                pendingPage != null && pendingPage === currentPage -> {
+                    pendingLoadMore = false
+                    loadGridPage(pendingPage, reset = true)
+                }
+
+                pendingPage == null && pendingLoadMore && state === currentPage -> loadMore()
+                else -> pendingLoadMore = false
+            }
         }
         // action 结果(播放源动作 / 筛选):
         sourceViewModel!!.actionResult.observe(this) { jsonObject ->
@@ -363,18 +378,10 @@ class HomeActivity : BaseActivity() {
         for (data in sortList) {
             val state = HomeGridPageState(data)
             state.style = ImgUtil.initStyle()
-            val isFolder = state.uiTag() == '1'
-            state.isFolderMode = isFolder
-            state.columns = if (isFolder) 1 else gridSpanCount(state)
+            state.isFolderMode = state.uiTag() == '1'
             pageStates.add(state)
             if (data.id == "my0") prepareUserPage(absXml)
         }
-    }
-
-    private fun gridSpanCount(state: HomeGridPageState): Int {
-        var span = if (isBaseOnWidth()) 5 else 6
-        if (state.style != null) span = ImgUtil.spanCountByStyle(state.style!!, span)
-        return span.coerceAtLeast(1)
     }
 
     /** 主页热播数据:站点推荐 / 历史 / 豆瓣。 */
@@ -382,7 +389,6 @@ class HomeActivity : BaseActivity() {
         val recMode = Hawk.get(HawkConfig.HOME_REC, HawkConfig.DEFAULT_HOME_REC)
         userPage.useGridStyle = Hawk.get(HawkConfig.HOME_REC_STYLE, false)
         userPage.deleteMode = HawkConfig.hotVodDelete
-        userPage.columns = if (isBaseOnWidth()) 5 else 6
         userPage.videos.clear()
         if (recMode == 1) {
             userPage.tvRate = "站点推荐"
@@ -481,7 +487,10 @@ class HomeActivity : BaseActivity() {
         sortChange = false
         sortList.clear()
         pageStates.clear()
+        pageGeneration++
         requestingPage = null
+        pendingGridPage = null
+        pendingLoadMore = false
         userPage.videos.clear()
     }
 
@@ -622,7 +631,7 @@ class HomeActivity : BaseActivity() {
             refreshHomeSort()
         } else {
             val state = pageStates.getOrNull(sortFocused)
-            if (state != null) forceGridRefresh()
+            if (state != null) forceGridRefresh(state)
         }
     }
 
@@ -657,6 +666,10 @@ class HomeActivity : BaseActivity() {
     // ===== 网格页回调 =====
     private fun loadGridPage(state: HomeGridPageState, reset: Boolean) {
         if (state.isRequesting) return
+        if (requestingPage != null) {
+            pendingGridPage = state
+            return
+        }
         val wasLoaded = state.isLoad
         if (reset) {
             state.page = 1
@@ -668,12 +681,16 @@ class HomeActivity : BaseActivity() {
         if (!wasLoaded) showLoading()
         requestingPage = state
         state.isRequesting = true
+        pushUiState()
         sourceViewModel!!.getList(state.sortData, state.page)
     }
 
-    private fun forceGridRefresh() {
-        val state = pageStates.getOrNull(currentSelected) ?: return
-        if (state.isRequesting) return
+    private fun forceGridRefresh(state: HomeGridPageState? = pageStates.getOrNull(currentSelected)) {
+        if (state == null) return
+        if (state.isRequesting) {
+            pendingGridPage = state
+            return
+        }
         loadGridPage(state, reset = true)
     }
 
@@ -681,8 +698,13 @@ class HomeActivity : BaseActivity() {
         val state = pageStates.getOrNull(currentSelected) ?: return
         if (state.isRequesting || !state.isLoad) return
         if (state.maxPage > 0 && state.page > state.maxPage) return
+        if (requestingPage != null) {
+            pendingLoadMore = true
+            return
+        }
         requestingPage = state
         state.isRequesting = true
+        pushUiState()
         sourceViewModel!!.getList(state.sortData, state.page)
     }
 
@@ -703,8 +725,10 @@ class HomeActivity : BaseActivity() {
         bundle.putString("sourceKey", video.sourceKey)
         bundle.putString("title", video.name)
         if (!video.tag.isNullOrEmpty() && (video.tag == "folder" || video.tag == "cover")) {
+            if (state.isRequesting || requestingPage != null) return
             // 进入文件夹:保存快照,改写 flag/id,重载
             state.pushFolder()
+            state.pendingScrollIndex = 0
             state.sortData.flag = if (state.style == null) {
                 if (video.tag == "folder") "1" else "2"
             } else {
@@ -712,7 +736,6 @@ class HomeActivity : BaseActivity() {
             }
             state.sortData.id = video.id
             state.isFolderMode = state.uiTag() == '1'
-            state.columns = if (state.isFolderMode) 1 else gridSpanCount(state)
             loadGridPage(state, reset = true)
         } else if (!video.id.isNullOrEmpty() && video.id!!.startsWith("msearch:")) {
             if (Hawk.get(HawkConfig.FAST_SEARCH_MODE, true) && state.enableFastSearch()) {
@@ -744,21 +767,22 @@ class HomeActivity : BaseActivity() {
         if (isUserPage(currentSelected)) return
         val state = pageStates.getOrNull(currentSelected) ?: return
         if (!state.hasFilters()) return
-        if (gridFilterDialog == null) {
-            gridFilterDialog = GridFilterDialog(this)
-            gridFilterDialog!!.setData(state.sortData)
-            gridFilterDialog!!.setOnDismiss(object : GridFilterDialog.Callback {
+        if (gridFilterDialog?.isShowing == true) gridFilterDialog!!.dismiss()
+        gridFilterDialog = GridFilterDialog(this).apply {
+            setData(state.sortData)
+            setOnDismiss(object : GridFilterDialog.Callback {
                 override fun change() {
-                    forceGridRefresh()
+                    forceGridRefresh(state)
                 }
             })
         }
-        if (!gridFilterDialog!!.isShowing) gridFilterDialog!!.show()
+        gridFilterDialog!!.show()
     }
 
     // ===== 主页(my0)回调 =====
     private fun onEntryClicked(key: String) {
         HawkConfig.hotVodDelete = false
+        userPage.deleteMode = false
         when (key) {
             "live" -> jumpActivity(LivePlayActivity::class.java)
             "search" -> jumpActivity(SearchActivity::class.java)
@@ -917,7 +941,7 @@ class HomeActivity : BaseActivity() {
     }
 
     private fun refreshEmpty() {
-        skipNextUpdate = true
+        skipNextUpdate = homeSortLoading || loadingSourceKey != null
         showSuccess()
         cancelHomeSortLoading()
         clearHomePages()
