@@ -3,19 +3,25 @@ package com.github.tvbox.kt.ui.compose
 import android.util.DisplayMetrics
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -97,6 +103,10 @@ fun HomeScreen(
         LocalDensity provides Density(displayDensity, currentDensity.fontScale)
     ) {
         TvAdaptiveLayout { metrics ->
+            val useSideActions = showUserPage &&
+                metrics.width >= 720.dp &&
+                metrics.height >= 360.dp &&
+                metrics.width / metrics.height >= 1.9f
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -126,7 +136,7 @@ fun HomeScreen(
                     )
                 }
                 key("home-actions") {
-                    if (showUserPage) {
+                    if (showUserPage && !useSideActions) {
                         QuickActionBar(onEntryClick = onEntryClick)
                     }
                 }
@@ -134,13 +144,37 @@ fun HomeScreen(
                     Box(modifier = Modifier.weight(1f)) {
                         when {
                             showUserPage -> key("user-home") {
-                                UserHomePage(
-                                    page = userPage,
-                                    metrics = metrics,
-                                    onItemClick = onHotItemClick,
-                                    onItemLongClick = onHotItemLongClick,
-                                    onRefresh = onTabUp
-                                )
+                                if (useSideActions) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = metrics.horizontalGutter)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .fillMaxHeight()
+                                        ) {
+                                            UserHomePage(
+                                                page = userPage,
+                                                metrics = metrics,
+                                                sideLayout = true,
+                                                onItemClick = onHotItemClick,
+                                                onItemLongClick = onHotItemLongClick,
+                                                onRefresh = onTabUp
+                                            )
+                                        }
+                                        QuickActionPanel(onEntryClick = onEntryClick)
+                                    }
+                                } else {
+                                    UserHomePage(
+                                        page = userPage,
+                                        metrics = metrics,
+                                        onItemClick = onHotItemClick,
+                                        onItemLongClick = onHotItemLongClick,
+                                        onRefresh = onTabUp
+                                    )
+                                }
                             }
 
                             gridPage != null -> key(gridPage) {
@@ -175,27 +209,64 @@ fun HomeScreen(
 @Composable
 private fun QuickActionBar(onEntryClick: (String) -> Unit) {
     val metrics = LocalTvLayoutMetrics.current
-    LazyRow(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
-            .focusRestorer(),
-        contentPadding = metrics.contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .horizontalScroll(rememberScrollState())
+            .padding(metrics.contentPadding)
+            .focusRestorer()
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        itemsIndexed(
-            items = HomeEntries,
-            key = { _, entry -> entry.key },
-            contentType = { _, _ -> "quick-action" }
-        ) { _, entry ->
-            TvQuickAction(
-                icon = entry.icon,
-                label = entry.label,
-                onClick = { onEntryClick(entry.key) }
-            )
+        HomeEntries.forEach { entry ->
+            key(entry.key) {
+                TvQuickAction(
+                    icon = entry.icon,
+                    label = entry.label,
+                    onClick = { onEntryClick(entry.key) }
+                )
+            }
         }
     }
     Spacer(modifier = Modifier.height(if (metrics.compactHeight) 4.dp else 8.dp))
+}
+
+@Composable
+private fun QuickActionPanel(onEntryClick: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(184.dp)
+            .fillMaxHeight()
+            .background(
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.38f),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(8.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        HomeEntries.chunked(2).forEachIndexed { index, rowEntries ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                rowEntries.forEach { entry ->
+                    key(entry.key) {
+                        TvQuickAction(
+                            icon = entry.icon,
+                            label = entry.label,
+                            onClick = { onEntryClick(entry.key) }
+                        )
+                    }
+                }
+                if (rowEntries.size == 1) {
+                    Spacer(modifier = Modifier.width(72.dp))
+                }
+            }
+            if (index < HomeEntries.lastIndex / 2) {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
@@ -205,7 +276,8 @@ private fun UserHomePage(
     metrics: TvLayoutMetrics,
     onItemClick: (Movie.Video) -> Unit,
     onItemLongClick: (Movie.Video) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    sideLayout: Boolean = false
 ) {
     val videos = page.videos
     if (videos.isEmpty()) {
@@ -218,18 +290,37 @@ private fun UserHomePage(
         return
     }
     val sectionTitle = page.tvRate.ifBlank { "热门推荐" }
+    val horizontalPadding = if (sideLayout) 0.dp else metrics.horizontalGutter
+    val availableWidth = if (sideLayout) {
+        (metrics.width - metrics.horizontalGutter * 2 - 184.dp).coerceAtLeast(240.dp)
+    } else {
+        metrics.width - metrics.horizontalGutter * 2
+    }
+    val columns = if (sideLayout) {
+        ((availableWidth + metrics.contentGap) / (metrics.cardWidth + metrics.contentGap))
+            .toInt()
+            .coerceIn(2, 6)
+    } else {
+        metrics.gridColumns
+    }
+    val cardWidth = if (sideLayout) {
+        ((availableWidth - metrics.contentGap * (columns - 1)) / columns)
+            .coerceIn(96.dp, 168.dp)
+    } else {
+        metrics.cardWidth
+    }
     if (page.useGridStyle || page.deleteMode) {
         val content = if (page.deleteMode) videos else videos.drop(1)
         val contentKeys = rememberVideoKeys(videos, if (page.deleteMode) 0 else 1)
         LazyVerticalGrid(
-            columns = GridCells.Fixed(metrics.gridColumns),
+            columns = GridCells.Fixed(columns),
             state = page.gridState,
             modifier = Modifier
                 .fillMaxSize()
                 .focusRestorer(),
             contentPadding = PaddingValues(
-                start = metrics.horizontalGutter,
-                end = metrics.horizontalGutter,
+                start = horizontalPadding,
+                end = horizontalPadding,
                 top = 8.dp,
                 bottom = 40.dp
             ),
@@ -280,6 +371,8 @@ private fun UserHomePage(
             ) { index, video ->
                 TvPosterCard(
                     video = video,
+                    cardWidth = cardWidth,
+                    cardHeight = cardWidth * 1.5f,
                     deleteMode = page.deleteMode,
                     onClick = { onItemClick(video) },
                     onLongClick = { onItemLongClick(video) }
@@ -309,8 +402,8 @@ private fun UserHomePage(
                 .fillMaxSize()
                 .focusRestorer(),
             contentPadding = PaddingValues(
-                start = metrics.horizontalGutter,
-                end = metrics.horizontalGutter,
+                start = horizontalPadding,
+                end = horizontalPadding,
                 top = 8.dp,
                 bottom = 40.dp
             ),
@@ -324,7 +417,7 @@ private fun UserHomePage(
                     onLongClick = { onItemLongClick(videos.first()) }
                 )
             }
-            if (remaining.isNotEmpty()) {
+            if (remaining.isNotEmpty() || sideLayout) {
                 item(key = "section", contentType = "section") {
                     TvSectionHeader(
                         title = sectionTitle,
@@ -343,6 +436,7 @@ private fun UserHomePage(
                         ) { _, video ->
                             TvPosterCard(
                                 video = video,
+                                cardWidth = cardWidth,
                                 onClick = { onItemClick(video) },
                                 onLongClick = { onItemLongClick(video) }
                             )

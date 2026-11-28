@@ -93,7 +93,7 @@ private fun rememberTvLayoutMetrics(width: Dp, height: Dp): TvLayoutMetrics {
             (contentWidth - contentGap * (columns - 1)) / columns
         ).coerceIn(96.dp, 168.dp)
         val heroHeight = when {
-            compactHeight -> (height * 0.42f).coerceIn(168.dp, 208.dp)
+            compactHeight -> (height * 0.34f).coerceIn(144.dp, 184.dp)
             height < 700.dp -> (height * 0.38f).coerceIn(216.dp, 280.dp)
             else -> (height * 0.42f).coerceIn(280.dp, 360.dp)
         }
@@ -108,7 +108,7 @@ private fun rememberTvLayoutMetrics(width: Dp, height: Dp): TvLayoutMetrics {
             cardHeight = cardWidth * 1.5f,
             gridColumns = columns,
             heroHeight = heroHeight,
-            showActionLabels = width >= 800.dp,
+            showActionLabels = width >= 640.dp,
             compactHeight = compactHeight
         )
     }

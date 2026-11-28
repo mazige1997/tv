@@ -1,5 +1,6 @@
 package com.github.tvbox.kt.ui.compose
 
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.compose.foundation.background
@@ -18,8 +19,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -304,6 +307,7 @@ fun TvFeaturedContent(
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TvQuickAction(
     icon: ImageVector,
@@ -317,10 +321,27 @@ fun TvQuickAction(
         onClick = onClick,
         modifier = modifier
             .width(if (showLabel) 72.dp else 52.dp)
-            .height(if (compactHeight) 56.dp else 64.dp)
+            .height(if (compactHeight) 52.dp else 64.dp)
             .semantics {
                 contentDescription = label
                 role = Role.Button
+            }
+            .onPreviewKeyEvent { event ->
+                val keyCode = event.nativeKeyEvent.keyCode
+                val isConfirm = keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                    keyCode == KeyEvent.KEYCODE_ENTER ||
+                    keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                if (!isConfirm) {
+                    false
+                } else {
+                    if (
+                        event.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
+                        !event.nativeKeyEvent.isCanceled
+                    ) {
+                        onClick()
+                    }
+                    true
+                }
             },
         shape = CardDefaults.shape(PosterShape),
         colors = CardDefaults.colors(
@@ -340,7 +361,7 @@ fun TvQuickAction(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = if (compactHeight) 6.dp else 8.dp),
+                .padding(vertical = if (compactHeight) 4.dp else 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
