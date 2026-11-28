@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import kotlin.math.roundToInt
 
 /** 剧集 UI 快照(从 VodInfo 的可变列表拷贝,保证 Compose 重组可靠)。 */
 data class DetailSeriesUi(val name: String, val selected: Boolean)
