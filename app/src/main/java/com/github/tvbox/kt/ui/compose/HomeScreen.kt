@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.platform.LocalDensity
@@ -63,7 +65,7 @@ private val HomeEntries = listOf(
     HomeEntry("transfer", "传输", Icons.Rounded.SwapHoriz)
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun HomeScreen(
     ui: HomeUiSnapshot,
@@ -169,7 +171,7 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun QuickActionBar(onEntryClick: (String) -> Unit) {
     val metrics = LocalTvLayoutMetrics.current
@@ -196,7 +198,7 @@ private fun QuickActionBar(onEntryClick: (String) -> Unit) {
     Spacer(modifier = Modifier.height(if (metrics.compactHeight) 4.dp else 8.dp))
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun UserHomePage(
     page: HomeUserPageState,
@@ -271,7 +273,7 @@ private fun UserHomePage(
                     )
                 }
             }
-            itemsIndexed(
+            gridItemsIndexed(
                 items = content,
                 key = { index, _ -> contentKeys[index] },
                 contentType = { _, _ -> "poster" }
@@ -360,7 +362,7 @@ private fun UserHomePage(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun GridHomePage(
     page: HomeGridPageState,
@@ -437,7 +439,7 @@ private fun GridHomePage(
         horizontalArrangement = Arrangement.spacedBy(metrics.contentGap),
         verticalArrangement = Arrangement.spacedBy(metrics.contentGap)
     ) {
-        itemsIndexed(
+        gridItemsIndexed(
             items = videos,
             key = { index, _ -> videoKeys[index] },
             contentType = { _, _ -> "poster" }

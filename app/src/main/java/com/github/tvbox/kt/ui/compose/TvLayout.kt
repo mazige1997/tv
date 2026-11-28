@@ -100,7 +100,7 @@ private fun rememberTvLayoutMetrics(width: Dp, height: Dp): TvLayoutMetrics {
         TvLayoutMetrics(
             width = width,
             height = height,
-            widthSizeClass = windowSizeClass.widthWindowSizeClass,
+            widthSizeClass = windowSizeClass.widthSizeClass,
             horizontalGutter = horizontalGutter,
             verticalGutter = verticalGutter,
             contentGap = contentGap,
