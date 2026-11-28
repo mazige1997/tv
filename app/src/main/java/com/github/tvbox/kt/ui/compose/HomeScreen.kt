@@ -12,7 +12,9 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -188,25 +190,43 @@ private fun CategoryBar(
     LaunchedEffect(focusToken) {
         if (focusToken > 0) runCatching { firstFocus.requestFocus() }
     }
-    LazyRow(
-        state = listState,
+
+    // 按「实际可用宽度」而非设备硬件值决定布局,这是 Compose 官方自适应布局的核心原则。
+    // 分类数量因站点而异(3~10+),固定宽度 + 固定间距必然出现「少时挤在左侧、多时溢出」。
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .height(TvSpec.ChipHeight)
-            .padding(horizontal = TvSpec.PageGutter),
-        horizontalArrangement = Arrangement.spacedBy(TvSpec.ChipGap)
+            .padding(horizontal = TvSpec.PageGutter)
     ) {
-        repeat(tabs.size) { index ->
-            item {
-                TabChip(
-                    text = tabs[index].name,
-                    isSelected = index == selected,
-                    filterCount = tabs[index].filterCount,
-                    focusRequester = if (index == 0) firstFocus else null,
-                    onFocus = { onFocus(index) },
-                    onClick = { onClick(index) },
-                    onUp = onUp
-                )
+        val gap = TvSpec.ChipGap
+        val count = tabs.size.coerceAtLeast(1)
+        // 先均分,再限制在舒适区间:保证 3~6 个时等宽铺开,超过阈值才收缩为可滚动。
+        val evenWidth = (maxWidth - gap * (count - 1)) / count
+        val chipWidth = evenWidth.coerceIn(TvSpec.TabMinWidth, TvSpec.TabMaxWidth)
+        val totalWidth = chipWidth * count + gap * (count - 1)
+        // 数量少时整体居中,避免右侧一大块空白造成「间距不合理」的观感。
+        val startGap = ((maxWidth - totalWidth) / 2f).coerceAtLeast(0.dp)
+
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = startGap),
+            horizontalArrangement = Arrangement.spacedBy(gap)
+        ) {
+            repeat(tabs.size) { index ->
+                item {
+                    TabChip(
+                        text = tabs[index].name,
+                        isSelected = index == selected,
+                        filterCount = tabs[index].filterCount,
+                        focusRequester = if (index == 0) firstFocus else null,
+                        onFocus = { onFocus(index) },
+                        onClick = { onClick(index) },
+                        onUp = onUp,
+                        modifier = Modifier.width(chipWidth)
+                    )
+                }
             }
         }
     }
@@ -221,12 +241,13 @@ private fun TabChip(
     focusRequester: FocusRequester?,
     onFocus: () -> Unit,
     onClick: () -> Unit,
-    onUp: () -> Unit
+    onUp: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val focused by interactionSource.collectIsFocusedAsState()
     LaunchedEffect(focused) { if (focused) onFocus() }
-    var mod = Modifier
+    var mod = modifier
         .height(TvSpec.ChipHeight)
         .background(
             brush = if (focused || isSelected) {

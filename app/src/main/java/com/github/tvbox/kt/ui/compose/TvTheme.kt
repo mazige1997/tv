@@ -50,6 +50,10 @@ object TvSpec {
     val SpaceXl = 24.dp
     val SpaceXxl = 32.dp
     val ChipGap = 12.dp       // 分类 chip 与功能入口 chip 共用,保证两行节奏一致
+    // 分类 chip 自适应区间:数量少时限宽并整体居中,数量多时收缩至最小宽后再滚动。
+    // 依据 Android TV 布局指南:用 dp 保证跨分辨率比例一致,并为焦点放大预留间距。
+    val TabMinWidth = 110.dp
+    val TabMaxWidth = 180.dp
     val PageGutter = 50.dp
     val ContentGutter = 40.dp
 
